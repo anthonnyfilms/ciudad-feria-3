@@ -1,0 +1,138 @@
+{
+  "identity": {
+    "name": "Ciudad Feria",
+    "tagline": "El Corazón Digital de San Sebastián 2026",
+    "mission": "Fusionar la tradición de la feria con la seguridad de la tecnología moderna.",
+    "aesthetic": "Neon Folklore",
+    "description": "A high-energy, dark-mode interface that captures the electric atmosphere of a night fair. It combines the vibrant yellow, blue, and red of the Venezuelan identity with deep midnight backgrounds and glassmorphism to feel premium and modern."
+  },
+  "design_system": {
+    "colors": {
+      "palette": {
+        "primary": "#FACC15",
+        "primary_foreground": "#020617",
+        "secondary": "#3B82F6",
+        "secondary_foreground": "#FFFFFF",
+        "accent": "#EF4444",
+        "accent_foreground": "#FFFFFF",
+        "background": "#020617",
+        "foreground": "#F8FAFC",
+        "card": "#0F172A",
+        "card_foreground": "#F8FAFC",
+        "border": "#1E293B",
+        "input": "#1E293B",
+        "ring": "#FACC15"
+      },
+      "gradients": {
+        "hero": "linear-gradient(to bottom right, #020617, #172554)",
+        "brand": "linear-gradient(90deg, #FACC15, #EF4444, #3B82F6)",
+        "glass": "rgba(15, 23, 42, 0.6)"
+      }
+    },
+    "typography": {
+      "font_family": {
+        "heading": ["Unbounded", "sans-serif"],
+        "body": ["Manrope", "sans-serif"],
+        "mono": ["JetBrains Mono", "monospace"]
+      },
+      "scale": {
+        "h1": "text-5xl md:text-7xl font-black tracking-tighter",
+        "h2": "text-3xl md:text-5xl font-bold tracking-tight",
+        "h3": "text-2xl md:text-3xl font-bold",
+        "body": "text-base md:text-lg leading-relaxed",
+        "caption": "text-xs uppercase tracking-widest font-semibold text-muted-foreground"
+      }
+    },
+    "spacing": {
+      "container_padding": "px-4 md:px-8 lg:px-12",
+      "section_gap": "gap-12 md:gap-24",
+      "component_gap": "gap-4 md:gap-6"
+    },
+    "visual_enhancers": {
+      "radius": "rounded-xl",
+      "shadows": {
+        "card": "0 10px 30px -10px rgba(0,0,0,0.5)",
+        "glow": "0 0 20px rgba(250, 204, 21, 0.3)"
+      },
+      "borders": "border border-white/10",
+      "glassmorphism": "backdrop-blur-xl bg-white/5 border border-white/10 shadow-2xl"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-full px-8 py-6 transition-all hover:scale-105 hover:shadow-[0_0_20px_rgba(250,204,21,0.4)]",
+      "secondary": "bg-secondary/10 text-secondary hover:bg-secondary/20 border border-secondary/20 rounded-full px-6 py-4",
+      "outline": "border-2 border-white/20 hover:border-white text-white bg-transparent rounded-full px-6 py-4"
+    },
+    "cards": {
+      "event_card": "group relative overflow-hidden rounded-2xl bg-card border border-border hover:border-primary/50 transition-all duration-300 hover:-translate-y-2",
+      "ticket_card": "relative bg-white text-black rounded-3xl p-6 border-2 border-dashed border-gray-300 mask-image-ticket"
+    },
+    "inputs": {
+      "default": "bg-background/50 border-border focus:border-primary focus:ring-primary rounded-lg h-12"
+    }
+  },
+  "layout_strategies": {
+    "landing_page": {
+      "hero": "Full-screen immersive layout. Background image with heavy gradient overlay. Huge typography 'SAN SEBASTIÁN 2026'. Floating 3D-style ticket elements.",
+      "grid_style": "Tetris Grid (Mode A). Mix of large event posters and small informational blocks.",
+      "navigation": "Floating glass navbar with blur effect. Sticky on scroll."
+    },
+    "events_page": {
+      "layout": "Sidebar filter (desktop) / Drawer filter (mobile) + Masonry grid of event cards.",
+      "card_style": "Image-heavy. Date badge in top-right (Neon style). Title and price at bottom."
+    },
+    "ticket_flow": {
+      "layout": "Centered single-column stepper. Focus mode (remove header/footer distractions).",
+      "steps": ["Select Tickets", "Attendee Info", "Payment", "Confirmation"]
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_bg": {
+        "url": "https://images.unsplash.com/photo-1750323313940-a267ef7d89fa?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Night concert crowd with lights",
+        "usage": "Main Hero Background with overlay"
+      },
+      "category_concerts": {
+        "url": "https://images.unsplash.com/photo-1760965825135-e94f4e34494b?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Red lighting concert stage",
+        "usage": "Concerts category card"
+      },
+      "category_culture": {
+        "url": "https://images.unsplash.com/photo-1659700570209-6446cca08ad8?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Carnival dancer with feathers",
+        "usage": "Culture & Parade category card"
+      },
+      "category_tourism": {
+        "url": "https://images.pexels.com/photos/18383620/pexels-photo-18383620.jpeg",
+        "alt": "San Cristobal City View",
+        "usage": "Tourism & City category card"
+      },
+      "ticket_bg": {
+        "url": "https://images.unsplash.com/photo-1750323313934-46d942e6afb7?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "alt": "Abstract festival lights",
+        "usage": "Background for ticket generation page"
+      }
+    },
+    "icons": "Use Lucide React. For social media, use simple SVGs or Lucide icons."
+  },
+  "instructions_to_main_agent": [
+    "1. SETUP: Install 'Unbounded' and 'Manrope' fonts from Google Fonts in index.css.",
+    "2. CONFIG: Update tailwind.config.js with the 'Neon Folklore' color palette defined above.",
+    "3. COMPONENTS: Use Shadcn UI for the 'Ticket Checkout' flow (Form, Input, Button, Dialog, Steps).",
+    "4. CUSTOM UI: Build the Landing Page using raw Tailwind + Framer Motion for the 'Tetris Grid'.",
+    "5. QR CODE: Use 'react-qr-code' for generating the ticket QR. Wrap it in a 'Gold Border' container to make it look valuable.",
+    "6. ANIMATION: Add 'hover:scale-105' to all event cards. Use 'framer-motion' for page transitions.",
+    "7. SOCIALS: Create a 'Social Hub' section in the footer with large, glowing icons for Instagram, TikTok, etc.",
+    "8. MOCK DATA: Create a 'events_data.js' file with mock events (Concierto de Feria, Desfile de Carrozas, Corrida de Toros, Vuelta al Táchira).",
+    "9. TESTING: Add data-testid to the 'Buy Ticket' button and the 'QR Code' container."
+  ],
+  "universal_guidelines": [
+    "Do not use gradients for text unless it is a very large headline.",
+    "Ensure all text on dark backgrounds is at least 'text-gray-300' or lighter for readability.",
+    "Use 'backdrop-blur' heavily to create depth.",
+    "Never use default scrollbars. Hide them or style them thin.",
+    "Images must have 'object-cover' and 'rounded-xl' in most cases."
+  ]
+}
