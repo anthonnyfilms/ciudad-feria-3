@@ -110,6 +110,7 @@ class CategoriaUpdate(BaseModel):
 class ConfiguracionSitio(BaseModel):
     banner_principal: Optional[str] = None
     logo: Optional[str] = None
+    video_principal: Optional[str] = None
     color_primario: str = "#FACC15"
     color_secundario: str = "#3B82F6"
     color_acento: str = "#EF4444"
