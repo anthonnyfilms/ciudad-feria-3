@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, BarChart3, Ticket, Users, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, BarChart3, Ticket, Users, CheckCircle, Tag, ShoppingCart, CreditCard } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -44,7 +44,9 @@ const AdminDashboard = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard', active: true },
     { icon: Calendar, label: 'Eventos', path: '/admin/eventos' },
-    { icon: Settings, label: 'Categorías', path: '/admin/categorias' },
+    { icon: Tag, label: 'Categorías', path: '/admin/categorias' },
+    { icon: ShoppingCart, label: 'Compras', path: '/admin/compras' },
+    { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];
 
