@@ -216,6 +216,16 @@ def main():
                 print("\n🔍 Testing QR Validation...")
                 print("   Note: QR validation test may require actual QR payload from database")
     
+    # Test 7: Admin Login
+    print("\n🔐 Testing Admin Functionality...")
+    admin_success, admin_token = tester.test_admin_login()
+    
+    if admin_success and admin_token:
+        # Test 8: Admin Statistics
+        tester.test_admin_estadisticas(admin_token)
+    else:
+        print("❌ Cannot test admin statistics without valid token")
+    
     # Test Category Filtering (check if events have categories)
     print(f"\n📊 Event Categories Found:")
     categorias = set()
