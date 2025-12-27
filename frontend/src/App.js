@@ -7,7 +7,7 @@ import ValidarEntrada from './pages/ValidarEntrada';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEventos from './pages/admin/AdminEventos';
-import AdminCompras from './pages/admin/AdminCompras';
+import AdminMetodosPago from './pages/admin/AdminMetodosPago';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -35,6 +35,7 @@ function App() {
                 <Route path="eventos" element={<AdminEventos />} />
                 <Route path="categorias" element={<AdminCategorias />} />
                 <Route path="compras" element={<AdminCompras />} />
+                <Route path="metodos-pago" element={<AdminMetodosPago />} />
                 <Route path="configuracion" element={<AdminConfiguracion />} />
               </Routes>
             </PrivateRoute>
