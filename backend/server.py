@@ -247,6 +247,14 @@ async def obtener_evento(evento_id: str):
         evento['fecha_creacion'] = datetime.fromisoformat(evento['fecha_creacion'])
     return evento
 
+@api_router.get("/categorias", response_model=List[Categoria])
+async def listar_categorias():
+    categorias = await db.categorias.find({}, {"_id": 0}).sort("orden", 1).to_list(100)
+    for categoria in categorias:
+        if isinstance(categoria.get('fecha_creacion'), str):
+            categoria['fecha_creacion'] = datetime.fromisoformat(categoria['fecha_creacion'])
+    return categorias
+
 @api_router.get("/configuracion")
 async def obtener_configuracion():
     config = await db.configuracion.find_one({}, {"_id": 0})
