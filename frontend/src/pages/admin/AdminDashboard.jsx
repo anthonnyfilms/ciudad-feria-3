@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, BarChart3, Ticket, Users, CheckCircle, Tag, ShoppingCart, CreditCard, Shield } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Ticket, Users, CheckCircle, Tag, ShoppingCart, CreditCard, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -53,11 +53,149 @@ const AdminDashboard = () => {
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];
 
+  const renderStats = () => (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="glass-card p-6 rounded-2xl"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Calendar className="w-6 h-6 text-primary" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-foreground mb-1">
+            {stats?.total_eventos || 0}
+          </h3>
+          <p className="text-foreground/60 text-sm">Eventos Activos</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-card p-6 rounded-2xl"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
+              <Ticket className="w-6 h-6 text-secondary" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-foreground mb-1">
+            {stats?.total_entradas_vendidas || 0}
+          </h3>
+          <p className="text-foreground/60 text-sm">Total Entradas</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="glass-card p-6 rounded-2xl"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <CheckCircle className="w-6 h-6 text-primary" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-foreground mb-1">
+            {stats?.entradas_aprobadas || 0}
+          </h3>
+          <p className="text-foreground/60 text-sm">Aprobadas</p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="glass-card p-6 rounded-2xl"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+              <Users className="w-6 h-6 text-accent" />
+            </div>
+          </div>
+          <h3 className="text-3xl font-bold text-foreground mb-1">
+            {stats?.entradas_pendientes_pago || 0}
+          </h3>
+          <p className="text-foreground/60 text-sm">Pendientes</p>
+        </motion.div>
+      </div>
+
+      {ventasPorEvento.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="glass-card p-8 rounded-3xl mb-12"
+        >
+          <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
+            Ventas por Evento
+          </h3>
+          <div className="space-y-4">
+            {ventasPorEvento.map((evento) => (
+              <div key={evento._id} className="glass-card p-4 rounded-xl">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-bold text-foreground">{evento.nombre_evento}</h4>
+                  <span className="text-primary font-bold">{evento.total_vendidas} entradas</span>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-foreground/70">
+                  <span>✅ Aprobadas: {evento.aprobadas}</span>
+                  <span>⏳ Pendientes: {evento.total_vendidas - evento.aprobadas}</span>
+                </div>
+                <div className="mt-3 h-2 bg-foreground/10 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary rounded-full transition-all"
+                    style={{ width: `${(evento.aprobadas / evento.total_vendidas) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Link to="/admin/eventos">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="glass-card p-8 rounded-2xl cursor-pointer group hover:border-primary/50 transition-all"
+          >
+            <Calendar className="w-10 h-10 text-primary mb-4 group-hover:scale-110 transition-transform" />
+            <h3 className="text-xl font-heading font-bold text-foreground mb-2">
+              Gestionar Eventos
+            </h3>
+            <p className="text-foreground/60">
+              Crear, editar y eliminar eventos de la feria
+            </p>
+          </motion.div>
+        </Link>
+
+        <Link to="/admin/configuracion">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="glass-card p-8 rounded-2xl cursor-pointer group hover:border-primary/50 transition-all"
+          >
+            <Settings className="w-10 h-10 text-primary mb-4 group-hover:scale-110 transition-transform" />
+            <h3 className="text-xl font-heading font-bold text-foreground mb-2">
+              Configuración del Sitio
+            </h3>
+            <p className="text-foreground/60">
+              Personalizar colores, banner, logo y redes sociales
+            </p>
+          </motion.div>
+        </Link>
+      </div>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-background">
       <Toaster richColors position="top-center" />
       
-      {/* Header */}
       <header className="glass-card border-b border-white/10 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
@@ -80,7 +218,6 @@ const AdminDashboard = () => {
       </header>
 
       <div className="flex">
-        {/* Sidebar */}
         <aside className="w-64 glass-card border-r border-white/10 min-h-screen p-6">
           <nav className="space-y-2">
             {menuItems.map((item) => (
@@ -100,7 +237,6 @@ const AdminDashboard = () => {
           </nav>
         </aside>
 
-        {/* Main Content */}
         <main className="flex-1 p-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -115,145 +251,7 @@ const AdminDashboard = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
               </div>
             ) : (
-              <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="glass-card p-6 rounded-2xl"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Calendar className="w-6 h-6 text-primary" />
-                    </div>
-                  </div>
-                  <h3 className="text-3xl font-bold text-foreground mb-1">
-                    {stats?.total_eventos || 0}
-                  </h3>
-                  <p className="text-foreground/60 text-sm">Eventos Activos</p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="glass-card p-6 rounded-2xl"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center">
-                      <Ticket className="w-6 h-6 text-secondary" />
-                    </div>
-                  </div>
-                  <h3 className="text-3xl font-bold text-foreground mb-1">
-                    {stats?.total_entradas_vendidas || 0}
-                  </h3>
-                  <p className="text-foreground/60 text-sm">Total Entradas</p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="glass-card p-6 rounded-2xl"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-primary" />
-                    </div>
-                  </div>
-                  <h3 className="text-3xl font-bold text-foreground mb-1">
-                    {stats?.entradas_aprobadas || 0}
-                  </h3>
-                  <p className="text-foreground/60 text-sm">Aprobadas</p>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
-                  className="glass-card p-6 rounded-2xl"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-accent" />
-                    </div>
-                  </div>
-                  <h3 className="text-3xl font-bold text-foreground mb-1">
-                    {stats?.entradas_pendientes_pago || 0}
-                  </h3>
-                  <p className="text-foreground/60 text-sm">Pendientes</p>
-                </motion.div>
-              </div>
-
-              {/* Ventas por Evento */}
-              {ventasPorEvento.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 }}
-                  className="glass-card p-8 rounded-3xl mb-12"
-                >
-                  <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
-                    Ventas por Evento
-                  </h3>
-                  <div className="space-y-4">
-                    {ventasPorEvento.map((evento, index) => (
-                      <div key={evento._id} className="glass-card p-4 rounded-xl">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-bold text-foreground">{evento.nombre_evento}</h4>
-                          <span className="text-primary font-bold">{evento.total_vendidas} entradas</span>
-                        </div>
-                        <div className="flex items-center gap-4 text-sm text-foreground/70">
-                          <span>✅ Aprobadas: {evento.aprobadas}</span>
-                          <span>⏳ Pendientes: {evento.total_vendidas - evento.aprobadas}</span>
-                        </div>
-                        {/* Barra de progreso */}
-                        <div className="mt-3 h-2 bg-foreground/10 rounded-full overflow-hidden">
-                          <div 
-                            className="h-full bg-primary rounded-full transition-all"
-                            style={{ width: `${(evento.aprobadas / evento.total_vendidas) * 100}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Link to="/admin/eventos">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="glass-card p-8 rounded-2xl cursor-pointer group hover:border-primary/50 transition-all"
-                  >
-                    <Calendar className="w-10 h-10 text-primary mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-                      Gestionar Eventos
-                    </h3>
-                    <p className="text-foreground/60">
-                      Crear, editar y eliminar eventos de la feria
-                    </p>
-                  </motion.div>
-                </Link>
-
-                <Link to="/admin/configuracion">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    className="glass-card p-8 rounded-2xl cursor-pointer group hover:border-primary/50 transition-all"
-                  >
-                    <Settings className="w-10 h-10 text-primary mb-4 group-hover:scale-110 transition-transform" />
-                    <h3 className="text-xl font-heading font-bold text-foreground mb-2">
-                      Configuración del Sitio
-                    </h3>
-                    <p className="text-foreground/60">
-                      Personalizar colores, banner, logo y redes sociales
-                    </p>
-                  </motion.div>
-                </Link>
-              </div>
-            </>
+              renderStats()
             )}
           </motion.div>
         </main>
