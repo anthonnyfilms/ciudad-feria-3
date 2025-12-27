@@ -96,7 +96,8 @@ class CiudadFeriaAPITester:
             "nombre_comprador": "Test User",
             "email_comprador": "test@example.com",
             "cantidad": 1,
-            "precio_total": 25.0
+            "precio_total": 25.0,
+            "metodo_pago": "transferencia"
         }
         
         success, data = self.run_test(f"Buy Ticket ({evento_nombre[:20]}...)", "POST", "comprar-entrada", 200, compra_data)
