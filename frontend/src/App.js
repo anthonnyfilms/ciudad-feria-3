@@ -7,6 +7,7 @@ import ValidarEntrada from './pages/ValidarEntrada';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEventos from './pages/admin/AdminEventos';
+import AdminCategorias from './pages/admin/AdminCategorias';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -32,6 +33,7 @@ function App() {
               <Routes>
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="eventos" element={<AdminEventos />} />
+                <Route path="categorias" element={<AdminCategorias />} />
                 <Route path="configuracion" element={<AdminConfiguracion />} />
               </Routes>
             </PrivateRoute>
