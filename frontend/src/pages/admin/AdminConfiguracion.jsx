@@ -151,7 +151,7 @@ const AdminConfiguracion = () => {
               <div className="glass-card p-8 rounded-3xl">
                 <h3 className="text-2xl font-heading font-bold text-foreground mb-6 flex items-center gap-3">
                   <Upload className="w-6 h-6 text-primary" />
-                  Imágenes
+                  Imágenes y Videos
                 </h3>
                 <div className="space-y-6">
                   <div>
@@ -167,6 +167,21 @@ const AdminConfiguracion = () => {
                     />
                     <p className="text-xs text-foreground/50 mt-2">
                       URL de la imagen que aparecerá en la página principal
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-foreground/80 mb-2 font-medium">
+                      Video Principal (URL)
+                    </label>
+                    <input
+                      type="url"
+                      value={config.video_principal || ''}
+                      onChange={(e) => setConfig({...config, video_principal: e.target.value})}
+                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      placeholder="https://www.youtube.com/watch?v=... o .mp4"
+                    />
+                    <p className="text-xs text-foreground/50 mt-2">
+                      URL de video directo (.mp4) para mostrar en la página principal
                     </p>
                   </div>
                   <div>
