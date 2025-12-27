@@ -84,6 +84,9 @@ const Footer = () => {
           <p className="text-foreground/30 text-xs mt-2">
             Sistema de entradas digitales con encriptación AES-256
           </p>
+          <p className="text-primary/80 text-sm mt-3 font-medium">
+            Creado por <span className="font-bold glow-text">Anthonnyfilms</span> 🎬
+          </p>
         </div>
       </div>
     </footer>
