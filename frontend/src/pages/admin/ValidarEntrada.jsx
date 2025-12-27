@@ -1,20 +1,38 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { useEffect, useRef } from 'react';
-import { CheckCircle, XCircle, Scan } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CreditCard, CheckCircle, XCircle, Scan, Shield } from 'lucide-react';
 import { toast } from 'sonner';
-import { Toaster } from '../components/ui/sonner';
+import { Toaster } from '../../components/ui/sonner';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const ValidarEntrada = () => {
+  const navigate = useNavigate();
   const [escaneando, setEscaneando] = useState(false);
   const [resultado, setResultado] = useState(null);
+  const [modoEscaneo, setModoEscaneo] = useState('entrada');
   const scannerRef = useRef(null);
   const [scanner, setScanner] = useState(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    toast.success('Sesión cerrada');
+    navigate('/secure-admin-panel-2026');
+  };
+
+  const menuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
+    { icon: Calendar, label: 'Eventos', path: '/admin/eventos' },
+    { icon: Tag, label: 'Categorías', path: '/admin/categorias' },
+    { icon: ShoppingCart, label: 'Compras', path: '/admin/compras' },
+    { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
+    { icon: Shield, label: 'Validar Entradas', path: '/admin/validar', active: true },
+    { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
+  ];
 
   useEffect(() => {
     return () => {
@@ -67,50 +85,12 @@ const ValidarEntrada = () => {
       if (response.data.valido) {
         toast.success(response.data.mensaje);
         // Sonido de éxito
-        if (typeof window !== 'undefined' && window.AudioContext) {
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const oscillator = audioContext.createOscillator();
-          const gainNode = audioContext.createGain();
-          
-          oscillator.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-          
-          oscillator.frequency.value = 800;
-          oscillator.type = 'sine';
-          gainNode.gain.value = 0.3;
-          
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.2);
-        }
+        playSound(true);
       } else {
         toast.error(response.data.mensaje);
-        // Sonido de error/alerta
-        if (response.data.tipo_alerta === 'ya_dentro' || response.data.tipo_alerta === 'fraude') {
-          if (typeof window !== 'undefined' && window.AudioContext) {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioContext.createOscillator();
-            const gainNode = audioContext.createGain();
-            
-            oscillator.connect(gainNode);
-            gainNode.connect(audioContext.destination);
-            
-            oscillator.frequency.value = 200;
-            oscillator.type = 'sawtooth';
-            gainNode.gain.value = 0.5;
-            
-            oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.5);
-            
-            // Repetir 3 veces
-            setTimeout(() => {
-              const osc2 = audioContext.createOscillator();
-              osc2.connect(gainNode);
-              osc2.frequency.value = 200;
-              osc2.type = 'sawtooth';
-              osc2.start(audioContext.currentTime);
-              osc2.stop(audioContext.currentTime + 0.5);
-            }, 600);
-          }
+        // Sonido de alerta
+        if (response.data.tipo_alerta) {
+          playSound(false);
         }
       }
     } catch (error) {
@@ -122,6 +102,41 @@ const ValidarEntrada = () => {
         entrada: null
       });
       toast.error(mensajeError);
+      playSound(false);
+    }
+  };
+
+  const playSound = (success) => {
+    if (typeof window !== 'undefined' && window.AudioContext) {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      if (success) {
+        oscillator.frequency.value = 800;
+        oscillator.type = 'sine';
+        gainNode.gain.value = 0.3;
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.2);
+      } else {
+        // Alerta de 3 pitidos
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.frequency.value = 300;
+            osc.type = 'square';
+            gain.gain.value = 0.5;
+            osc.start(audioContext.currentTime);
+            osc.stop(audioContext.currentTime + 0.3);
+          }, i * 400);
+        }
+      }
     }
   };
 
@@ -134,21 +149,67 @@ const ValidarEntrada = () => {
   };
 
   return (
-    <div className="min-h-screen pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background">
       <Toaster richColors position="top-center" />
-      <div className="max-w-4xl mx-auto">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h1 className="text-5xl font-heading font-black text-primary glow-text mb-4">
-            Validar Entrada
-          </h1>
-          <p className="text-lg text-foreground/70">
-            Escanea el código QR para validar la entrada
-          </p>
-        </motion.div>
+      
+      {/* Header */}
+      <header className="glass-card border-b border-white/10 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <span className="text-3xl">🎪</span>
+              <div>
+                <h1 className="text-xl font-heading font-black text-primary">Panel Admin</h1>
+                <p className="text-xs text-foreground/50">Ciudad Feria 2026</p>
+              </div>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-6 py-3 rounded-full glass-card hover:border-accent/50 transition-all text-foreground/80 hover:text-accent"
+            >
+              <LogOut className="w-4 h-4" />
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div className="flex">
+        {/* Sidebar */}
+        <aside className="w-64 glass-card border-r border-white/10 min-h-screen p-6">
+          <nav className="space-y-2">
+            {menuItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                  item.active
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-foreground/70 hover:bg-white/5 hover:text-foreground'
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </Link>
+            ))}
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main className="flex-1 p-8">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center mb-12"
+            >
+              <h1 className="text-5xl font-heading font-black text-primary glow-text mb-4">
+                Validar Entradas
+              </h1>
+              <p className="text-lg text-foreground/70">
+                Escanea el código QR para validar entradas
+              </p>
+            </motion.div>
 
         {!escaneando && !resultado && (
           <motion.div
@@ -239,6 +300,8 @@ const ValidarEntrada = () => {
             </motion.button>
           </motion.div>
         )}
+          </motion.div>
+        </main>
       </div>
     </div>
   );
