@@ -58,19 +58,60 @@ const ValidarEntrada = () => {
   const validarQR = async (qrPayload) => {
     try {
       const response = await axios.post(`${API}/validar-entrada`, {
-        qr_payload: qrPayload
+        qr_payload: qrPayload,
+        accion: modoEscaneo
       });
 
-      setResultado({
-        valido: response.data.valido,
-        mensaje: response.data.mensaje,
-        entrada: response.data.entrada
-      });
+      setResultado(response.data);
 
       if (response.data.valido) {
-        toast.success('Entrada válida');
+        toast.success(response.data.mensaje);
+        // Sonido de éxito
+        if (typeof window !== 'undefined' && window.AudioContext) {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          
+          oscillator.frequency.value = 800;
+          oscillator.type = 'sine';
+          gainNode.gain.value = 0.3;
+          
+          oscillator.start(audioContext.currentTime);
+          oscillator.stop(audioContext.currentTime + 0.2);
+        }
       } else {
         toast.error(response.data.mensaje);
+        // Sonido de error/alerta
+        if (response.data.tipo_alerta === 'ya_dentro' || response.data.tipo_alerta === 'fraude') {
+          if (typeof window !== 'undefined' && window.AudioContext) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 200;
+            oscillator.type = 'sawtooth';
+            gainNode.gain.value = 0.5;
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+            
+            // Repetir 3 veces
+            setTimeout(() => {
+              const osc2 = audioContext.createOscillator();
+              osc2.connect(gainNode);
+              osc2.frequency.value = 200;
+              osc2.type = 'sawtooth';
+              osc2.start(audioContext.currentTime);
+              osc2.stop(audioContext.currentTime + 0.5);
+            }, 600);
+          }
+        }
       }
     } catch (error) {
       console.error('Error validando entrada:', error);
