@@ -300,7 +300,6 @@ const ValidarEntrada = () => {
             </motion.button>
           </motion.div>
         )}
-          </motion.div>
         </main>
       </div>
     </div>
