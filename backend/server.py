@@ -460,6 +460,43 @@ async def obtener_estadisticas_admin(current_user: str = Depends(get_current_use
         "entradas_pendientes": total_entradas - entradas_usadas
     }
 
+@api_router.post("/admin/categorias", response_model=Categoria)
+async def crear_categoria_admin(categoria: CategoriaCreate, current_user: str = Depends(get_current_user)):
+    # Generar slug desde el nombre
+    slug = categoria.nombre.lower().replace(" ", "-").replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+    
+    categoria_dict = categoria.model_dump()
+    categoria_obj = Categoria(**categoria_dict, slug=slug)
+    doc = categoria_obj.model_dump()
+    doc['fecha_creacion'] = doc['fecha_creacion'].isoformat()
+    await db.categorias.insert_one(doc)
+    return categoria_obj
+
+@api_router.put("/admin/categorias/{categoria_id}")
+async def actualizar_categoria_admin(categoria_id: str, categoria: CategoriaUpdate, current_user: str = Depends(get_current_user)):
+    categoria_existente = await db.categorias.find_one({"id": categoria_id})
+    if not categoria_existente:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    
+    update_data = {k: v for k, v in categoria.model_dump().items() if v is not None}
+    
+    # Si se actualiza el nombre, actualizar el slug también
+    if "nombre" in update_data:
+        update_data["slug"] = update_data["nombre"].lower().replace(" ", "-").replace("á", "a").replace("é", "e").replace("í", "i").replace("ó", "o").replace("ú", "u")
+    
+    if update_data:
+        await db.categorias.update_one({"id": categoria_id}, {"$set": update_data})
+    
+    categoria_actualizada = await db.categorias.find_one({"id": categoria_id}, {"_id": 0})
+    return categoria_actualizada
+
+@api_router.delete("/admin/categorias/{categoria_id}")
+async def eliminar_categoria_admin(categoria_id: str, current_user: str = Depends(get_current_user)):
+    result = await db.categorias.delete_one({"id": categoria_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Categoría no encontrada")
+    return {"message": "Categoría eliminada exitosamente"}
+
 app.include_router(api_router)
 
 app.add_middleware(
