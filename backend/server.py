@@ -576,16 +576,141 @@ async def actualizar_configuracion_admin(config: ConfiguracionSitio, current_use
 
 @api_router.get("/admin/estadisticas")
 async def obtener_estadisticas_admin(current_user: str = Depends(get_current_user)):
+    from datetime import timedelta
+    
     total_eventos = await db.eventos.count_documents({})
     total_entradas = await db.entradas.count_documents({})
     entradas_usadas = await db.entradas.count_documents({"usado": True})
+    entradas_aprobadas = await db.entradas.count_documents({"estado_pago": "aprobado"})
+    entradas_pendientes_pago = await db.entradas.count_documents({"estado_pago": "pendiente"})
+    
+    # Estadísticas por evento
+    pipeline_eventos = [
+        {
+            "$group": {
+                "_id": "$evento_id",
+                "nombre_evento": {"$first": "$nombre_evento"},
+                "total_vendidas": {"$sum": 1},
+                "aprobadas": {
+                    "$sum": {"$cond": [{"$eq": ["$estado_pago", "aprobado"]}, 1, 0]}
+                },
+                "ingresos": {
+                    "$sum": {"$cond": [{"$eq": ["$estado_pago", "aprobado"]}, 1, 0]}
+                }
+            }
+        }
+    ]
+    ventas_por_evento = await db.entradas.aggregate(pipeline_eventos).to_list(100)
+    
+    # Estadísticas por hora (últimas 24 horas)
+    hace_24h = datetime.now(timezone.utc) - timedelta(hours=24)
+    pipeline_horas = [
+        {
+            "$match": {
+                "fecha_compra": {"$gte": hace_24h.isoformat()}
+            }
+        },
+        {
+            "$group": {
+                "_id": {
+                    "$dateToString": {
+                        "format": "%Y-%m-%d %H:00",
+                        "date": {"$dateFromString": {"dateString": "$fecha_compra"}}
+                    }
+                },
+                "ventas": {"$sum": 1}
+            }
+        },
+        {"$sort": {"_id": 1}}
+    ]
     
     return {
         "total_eventos": total_eventos,
         "total_entradas_vendidas": total_entradas,
         "entradas_usadas": entradas_usadas,
-        "entradas_pendientes": total_entradas - entradas_usadas
+        "entradas_aprobadas": entradas_aprobadas,
+        "entradas_pendientes": total_entradas - entradas_usadas,
+        "entradas_pendientes_pago": entradas_pendientes_pago,
+        "ventas_por_evento": ventas_por_evento
     }
+
+@api_router.get("/admin/compras")
+async def listar_compras_admin(
+    evento_id: Optional[str] = None,
+    estado: Optional[str] = None,
+    current_user: str = Depends(get_current_user)
+):
+    filtro = {}
+    if evento_id:
+        filtro["evento_id"] = evento_id
+    if estado:
+        filtro["estado_pago"] = estado
+    
+    entradas = await db.entradas.find(filtro, {"_id": 0}).sort("fecha_compra", -1).to_list(1000)
+    for entrada in entradas:
+        if isinstance(entrada.get('fecha_compra'), str):
+            entrada['fecha_compra'] = datetime.fromisoformat(entrada['fecha_compra'])
+    return entradas
+
+@api_router.post("/admin/aprobar-compra")
+async def aprobar_compra_admin(datos: AprobarCompra, current_user: str = Depends(get_current_user)):
+    result = await db.entradas.update_many(
+        {"id": {"$in": datos.entrada_ids}},
+        {"$set": {"estado_pago": "aprobado"}}
+    )
+    
+    return {
+        "message": f"{result.modified_count} entrada(s) aprobada(s)",
+        "aprobadas": result.modified_count
+    }
+
+@api_router.post("/admin/rechazar-compra")
+async def rechazar_compra_admin(datos: AprobarCompra, current_user: str = Depends(get_current_user)):
+    # Devolver asientos y eliminar entradas
+    entradas = await db.entradas.find({"id": {"$in": datos.entrada_ids}}).to_list(100)
+    
+    for entrada in entradas:
+        await db.eventos.update_one(
+            {"id": entrada['evento_id']},
+            {"$inc": {"asientos_disponibles": 1}}
+        )
+    
+    result = await db.entradas.delete_many({"id": {"$in": datos.entrada_ids}})
+    
+    return {
+        "message": f"{result.deleted_count} entrada(s) rechazada(s)",
+        "eliminadas": result.deleted_count
+    }
+
+@api_router.get("/metodos-pago")
+async def listar_metodos_pago():
+    metodos = await db.metodos_pago.find({"activo": True}, {"_id": 0}).sort("orden", 1).to_list(100)
+    return metodos
+
+@api_router.post("/admin/metodos-pago")
+async def crear_metodo_pago_admin(metodo: MetodoPagoCreate, current_user: str = Depends(get_current_user)):
+    metodo_dict = metodo.model_dump()
+    metodo_dict["id"] = str(uuid.uuid4())
+    metodo_dict["activo"] = True
+    await db.metodos_pago.insert_one(metodo_dict)
+    return metodo_dict
+
+@api_router.put("/admin/metodos-pago/{metodo_id}")
+async def actualizar_metodo_pago_admin(
+    metodo_id: str,
+    metodo: MetodoPagoCreate,
+    current_user: str = Depends(get_current_user)
+):
+    await db.metodos_pago.update_one(
+        {"id": metodo_id},
+        {"$set": metodo.model_dump()}
+    )
+    return {"message": "Método de pago actualizado"}
+
+@api_router.delete("/admin/metodos-pago/{metodo_id}")
+async def eliminar_metodo_pago_admin(metodo_id: str, current_user: str = Depends(get_current_user)):
+    await db.metodos_pago.delete_one({"id": metodo_id})
+    return {"message": "Método de pago eliminado"}
 
 @api_router.post("/admin/categorias", response_model=Categoria)
 async def crear_categoria_admin(categoria: CategoriaCreate, current_user: str = Depends(get_current_user)):
