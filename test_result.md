@@ -123,11 +123,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "Endpoint returns correct statistics - verified via dashboard display"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin login (admin/admin123) successful, statistics endpoint returns all required fields (total_eventos, total_entradas_vendidas, entradas_aprobadas, entradas_pendientes_pago, ventas_por_evento). Currently showing 6 events, 11 tickets sold, 1 approved, 3 pending payment."
 
   - task: "Purchase flow with payment proof upload"
     implemented: true
