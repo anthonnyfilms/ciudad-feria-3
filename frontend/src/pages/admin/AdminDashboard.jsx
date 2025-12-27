@@ -13,6 +13,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [ventasPorEvento, setVentasPorEvento] = useState([]);
 
   useEffect(() => {
     cargarEstadisticas();
@@ -25,6 +26,7 @@ const AdminDashboard = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       setStats(response.data);
+      setVentasPorEvento(response.data.ventas_por_evento || []);
     } catch (error) {
       console.error('Error cargando estadísticas:', error);
       if (error.response?.status === 401) {
@@ -145,7 +147,7 @@ const AdminDashboard = () => {
                   <h3 className="text-3xl font-bold text-foreground mb-1">
                     {stats?.total_entradas_vendidas || 0}
                   </h3>
-                  <p className="text-foreground/60 text-sm">Entradas Vendidas</p>
+                  <p className="text-foreground/60 text-sm">Total Entradas</p>
                 </motion.div>
 
                 <motion.div
@@ -155,14 +157,14 @@ const AdminDashboard = () => {
                   className="glass-card p-6 rounded-2xl"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                      <CheckCircle className="w-6 h-6 text-accent" />
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                      <CheckCircle className="w-6 h-6 text-primary" />
                     </div>
                   </div>
                   <h3 className="text-3xl font-bold text-foreground mb-1">
-                    {stats?.entradas_usadas || 0}
+                    {stats?.entradas_aprobadas || 0}
                   </h3>
-                  <p className="text-foreground/60 text-sm">Entradas Usadas</p>
+                  <p className="text-foreground/60 text-sm">Aprobadas</p>
                 </motion.div>
 
                 <motion.div
@@ -172,16 +174,51 @@ const AdminDashboard = () => {
                   className="glass-card p-6 rounded-2xl"
                 >
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-primary" />
+                    <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-accent" />
                     </div>
                   </div>
                   <h3 className="text-3xl font-bold text-foreground mb-1">
-                    {stats?.entradas_pendientes || 0}
+                    {stats?.entradas_pendientes_pago || 0}
                   </h3>
-                  <p className="text-foreground/60 text-sm">Pendientes de Uso</p>
+                  <p className="text-foreground/60 text-sm">Pendientes</p>
                 </motion.div>
               </div>
+
+              {/* Ventas por Evento */}
+              {ventasPorEvento.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="glass-card p-8 rounded-3xl mb-12"
+                >
+                  <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
+                    Ventas por Evento
+                  </h3>
+                  <div className="space-y-4">
+                    {ventasPorEvento.map((evento, index) => (
+                      <div key={evento._id} className="glass-card p-4 rounded-xl">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-bold text-foreground">{evento.nombre_evento}</h4>
+                          <span className="text-primary font-bold">{evento.total_vendidas} entradas</span>
+                        </div>
+                        <div className="flex items-center gap-4 text-sm text-foreground/70">
+                          <span>✅ Aprobadas: {evento.aprobadas}</span>
+                          <span>⏳ Pendientes: {evento.total_vendidas - evento.aprobadas}</span>
+                        </div>
+                        {/* Barra de progreso */}
+                        <div className="mt-3 h-2 bg-foreground/10 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${(evento.aprobadas / evento.total_vendidas) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             )}
 
             {/* Quick Actions */}
