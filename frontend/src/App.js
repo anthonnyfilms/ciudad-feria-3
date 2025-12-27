@@ -3,7 +3,7 @@ import Home from './pages/Home';
 import Eventos from './pages/Eventos';
 import DetalleEvento from './pages/DetalleEvento';
 import MisEntradas from './pages/MisEntradas';
-import ValidarEntrada from './pages/ValidarEntrada';
+import ValidarEntrada from './pages/admin/ValidarEntrada';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEventos from './pages/admin/AdminEventos';
@@ -26,7 +26,6 @@ function App() {
           <Route path="/eventos" element={<><Navbar /><Eventos /><Footer /></>} />
           <Route path="/evento/:id" element={<><Navbar /><DetalleEvento /><Footer /></>} />
           <Route path="/mis-entradas" element={<><Navbar /><MisEntradas /><Footer /></>} />
-          <Route path="/validar" element={<><Navbar /><ValidarEntrada /><Footer /></>} />
           
           {/* Admin Routes */}
           <Route path="/secure-admin-panel-2026" element={<AdminLogin />} />
@@ -38,6 +37,7 @@ function App() {
                 <Route path="categorias" element={<AdminCategorias />} />
                 <Route path="compras" element={<AdminCompras />} />
                 <Route path="metodos-pago" element={<AdminMetodosPago />} />
+                <Route path="validar" element={<ValidarEntrada />} />
                 <Route path="configuracion" element={<AdminConfiguracion />} />
               </Routes>
             </PrivateRoute>
