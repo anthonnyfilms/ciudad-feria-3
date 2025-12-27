@@ -18,30 +18,47 @@ const DetalleEvento = () => {
   const [cantidad, setCantidad] = useState(1);
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
+  const [telefono, setTelefono] = useState('');
+  const [metodoPago, setMetodoPago] = useState('');
+  const [comprobante, setComprobante] = useState('');
+  const [metodosPago, setMetodosPago] = useState([]);
   const [mostrarEntradas, setMostrarEntradas] = useState(false);
   const [entradasCompradas, setEntradasCompradas] = useState([]);
 
   useEffect(() => {
-    const cargarEvento = async () => {
-      try {
-        const response = await axios.get(`${API}/eventos/${id}`);
-        setEvento(response.data);
-      } catch (error) {
-        console.error('Error cargando evento:', error);
-        toast.error('Error al cargar el evento');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     cargarEvento();
+    cargarMetodosPago();
   }, [id]);
+
+  const cargarEvento = async () => {
+    try {
+      const response = await axios.get(`${API}/eventos/${id}`);
+      setEvento(response.data);
+    } catch (error) {
+      console.error('Error cargando evento:', error);
+      toast.error('Error al cargar el evento');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cargarMetodosPago = async () => {
+    try {
+      const response = await axios.get(`${API}/metodos-pago`);
+      setMetodosPago(response.data);
+      if (response.data.length > 0) {
+        setMetodoPago(response.data[0].id);
+      }
+    } catch (error) {
+      console.error('Error cargando métodos de pago:', error);
+    }
+  };
 
   const handleCompra = async (e) => {
     e.preventDefault();
     
-    if (!nombre || !email) {
-      toast.error('Por favor completa todos los campos');
+    if (!nombre || !email || !metodoPago) {
+      toast.error('Por favor completa todos los campos requeridos');
       return;
     }
 
@@ -52,13 +69,23 @@ const DetalleEvento = () => {
         evento_id: id,
         nombre_comprador: nombre,
         email_comprador: email,
+        telefono_comprador: telefono,
         cantidad: cantidad,
-        precio_total: evento.precio * cantidad
+        precio_total: evento.precio * cantidad,
+        metodo_pago: metodoPago,
+        comprobante_pago: comprobante || null
       });
 
-      setEntradasCompradas(response.data.entradas);
-      setMostrarEntradas(true);
-      toast.success(response.data.message);
+      if (response.data.requiere_aprobacion) {
+        toast.success('Compra registrada. Espera la aprobación del pago.', { duration: 5000 });
+        setTimeout(() => {
+          navigate('/mis-entradas');
+        }, 2000);
+      } else {
+        setEntradasCompradas(response.data.entradas);
+        setMostrarEntradas(true);
+        toast.success(response.data.message);
+      }
     } catch (error) {
       console.error('Error comprando entrada:', error);
       toast.error(error.response?.data?.detail || 'Error al procesar la compra');
@@ -254,6 +281,58 @@ const DetalleEvento = () => {
                     required
                     data-testid="input-email"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-foreground/80 mb-2 font-medium">
+                    Teléfono (Opcional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={telefono}
+                    onChange={(e) => setTelefono(e.target.value)}
+                    className="w-full bg-input border border-border rounded-xl px-6 py-4 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="+58 412 123 4567"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-foreground/80 mb-2 font-medium">
+                    Método de Pago *
+                  </label>
+                  <select
+                    value={metodoPago}
+                    onChange={(e) => setMetodoPago(e.target.value)}
+                    className="w-full bg-input border border-border rounded-xl px-6 py-4 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    required
+                  >
+                    {metodosPago.map((metodo) => (
+                      <option key={metodo.id} value={metodo.id}>{metodo.nombre}</option>
+                    ))}
+                  </select>
+                  {metodoPago && metodosPago.find(m => m.id === metodoPago) && (
+                    <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                      <p className="text-sm text-foreground/80 whitespace-pre-line">
+                        {metodosPago.find(m => m.id === metodoPago).informacion}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-foreground/80 mb-2 font-medium">
+                    Comprobante de Pago (URL de imagen)
+                  </label>
+                  <input
+                    type="url"
+                    value={comprobante}
+                    onChange={(e) => setComprobante(e.target.value)}
+                    className="w-full bg-input border border-border rounded-xl px-6 py-4 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="https://ejemplo.com/comprobante.jpg"
+                  />
+                  <p className="text-xs text-foreground/50 mt-2">
+                    Sube tu comprobante a un servicio como ImgBB o Imgur y pega la URL aquí
+                  </p>
                 </div>
 
                 <div>
