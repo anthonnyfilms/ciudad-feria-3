@@ -116,6 +116,9 @@ backend:
       - working: true
         agent: "main"
         comment: "JWT auth implemented and working correctly"
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin login endpoint working perfectly. Credentials admin/admin123 authenticate successfully and return valid JWT Bearer token for subsequent API calls."
 
   - task: "Admin statistics endpoint /api/admin/estadisticas"
     implemented: true
