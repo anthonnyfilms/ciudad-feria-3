@@ -44,6 +44,7 @@ const AdminDashboard = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard', active: true },
     { icon: Calendar, label: 'Eventos', path: '/admin/eventos' },
+    { icon: Settings, label: 'Categorías', path: '/admin/categorias' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];
 

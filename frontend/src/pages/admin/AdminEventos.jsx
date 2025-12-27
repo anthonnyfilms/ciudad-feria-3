@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Plus, Edit, Trash2, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Plus, Edit, Trash2, ExternalLink, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -131,6 +131,7 @@ const AdminEventos = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Calendar, label: 'Eventos', path: '/admin/eventos', active: true },
+    { icon: Tag, label: 'Categorías', path: '/admin/categorias' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];
 
