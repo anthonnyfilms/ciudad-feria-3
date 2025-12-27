@@ -221,7 +221,7 @@ const AdminDashboard = () => {
                 </motion.div>
               )}
 
-                {/* Quick Actions */}
+              {/* Quick Actions */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Link to="/admin/eventos">
                   <motion.div
