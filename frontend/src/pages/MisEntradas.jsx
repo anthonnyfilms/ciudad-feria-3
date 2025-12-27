@@ -130,13 +130,23 @@ const MisEntradas = () => {
                   data-testid={`entrada-card-${index}`}
                 >
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* QR Code */}
+                    {/* QR Code o Estado Pendiente */}
                     <div className="flex justify-center items-center">
-                      <img
-                        src={entrada.codigo_qr}
-                        alt="Código QR"
-                        className="w-48 h-48 rounded-xl"
-                      />
+                      {entrada.estado_pago === 'aprobado' ? (
+                        <img
+                          src={entrada.codigo_qr}
+                          alt="Código QR"
+                          className="w-48 h-48 rounded-xl"
+                        />
+                      ) : (
+                        <div className="w-48 h-48 rounded-xl glass-card flex flex-col items-center justify-center text-center p-4">
+                          <div className="text-4xl mb-3">⏳</div>
+                          <p className="text-accent font-bold mb-2">Pendiente de Aprobación</p>
+                          <p className="text-foreground/60 text-xs">
+                            Tu pago está siendo verificado. Te notificaremos cuando sea aprobado.
+                          </p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Detalles */}
@@ -157,27 +167,39 @@ const MisEntradas = () => {
                             Comprado: {new Date(entrada.fecha_compra).toLocaleDateString()}
                           </span>
                         </div>
+                        {entrada.asiento && (
+                          <div className="text-foreground/80 font-medium">
+                            🪑 Asiento: {entrada.asiento}
+                          </div>
+                        )}
                         <div className="flex items-center gap-2">
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                            entrada.usado
-                              ? 'bg-accent/20 text-accent'
-                              : 'bg-primary/20 text-primary'
+                            entrada.estado_pago === 'aprobado'
+                              ? 'bg-primary/20 text-primary'
+                              : 'bg-accent/20 text-accent'
                           }`}>
-                            {entrada.usado ? 'Entrada Usada' : 'Entrada Válida'}
+                            {entrada.estado_pago === 'aprobado' ? '✅ Pago Aprobado' : '⏳ Pago Pendiente'}
                           </span>
+                          {entrada.usado && entrada.estado_pago === 'aprobado' && (
+                            <span className="px-3 py-1 rounded-full text-sm font-medium bg-secondary/20 text-secondary">
+                              ✓ Entrada Usada
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      <div className="pt-4">
-                        <button
-                          onClick={() => descargarEntrada(entrada)}
-                          className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold hover:shadow-lg transition-all"
-                          data-testid={`download-button-${index}`}
-                        >
-                          <Download className="w-4 h-4" />
-                          Descargar QR
-                        </button>
-                      </div>
+                      {entrada.estado_pago === 'aprobado' && (
+                        <div className="pt-4">
+                          <button
+                            onClick={() => descargarEntrada(entrada)}
+                            className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-bold hover:shadow-lg transition-all"
+                            data-testid={`download-button-${index}`}
+                          >
+                            <Download className="w-4 h-4" />
+                            Descargar QR
+                          </button>
+                        </div>
+                      )}
 
                       <p className="text-xs text-foreground/40 pt-4 border-t border-white/10">
                         ID: {entrada.id}
