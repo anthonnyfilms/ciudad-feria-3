@@ -9,34 +9,37 @@ const API = `${BACKEND_URL}/api`;
 
 const Eventos = () => {
   const [eventos, setEventos] = useState([]);
+  const [categorias, setCategorias] = useState([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('todas');
   const [loading, setLoading] = useState(true);
 
-  const categorias = [
-    { id: 'todas', label: 'Todos' },
-    { id: 'conciertos', label: 'Conciertos' },
-    { id: 'culturales', label: 'Culturales' },
-    { id: 'deportivos', label: 'Deportivos' },
-  ];
-
   useEffect(() => {
-    const cargarEventos = async () => {
-      try {
-        const response = await axios.get(`${API}/eventos`);
-        setEventos(response.data);
-      } catch (error) {
-        console.error('Error cargando eventos:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    cargarEventos();
+    cargarDatos();
   }, []);
+
+  const cargarDatos = async () => {
+    try {
+      const [eventosRes, categoriasRes] = await Promise.all([
+        axios.get(`${API}/eventos`),
+        axios.get(`${API}/categorias`)
+      ]);
+      setEventos(eventosRes.data);
+      setCategorias(categoriasRes.data);
+    } catch (error) {
+      console.error('Error cargando datos:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const eventosFiltrados = categoriaSeleccionada === 'todas'
     ? eventos
     : eventos.filter(e => e.categoria === categoriaSeleccionada);
+
+  const categoriasConTodas = [
+    { id: 'todas', nombre: 'Todos', slug: 'todas' },
+    ...categorias
+  ];
 
   if (loading) {
     return (
@@ -67,18 +70,24 @@ const Eventos = () => {
 
         {/* Filtros */}
         <div className="flex flex-wrap justify-center gap-4 mb-12">
-          {categorias.map((categoria) => (
+          {categoriasConTodas.map((categoria) => (
             <button
-              key={categoria.id}
-              onClick={() => setCategoriaSeleccionada(categoria.id)}
-              data-testid={`filter-${categoria.id}`}
+              key={categoria.slug}
+              onClick={() => setCategoriaSeleccionada(categoria.slug)}
+              data-testid={`filter-${categoria.slug}`}
               className={`px-8 py-3 rounded-full font-medium transition-all ${
-                categoriaSeleccionada === categoria.id
+                categoriaSeleccionada === categoria.slug
                   ? 'bg-primary text-primary-foreground'
                   : 'glass-card text-foreground/70 hover:text-foreground hover:border-primary/50'
               }`}
+              style={
+                categoriaSeleccionada === categoria.slug && categoria.id !== 'todas'
+                  ? { backgroundColor: categoria.color, color: '#020617' }
+                  : {}
+              }
             >
-              {categoria.label}
+              {categoria.icono && <span className="mr-2">{categoria.icono}</span>}
+              {categoria.nombre}
             </button>
           ))}
         </div>
