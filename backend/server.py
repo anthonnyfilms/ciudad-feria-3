@@ -312,13 +312,19 @@ async def comprar_entrada(compra: CompraEntrada):
     entradas = []
     for i in range(compra.cantidad):
         entrada_id = str(uuid.uuid4())
+        
+        # Asignar asiento si está especificado
+        asiento = compra.asientos[i] if compra.asientos and i < len(compra.asientos) else None
+        
         datos_entrada = {
             "entrada_id": entrada_id,
             "evento_id": compra.evento_id,
             "nombre_evento": evento['nombre'],
             "nombre_comprador": compra.nombre_comprador,
             "email_comprador": compra.email_comprador,
-            "numero_entrada": i + 1
+            "telefono_comprador": compra.telefono_comprador,
+            "numero_entrada": i + 1,
+            "asiento": asiento
         }
         
         hash_validacion = generar_hash(datos_entrada)
@@ -332,13 +338,20 @@ async def comprar_entrada(compra: CompraEntrada):
             nombre_evento=evento['nombre'],
             nombre_comprador=compra.nombre_comprador,
             email_comprador=compra.email_comprador,
+            telefono_comprador=compra.telefono_comprador,
             codigo_qr=qr_image,
-            hash_validacion=hash_validacion
+            qr_payload=qr_payload,
+            asiento=asiento,
+            estado_pago="pendiente",
+            metodo_pago=compra.metodo_pago,
+            comprobante_pago=compra.comprobante_pago,
+            hash_validacion=hash_validacion,
+            estado_entrada="fuera",
+            historial_acceso=[]
         )
         
         doc_entrada = entrada.model_dump()
         doc_entrada['fecha_compra'] = doc_entrada['fecha_compra'].isoformat()
-        doc_entrada['qr_payload'] = qr_payload
         await db.entradas.insert_one(doc_entrada)
         entradas.append(entrada.model_dump())
     
@@ -349,8 +362,9 @@ async def comprar_entrada(compra: CompraEntrada):
     
     return {
         "success": True,
-        "message": f"{compra.cantidad} entrada(s) comprada(s) exitosamente",
-        "entradas": entradas
+        "message": f"{compra.cantidad} entrada(s) en espera de aprobación",
+        "entradas": entradas,
+        "requiere_aprobacion": True
     }
 
 @api_router.post("/validar-entrada")
