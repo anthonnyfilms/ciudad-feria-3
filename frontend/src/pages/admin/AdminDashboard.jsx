@@ -115,6 +115,7 @@ const AdminDashboard = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-primary"></div>
               </div>
             ) : (
+              <>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
