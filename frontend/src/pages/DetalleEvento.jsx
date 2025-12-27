@@ -21,6 +21,8 @@ const DetalleEvento = () => {
   const [telefono, setTelefono] = useState('');
   const [metodoPago, setMetodoPago] = useState('');
   const [comprobante, setComprobante] = useState('');
+  const [comprobanteFile, setComprobanteFile] = useState(null);
+  const [uploadingComprobante, setUploadingComprobante] = useState(false);
   const [metodosPago, setMetodosPago] = useState([]);
   const [mostrarEntradas, setMostrarEntradas] = useState(false);
   const [entradasCompradas, setEntradasCompradas] = useState([]);
@@ -52,6 +54,39 @@ const DetalleEvento = () => {
     } catch (error) {
       console.error('Error cargando métodos de pago:', error);
     }
+  };
+
+  const handleComprobanteFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validar tamaño (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('El archivo es muy grande. Máximo 5MB');
+      return;
+    }
+
+    // Validar tipo
+    if (!file.type.startsWith('image/')) {
+      toast.error('Solo se permiten imágenes');
+      return;
+    }
+
+    setUploadingComprobante(true);
+    
+    // Convertir a base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setComprobante(reader.result);
+      setComprobanteFile(file);
+      setUploadingComprobante(false);
+      toast.success('Comprobante cargado');
+    };
+    reader.onerror = () => {
+      toast.error('Error al cargar el archivo');
+      setUploadingComprobante(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCompra = async (e) => {
@@ -321,18 +356,28 @@ const DetalleEvento = () => {
 
                 <div>
                   <label className="block text-foreground/80 mb-2 font-medium">
-                    Comprobante de Pago (URL de imagen)
+                    Comprobante de Pago *
                   </label>
                   <input
-                    type="url"
-                    value={comprobante}
-                    onChange={(e) => setComprobante(e.target.value)}
-                    className="w-full bg-input border border-border rounded-xl px-6 py-4 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    placeholder="https://ejemplo.com/comprobante.jpg"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleComprobanteFile}
+                    className="w-full bg-input border border-border rounded-xl px-6 py-4 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/80"
+                    disabled={uploadingComprobante}
                   />
                   <p className="text-xs text-foreground/50 mt-2">
-                    Sube tu comprobante a un servicio como ImgBB o Imgur y pega la URL aquí
+                    Sube una foto o captura de tu comprobante de pago (máx. 5MB)
                   </p>
+                  {comprobante && (
+                    <div className="mt-3 p-4 rounded-xl bg-primary/5 border border-primary/20">
+                      <img 
+                        src={comprobante} 
+                        alt="Comprobante" 
+                        className="max-h-40 rounded-lg mx-auto"
+                      />
+                      <p className="text-xs text-primary text-center mt-2">✓ Comprobante cargado</p>
+                    </div>
+                  )}
                 </div>
 
                 <div>
