@@ -127,8 +127,22 @@ class CompraEntrada(BaseModel):
     evento_id: str
     nombre_comprador: str
     email_comprador: str
+    telefono_comprador: Optional[str] = None
     cantidad: int
     precio_total: float
+    metodo_pago: str
+    comprobante_pago: Optional[str] = None
+    asientos: Optional[List[str]] = []
+
+class AprobarCompra(BaseModel):
+    entrada_ids: List[str]
+    
+class MetodoPagoCreate(BaseModel):
+    nombre: str
+    tipo: str
+    informacion: str
+    icono: Optional[str] = None
+    orden: int = 0
 
 class Entrada(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -137,11 +151,30 @@ class Entrada(BaseModel):
     nombre_evento: str
     nombre_comprador: str
     email_comprador: str
+    telefono_comprador: Optional[str] = None
     fecha_compra: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     codigo_qr: str
+    qr_payload: str = ""
+    asiento: Optional[str] = None
+    mesa: Optional[str] = None
+    estado_pago: str = "pendiente"
+    metodo_pago: Optional[str] = None
+    comprobante_pago: Optional[str] = None
     usado: bool = False
     fecha_uso: Optional[datetime] = None
+    estado_entrada: str = "fuera"
+    historial_acceso: List[dict] = []
     hash_validacion: str
+
+class MetodoPago(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    nombre: str
+    tipo: str
+    informacion: str
+    icono: Optional[str] = None
+    activo: bool = True
+    orden: int = 0
 
 # Auth Functions
 def verify_password(plain_password, hashed_password):
