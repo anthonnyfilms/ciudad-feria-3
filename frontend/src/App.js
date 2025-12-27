@@ -7,6 +7,8 @@ import ValidarEntrada from './pages/ValidarEntrada';
 import AdminLogin from './pages/admin/AdminLogin';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminEventos from './pages/admin/AdminEventos';
+import AdminCategorias from './pages/admin/AdminCategorias';
+import AdminCompras from './pages/admin/AdminCompras';
 import AdminMetodosPago from './pages/admin/AdminMetodosPago';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion';
 import Navbar from './components/Navbar';
