@@ -167,8 +167,25 @@ const AdminEventos = () => {
     { icon: Tag, label: 'Categorías', path: '/admin/categorias' },
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras' },
     { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
+    { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];
+
+  const getTipoAsientosLabel = (tipo) => {
+    switch (tipo) {
+      case 'mesas': return 'Mesas';
+      case 'mixto': return 'Mixto';
+      default: return 'General';
+    }
+  };
+
+  const getTipoAsientosIcon = (tipo) => {
+    switch (tipo) {
+      case 'mesas': return <Table2 className="w-3 h-3" />;
+      case 'mixto': return <Users className="w-3 h-3" />;
+      default: return null;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
