@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users, CreditCard, Shield, Table2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -89,8 +89,10 @@ const AdminCompras = () => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Calendar, label: 'Eventos', path: '/admin/eventos' },
     { icon: Tag, label: 'Categorías', path: '/admin/categorias' },
+    { icon: Table2, label: 'Categorías Mesas', path: '/admin/categorias-mesas' },
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras', active: true },
-    { icon: Users, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
+    { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
+    { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];
 
