@@ -180,6 +180,218 @@ class CiudadFeriaAPITester:
         
         return success, data
 
+    # ==================== SEAT SELECTION SYSTEM TESTS ====================
+    
+    def test_get_seats(self, evento_id):
+        """Test getting seats configuration for an event"""
+        success, data = self.run_test(f"Get Seats ({evento_id[:8]}...)", "GET", f"eventos/{evento_id}/asientos", 200)
+        
+        if success:
+            # Check required fields
+            required_fields = [
+                'evento_id', 
+                'tipo_asientos', 
+                'configuracion', 
+                'capacidad_total', 
+                'asientos_ocupados', 
+                'asientos_pendientes',
+                'disponibles'
+            ]
+            
+            missing_fields = []
+            for field in required_fields:
+                if field not in data:
+                    missing_fields.append(field)
+            
+            if missing_fields:
+                self.log_test("Seats Response Fields Check", False, f"Missing fields: {missing_fields}")
+                return False, data
+            else:
+                print(f"   ✅ All required seat fields present")
+                print(f"   🪑 Seat Type: {data.get('tipo_asientos', 'unknown')}")
+                print(f"   🪑 Total Capacity: {data.get('capacidad_total', 0)}")
+                print(f"   🪑 Occupied: {len(data.get('asientos_ocupados', []))}")
+                print(f"   🪑 Pending: {len(data.get('asientos_pendientes', []))}")
+                print(f"   🪑 Available: {data.get('disponibles', 0)}")
+                return True, data
+        
+        return success, data
+
+    def test_configure_seats(self, evento_id, token):
+        """Test configuring seats for an event (admin only)"""
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {token}'
+        }
+        
+        # Test table-based configuration
+        config_data = {
+            "tipo_asientos": "mesas",
+            "configuracion": {
+                "mesas": [
+                    {"id": "1", "nombre": "Mesa VIP 1", "sillas": 10, "precio": 50, "categoria": "VIP"},
+                    {"id": "2", "nombre": "Mesa VIP 2", "sillas": 10, "precio": 50, "categoria": "VIP"}
+                ]
+            }
+        }
+        
+        success, data = self.run_test(f"Configure Seats ({evento_id[:8]}...)", "POST", f"admin/eventos/{evento_id}/configurar-asientos", 200, config_data, headers)
+        
+        if success:
+            if data.get('success') and data.get('capacidad_total') == 20:
+                print(f"   ✅ Seat configuration successful")
+                print(f"   🪑 Type: {data.get('tipo', 'unknown')}")
+                print(f"   🪑 Total Capacity: {data.get('capacidad_total', 0)}")
+                print(f"   🪑 Seats Created: {data.get('asientos_creados', 0)}")
+                return True, data
+            else:
+                self.log_test("Seat Configuration Check", False, f"Expected success=True and capacity=20, got {data}")
+                return False, data
+        
+        return success, data
+
+    def test_reserve_seats(self, evento_id):
+        """Test reserving specific seats"""
+        reservation_data = {
+            "evento_id": evento_id,
+            "asientos": ["M1-S1", "M1-S2"],
+            "session_id": "test-session-123"
+        }
+        
+        success, data = self.run_test(f"Reserve Seats ({evento_id[:8]}...)", "POST", "reservar-asientos", 200, reservation_data)
+        
+        if success:
+            if data.get('success') and data.get('asientos_reservados'):
+                print(f"   ✅ Seat reservation successful")
+                print(f"   🪑 Session ID: {data.get('session_id', 'unknown')}")
+                print(f"   🪑 Reserved Seats: {data.get('asientos_reservados', [])}")
+                print(f"   🪑 Expires In: {data.get('expira_en', 0)} seconds")
+                return True, data
+            else:
+                self.log_test("Seat Reservation Check", False, f"Expected success=True and reserved seats, got {data}")
+                return False, data
+        
+        return success, data
+
+    def test_purchase_with_seats(self, evento_id, evento_nombre):
+        """Test purchasing tickets with specific seat selection"""
+        compra_data = {
+            "evento_id": evento_id,
+            "nombre_comprador": "Maria Rodriguez",
+            "email_comprador": "maria@example.com",
+            "telefono_comprador": "1234567890",
+            "cantidad": 2,
+            "metodo_pago": "efectivo",
+            "asientos": ["M1-S3", "M1-S4"]
+        }
+        
+        success, data = self.run_test(f"Purchase with Seats ({evento_nombre[:20]}...)", "POST", "comprar-entrada", 200, compra_data)
+        
+        if success and data.get('success'):
+            entradas = data.get('entradas', [])
+            if entradas and len(entradas) == 2:
+                # Check if seats are assigned correctly
+                seats_assigned = []
+                for entrada in entradas:
+                    if entrada.get('asiento'):
+                        seats_assigned.append(entrada['asiento'])
+                
+                if len(seats_assigned) == 2 and "M1-S3" in seats_assigned and "M1-S4" in seats_assigned:
+                    print(f"   ✅ Purchase with seats successful")
+                    print(f"   🪑 Seats Assigned: {seats_assigned}")
+                    print(f"   🎫 Tickets Created: {len(entradas)}")
+                    return True, entradas
+                else:
+                    self.log_test("Seat Assignment Check", False, f"Expected seats M1-S3, M1-S4, got {seats_assigned}")
+                    return False, data
+            else:
+                self.log_test("Ticket Creation with Seats Check", False, f"Expected 2 tickets, got {len(entradas)}")
+                return False, data
+        
+        return success, data
+
+    def test_verify_occupied_seats(self, evento_id):
+        """Test that purchased seats appear as occupied"""
+        success, data = self.test_get_seats(evento_id)
+        
+        if success:
+            asientos_pendientes = data.get('asientos_pendientes', [])
+            
+            # Check if our purchased seats are in pending list
+            expected_seats = ["M1-S3", "M1-S4"]
+            found_seats = []
+            
+            for seat in expected_seats:
+                if seat in asientos_pendientes:
+                    found_seats.append(seat)
+            
+            if len(found_seats) == 2:
+                print(f"   ✅ Occupied seats tracking working")
+                print(f"   🪑 Pending Seats: {found_seats}")
+                return True, data
+            else:
+                self.log_test("Occupied Seats Tracking", False, f"Expected seats {expected_seats} in pending, found {found_seats}")
+                return False, data
+        
+        return success, data
+
+    def test_seat_system_complete(self, token):
+        """Run complete seat selection system test suite"""
+        print("\n🪑 SEAT SELECTION SYSTEM TESTING")
+        print("=" * 50)
+        
+        # Get events to test with
+        success, eventos = self.test_list_eventos()
+        if not success or not eventos:
+            print("❌ Cannot test seat system without events")
+            return False
+        
+        # Use first event for testing
+        evento = eventos[0]
+        evento_id = evento.get('id')
+        evento_nombre = evento.get('nombre', 'Unknown Event')
+        
+        if not evento_id:
+            print("❌ No valid event ID found")
+            return False
+        
+        print(f"\n🎪 Testing with event: {evento_nombre}")
+        
+        # Test 1: Get initial seats state
+        print(f"\n1️⃣ Testing initial seats state...")
+        success1, _ = self.test_get_seats(evento_id)
+        
+        # Test 2: Configure seats (admin)
+        print(f"\n2️⃣ Testing seat configuration...")
+        success2, _ = self.test_configure_seats(evento_id, token)
+        
+        # Test 3: Get seats after configuration
+        print(f"\n3️⃣ Testing seats after configuration...")
+        success3, _ = self.test_get_seats(evento_id)
+        
+        # Test 4: Reserve seats
+        print(f"\n4️⃣ Testing seat reservation...")
+        success4, _ = self.test_reserve_seats(evento_id)
+        
+        # Test 5: Purchase with specific seats
+        print(f"\n5️⃣ Testing purchase with seat selection...")
+        success5, _ = self.test_purchase_with_seats(evento_id, evento_nombre)
+        
+        # Test 6: Verify occupied seats tracking
+        print(f"\n6️⃣ Testing occupied seats tracking...")
+        success6, _ = self.test_verify_occupied_seats(evento_id)
+        
+        # Summary
+        all_tests = [success1, success2, success3, success4, success5, success6]
+        passed_tests = sum(all_tests)
+        total_tests = len(all_tests)
+        
+        print(f"\n🪑 SEAT SYSTEM TEST SUMMARY:")
+        print(f"   Tests Passed: {passed_tests}/{total_tests}")
+        print(f"   Success Rate: {(passed_tests/total_tests*100):.1f}%")
+        
+        return passed_tests == total_tests
+
 def main():
     print("🎪 Ciudad Feria API Testing Suite")
     print("=" * 50)
