@@ -22,8 +22,7 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
   useEffect(() => {
     const config = generarConfiguracion();
     onConfiguracionChange?.(tipoAsientos, config);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tipoAsientos, capacidadGeneral, mesas, entradasGeneralesMixto]);
+  }, [tipoAsientos, capacidadGeneral, mesas, entradasGeneralesMixto, onConfiguracionChange]);
 
   const agregarMesa = () => {
     const nuevaMesa = {
