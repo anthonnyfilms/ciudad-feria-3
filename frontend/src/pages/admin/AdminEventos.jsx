@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Plus, Edit, Trash2, ExternalLink, Tag, ShoppingCart, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Plus, Edit, Trash2, ExternalLink, Tag, ShoppingCart, CreditCard, Shield, Table2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
+import ConfiguradorAsientos from '../../components/ConfiguradorAsientos';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -16,6 +17,7 @@ const AdminEventos = () => {
   const [loading, setLoading] = useState(true);
   const [mostrarModal, setMostrarModal] = useState(false);
   const [eventoEditando, setEventoEditando] = useState(null);
+  const [pasoActual, setPasoActual] = useState(1); // 1: Info básica, 2: Asientos
   const [formData, setFormData] = useState({
     nombre: '',
     descripcion: '',
@@ -26,7 +28,9 @@ const AdminEventos = () => {
     precio: 0,
     imagen: '',
     link_externo: '',
-    asientos_disponibles: 1000
+    asientos_disponibles: 1000,
+    tipo_asientos: 'general',
+    configuracion_asientos: null
   });
 
   useEffect(() => {
