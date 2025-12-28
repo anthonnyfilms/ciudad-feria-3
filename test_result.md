@@ -267,10 +267,7 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus:
-    - "Sistema de asientos - Configurador Admin"
-    - "Sistema de asientos - Selector Usuario"
-    - "Compra con asientos seleccionados"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
@@ -284,3 +281,5 @@ agent_communication:
     message: "✅ FRONTEND TESTING COMPLETE: Both bug fixes verified successful. Admin dashboard fully functional - login works, statistics display correctly (6 events, 11 tickets, 1 approved, 3 pending), all UI elements present. QR scanner implementation working correctly - proper camera permission handling with appropriate error messages when access denied (expected in test environment). Navigation and logout functionality working. No critical JavaScript errors detected. Both tasks ready for production."
   - agent: "main"
     message: "IMPLEMENTED: Complete seat selection system with 3 modes: 1) General - simple capacity counter, 2) Mesas - tables with configurable chairs around each, 3) Mixto - tables + general admission. Backend endpoints added: GET /api/eventos/{id}/asientos, POST /api/admin/eventos/{id}/configurar-asientos, POST /api/reservar-asientos. Frontend components: ConfiguradorAsientos.jsx (admin), SelectorAsientos.jsx (user purchase flow). Visual map shows tables with chairs around them, green=available, red=occupied. Admin can set name, chairs per table, price, category for each table."
+  - agent: "testing"
+    message: "✅ SEAT SELECTION SYSTEM TESTING COMPLETE: All 3 backend seat system tasks fully functional. Comprehensive testing performed on all endpoints: 1) GET /api/eventos/{id}/asientos - returns all required fields (tipo_asientos, configuracion, capacidad_total, asientos_ocupados, asientos_pendientes, disponibles). 2) POST /api/admin/eventos/{id}/configurar-asientos - successfully configures table-based seating with proper capacity calculation and seat document creation. 3) POST /api/reservar-asientos - reserves specific seats with session tracking. 4) POST /api/comprar-entrada with seat selection - correctly assigns specific seats to tickets and tracks occupancy. 5) Occupied seat tracking working perfectly - purchased seats appear in asientos_pendientes list and prevent double-booking. Test suite: 15/15 tests passed (100% success rate). All seat selection functionality ready for production."
