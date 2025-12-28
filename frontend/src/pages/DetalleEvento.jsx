@@ -310,10 +310,11 @@ const DetalleEvento = () => {
               {evento.tipo_asientos && evento.tipo_asientos !== 'general' && pasoCompra === 1 && (
                 <div className="space-y-6">
                   <p className="text-foreground/70 text-center mb-4">
-                    Selecciona tus asientos en el mapa
+                    Selecciona tus sillas en el mapa
                   </p>
                   <SelectorAsientos
                     eventoId={id}
+                    precioBase={evento.precio}
                     onSeleccionChange={handleSeleccionAsientos}
                     maxSeleccion={10}
                   />
