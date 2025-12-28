@@ -47,6 +47,7 @@ const AdminDashboard = () => {
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard', active: true },
     { icon: Calendar, label: 'Eventos', path: '/admin/eventos' },
     { icon: Tag, label: 'Categorías', path: '/admin/categorias' },
+    { icon: Table2, label: 'Categorías Mesas', path: '/admin/categorias-mesas' },
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras' },
     { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
