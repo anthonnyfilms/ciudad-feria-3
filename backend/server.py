@@ -788,6 +788,188 @@ async def eliminar_categoria_admin(categoria_id: str, current_user: str = Depend
         raise HTTPException(status_code=404, detail="Categoría no encontrada")
     return {"message": "Categoría eliminada exitosamente"}
 
+# ==================== SISTEMA DE ASIENTOS ====================
+
+@api_router.get("/eventos/{evento_id}/asientos")
+async def obtener_asientos_evento(evento_id: str):
+    """Obtener el mapa de asientos de un evento con estado de ocupación"""
+    evento = await db.eventos.find_one({"id": evento_id}, {"_id": 0})
+    if not evento:
+        raise HTTPException(status_code=404, detail="Evento no encontrado")
+    
+    # Obtener asientos ocupados (entradas no rechazadas)
+    entradas = await db.entradas.find(
+        {"evento_id": evento_id, "estado_pago": {"$ne": "rechazado"}},
+        {"asiento": 1, "mesa": 1, "estado_pago": 1, "_id": 0}
+    ).to_list(1000)
+    
+    asientos_ocupados = []
+    asientos_pendientes = []
+    
+    for entrada in entradas:
+        if entrada.get('asiento'):
+            if entrada.get('estado_pago') == 'aprobado':
+                asientos_ocupados.append(entrada['asiento'])
+            else:
+                asientos_pendientes.append(entrada['asiento'])
+    
+    return {
+        "evento_id": evento_id,
+        "tipo_asientos": evento.get('tipo_asientos', 'general'),
+        "configuracion": evento.get('configuracion_asientos'),
+        "capacidad_total": evento.get('asientos_disponibles', 0),
+        "asientos_ocupados": asientos_ocupados,
+        "asientos_pendientes": asientos_pendientes,
+        "disponibles": evento.get('asientos_disponibles', 0) - len(asientos_ocupados) - len(asientos_pendientes)
+    }
+
+@api_router.post("/admin/eventos/{evento_id}/configurar-asientos")
+async def configurar_asientos_evento(
+    evento_id: str, 
+    request: Request,
+    current_user: str = Depends(get_current_user)
+):
+    """Configurar el sistema de asientos para un evento"""
+    body = await request.json()
+    
+    evento = await db.eventos.find_one({"id": evento_id})
+    if not evento:
+        raise HTTPException(status_code=404, detail="Evento no encontrado")
+    
+    tipo_asientos = body.get('tipo_asientos', 'general')
+    configuracion = body.get('configuracion', {})
+    
+    # Calcular capacidad total según configuración
+    capacidad_total = 0
+    
+    if tipo_asientos == 'general':
+        capacidad_total = configuracion.get('capacidad', 100)
+    
+    elif tipo_asientos == 'mesas':
+        mesas = configuracion.get('mesas', [])
+        for mesa in mesas:
+            capacidad_total += mesa.get('sillas', 10)
+    
+    elif tipo_asientos == 'mixto':
+        # Mesas + entradas generales
+        mesas = configuracion.get('mesas', [])
+        for mesa in mesas:
+            capacidad_total += mesa.get('sillas', 10)
+        capacidad_total += configuracion.get('entradas_generales', 0)
+    
+    # Actualizar evento
+    await db.eventos.update_one(
+        {"id": evento_id},
+        {
+            "$set": {
+                "tipo_asientos": tipo_asientos,
+                "configuracion_asientos": configuracion,
+                "asientos_disponibles": capacidad_total
+            }
+        }
+    )
+    
+    # Crear/actualizar documento de asientos
+    await db.asientos.delete_many({"evento_id": evento_id})
+    
+    asientos_docs = []
+    
+    if tipo_asientos == 'mesas':
+        mesas = configuracion.get('mesas', [])
+        for mesa in mesas:
+            mesa_id = mesa.get('id', str(uuid.uuid4()))
+            num_sillas = mesa.get('sillas', 10)
+            precio = mesa.get('precio', evento.get('precio', 0))
+            categoria = mesa.get('categoria', 'General')
+            
+            for silla_num in range(1, num_sillas + 1):
+                asiento_id = f"M{mesa_id}-S{silla_num}"
+                asientos_docs.append({
+                    "id": asiento_id,
+                    "evento_id": evento_id,
+                    "tipo": "mesa",
+                    "mesa_id": mesa_id,
+                    "mesa_nombre": mesa.get('nombre', f'Mesa {mesa_id}'),
+                    "silla_numero": silla_num,
+                    "categoria": categoria,
+                    "precio": precio,
+                    "estado": "disponible"
+                })
+    
+    elif tipo_asientos == 'mixto':
+        # Crear asientos de mesas
+        mesas = configuracion.get('mesas', [])
+        for mesa in mesas:
+            mesa_id = mesa.get('id', str(uuid.uuid4()))
+            num_sillas = mesa.get('sillas', 10)
+            precio = mesa.get('precio', evento.get('precio', 0))
+            categoria = mesa.get('categoria', 'VIP')
+            
+            for silla_num in range(1, num_sillas + 1):
+                asiento_id = f"M{mesa_id}-S{silla_num}"
+                asientos_docs.append({
+                    "id": asiento_id,
+                    "evento_id": evento_id,
+                    "tipo": "mesa",
+                    "mesa_id": mesa_id,
+                    "mesa_nombre": mesa.get('nombre', f'Mesa {mesa_id}'),
+                    "silla_numero": silla_num,
+                    "categoria": categoria,
+                    "precio": precio,
+                    "estado": "disponible"
+                })
+        
+        # Entradas generales no necesitan documento individual
+    
+    if asientos_docs:
+        await db.asientos.insert_many(asientos_docs)
+    
+    return {
+        "success": True,
+        "message": f"Configuración de asientos actualizada",
+        "tipo": tipo_asientos,
+        "capacidad_total": capacidad_total,
+        "asientos_creados": len(asientos_docs)
+    }
+
+@api_router.post("/reservar-asientos")
+async def reservar_asientos(request: Request):
+    """Reservar asientos temporalmente durante el proceso de compra"""
+    body = await request.json()
+    evento_id = body.get('evento_id')
+    asientos_ids = body.get('asientos', [])
+    session_id = body.get('session_id', str(uuid.uuid4()))
+    
+    if not evento_id:
+        raise HTTPException(status_code=400, detail="evento_id requerido")
+    
+    evento = await db.eventos.find_one({"id": evento_id}, {"_id": 0})
+    if not evento:
+        raise HTTPException(status_code=404, detail="Evento no encontrado")
+    
+    # Verificar disponibilidad de asientos
+    if evento.get('tipo_asientos') != 'general' and asientos_ids:
+        for asiento_id in asientos_ids:
+            # Verificar si ya está ocupado
+            entrada_existente = await db.entradas.find_one({
+                "evento_id": evento_id,
+                "asiento": asiento_id,
+                "estado_pago": {"$ne": "rechazado"}
+            })
+            
+            if entrada_existente:
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"El asiento {asiento_id} ya no está disponible"
+                )
+    
+    return {
+        "success": True,
+        "session_id": session_id,
+        "asientos_reservados": asientos_ids,
+        "expira_en": 600  # 10 minutos
+    }
+
 app.include_router(api_router)
 
 app.add_middleware(
