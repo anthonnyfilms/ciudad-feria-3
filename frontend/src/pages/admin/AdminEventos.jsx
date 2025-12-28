@@ -335,137 +335,188 @@ const AdminEventos = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="glass-card p-8 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
           >
+            {/* Indicador de pasos */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <button
+                type="button"
+                onClick={() => setPasoActual(1)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                  pasoActual === 1 ? 'bg-primary text-primary-foreground' : 'glass-card text-foreground/60'
+                }`}
+              >
+                <span className="w-6 h-6 rounded-full bg-current/20 flex items-center justify-center text-sm">1</span>
+                Info Básica
+              </button>
+              <div className="w-8 h-0.5 bg-foreground/20"></div>
+              <button
+                type="button"
+                onClick={() => setPasoActual(2)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition-all ${
+                  pasoActual === 2 ? 'bg-primary text-primary-foreground' : 'glass-card text-foreground/60'
+                }`}
+              >
+                <span className="w-6 h-6 rounded-full bg-current/20 flex items-center justify-center text-sm">2</span>
+                Asientos
+              </button>
+            </div>
+
             <h3 className="text-2xl font-heading font-bold text-foreground mb-6">
               {eventoEditando ? 'Editar Evento' : 'Crear Nuevo Evento'}
             </h3>
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-foreground/80 mb-2 font-medium">Nombre del Evento</label>
-                <input
-                  type="text"
-                  value={formData.nombre}
-                  onChange={(e) => setFormData({...formData, nombre: e.target.value})}
-                  className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  required
+              {/* Paso 1: Info Básica */}
+              {pasoActual === 1 && (
+                <>
+                  <div>
+                    <label className="block text-foreground/80 mb-2 font-medium">Nombre del Evento</label>
+                    <input
+                      type="text"
+                      value={formData.nombre}
+                      onChange={(e) => setFormData({...formData, nombre: e.target.value})}
+                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-foreground/80 mb-2 font-medium">Descripción</label>
+                    <textarea
+                      value={formData.descripcion}
+                      onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
+                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      rows="3"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-foreground/80 mb-2 font-medium">Fecha</label>
+                      <input
+                        type="date"
+                        value={formData.fecha}
+                        onChange={(e) => setFormData({...formData, fecha: e.target.value})}
+                        className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-foreground/80 mb-2 font-medium">Hora</label>
+                      <input
+                        type="time"
+                        value={formData.hora}
+                        onChange={(e) => setFormData({...formData, hora: e.target.value})}
+                        className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-foreground/80 mb-2 font-medium">Ubicación</label>
+                    <input
+                      type="text"
+                      value={formData.ubicacion}
+                      onChange={(e) => setFormData({...formData, ubicacion: e.target.value})}
+                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-foreground/80 mb-2 font-medium">Categoría</label>
+                      <select
+                        value={formData.categoria}
+                        onChange={(e) => setFormData({...formData, categoria: e.target.value})}
+                        className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      >
+                        {categorias.map((cat) => (
+                          <option key={cat.id} value={cat.slug}>{cat.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-foreground/80 mb-2 font-medium">Precio Base ($)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={formData.precio}
+                        onChange={(e) => setFormData({...formData, precio: parseFloat(e.target.value)})}
+                        className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-foreground/80 mb-2 font-medium">URL de la Imagen</label>
+                    <input
+                      type="url"
+                      value={formData.imagen}
+                      onChange={(e) => setFormData({...formData, imagen: e.target.value})}
+                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      required
+                      placeholder="https://..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-foreground/80 mb-2 font-medium">Link Externo (Opcional)</label>
+                    <input
+                      type="url"
+                      value={formData.link_externo}
+                      onChange={(e) => setFormData({...formData, link_externo: e.target.value})}
+                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      placeholder="https://..."
+                    />
+                  </div>
+                </>
+              )}
+
+              {/* Paso 2: Configuración de Asientos */}
+              {pasoActual === 2 && (
+                <ConfiguradorAsientos
+                  eventoId={eventoEditando?.id}
+                  configuracionInicial={{
+                    tipo: formData.tipo_asientos,
+                    capacidad: formData.asientos_disponibles,
+                    mesas: formData.configuracion_asientos?.mesas || [],
+                    entradas_generales: formData.configuracion_asientos?.entradas_generales || 0
+                  }}
+                  onConfiguracionChange={handleConfiguracionAsientos}
                 />
-              </div>
-              <div>
-                <label className="block text-foreground/80 mb-2 font-medium">Descripción</label>
-                <textarea
-                  value={formData.descripcion}
-                  onChange={(e) => setFormData({...formData, descripcion: e.target.value})}
-                  className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  rows="3"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-foreground/80 mb-2 font-medium">Fecha</label>
-                  <input
-                    type="date"
-                    value={formData.fecha}
-                    onChange={(e) => setFormData({...formData, fecha: e.target.value})}
-                    className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-foreground/80 mb-2 font-medium">Hora</label>
-                  <input
-                    type="time"
-                    value={formData.hora}
-                    onChange={(e) => setFormData({...formData, hora: e.target.value})}
-                    className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-foreground/80 mb-2 font-medium">Ubicación</label>
-                <input
-                  type="text"
-                  value={formData.ubicacion}
-                  onChange={(e) => setFormData({...formData, ubicacion: e.target.value})}
-                  className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  required
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-foreground/80 mb-2 font-medium">Categoría</label>
-                  <select
-                    value={formData.categoria}
-                    onChange={(e) => setFormData({...formData, categoria: e.target.value})}
-                    className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  >
-                    {categorias.map((cat) => (
-                      <option key={cat.id} value={cat.slug}>{cat.nombre}</option>
-                    ))}
-                  </select>
-                  {categorias.length === 0 && (
-                    <p className="text-xs text-accent mt-1">
-                      No hay categorías. <Link to="/admin/categorias" className="underline">Crear una</Link>
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="block text-foreground/80 mb-2 font-medium">Precio ($)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.precio}
-                    onChange={(e) => setFormData({...formData, precio: parseFloat(e.target.value)})}
-                    className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-foreground/80 mb-2 font-medium">URL de la Imagen</label>
-                <input
-                  type="url"
-                  value={formData.imagen}
-                  onChange={(e) => setFormData({...formData, imagen: e.target.value})}
-                  className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  required
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <label className="block text-foreground/80 mb-2 font-medium">Link Externo (Opcional)</label>
-                <input
-                  type="url"
-                  value={formData.link_externo}
-                  onChange={(e) => setFormData({...formData, link_externo: e.target.value})}
-                  className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <label className="block text-foreground/80 mb-2 font-medium">Asientos Disponibles</label>
-                <input
-                  type="number"
-                  value={formData.asientos_disponibles}
-                  onChange={(e) => setFormData({...formData, asientos_disponibles: parseInt(e.target.value)})}
-                  className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  required
-                />
-              </div>
+              )}
+
+              {/* Botones de navegación */}
               <div className="flex gap-4 pt-4">
                 <button
                   type="button"
-                  onClick={() => { setMostrarModal(false); setEventoEditando(null); resetForm(); }}
+                  onClick={() => { 
+                    if (pasoActual === 1) {
+                      setMostrarModal(false); 
+                      setEventoEditando(null); 
+                      resetForm();
+                    } else {
+                      setPasoActual(1);
+                    }
+                  }}
                   className="flex-1 px-6 py-3 rounded-full glass-card font-bold text-foreground/80 hover:text-foreground transition-all"
                 >
-                  Cancelar
+                  {pasoActual === 1 ? 'Cancelar' : 'Anterior'}
                 </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold btn-glow"
-                >
-                  {eventoEditando ? 'Actualizar' : 'Crear'} Evento
-                </button>
+                
+                {pasoActual === 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => setPasoActual(2)}
+                    className="flex-1 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold btn-glow"
+                  >
+                    Siguiente: Asientos
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    className="flex-1 px-6 py-3 rounded-full bg-primary text-primary-foreground font-bold btn-glow"
+                  >
+                    {eventoEditando ? 'Actualizar' : 'Crear'} Evento
+                  </button>
+                )}
               </div>
             </form>
           </motion.div>
