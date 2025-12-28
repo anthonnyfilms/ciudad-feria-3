@@ -285,12 +285,18 @@ const AdminEventos = () => {
                       <span className="text-xs px-3 py-1 rounded-full bg-primary/20 text-primary">
                         {evento.categoria}
                       </span>
+                      {evento.tipo_asientos && evento.tipo_asientos !== 'general' && (
+                        <span className="text-xs px-3 py-1 rounded-full bg-secondary/20 text-secondary flex items-center gap-1">
+                          {getTipoAsientosIcon(evento.tipo_asientos)}
+                          {getTipoAsientosLabel(evento.tipo_asientos)}
+                        </span>
+                      )}
                       {evento.link_externo && (
                         <a
                           href={evento.link_externo}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs px-3 py-1 rounded-full bg-secondary/20 text-secondary flex items-center gap-1 hover:bg-secondary/30 transition-colors"
+                          className="text-xs px-3 py-1 rounded-full bg-accent/20 text-accent flex items-center gap-1 hover:bg-accent/30 transition-colors"
                         >
                           <ExternalLink className="w-3 h-3" />
                           Link
