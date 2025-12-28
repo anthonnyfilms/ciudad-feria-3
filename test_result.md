@@ -260,6 +260,42 @@ frontend:
     priority: "medium"
     needs_retesting: false
 
+  - task: "Admin Seat Configurator (ConfiguradorAsientos)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/ConfiguradorAsientos.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin seat configurator fully functional. Successfully accessed admin panel, navigated to event creation, and verified 2-step process (Info Básica → Asientos). All 3 seat types available (General, Mesas, Mixto). Table configuration working: can add multiple tables, configure name/chairs/price/category for each, dynamic capacity calculation updates correctly. Event creation successful with seat configuration."
+
+  - task: "User Seat Selector (SelectorAsientos)"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/components/SelectorAsientos.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: User seat selection interface working perfectly. Visual seat map displays correctly with: 1) Stage indicator (🎭 ESCENARIO), 2) Tables arranged with chairs in circular formation around each table, 3) Perfect legend with color coding (Green=Disponible, Yellow=Seleccionado, Orange=Pendiente, Red=Ocupado), 4) Individual numbered chairs (1,2,3...) that are clickable for selection, 5) Real-time seat selection with visual feedback. Both table seating and general seating modes operational."
+
+  - task: "Purchase flow with seat selection"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/DetalleEvento.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Complete purchase flow with seat selection working. Event detail pages accessible from public events listing. Purchase form includes all required fields: buyer name, email, payment method selection, file upload for payment proof. Seat selection integrates seamlessly with purchase process. Form validation and total calculation working correctly. Purchase button enabled when all required fields completed."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
