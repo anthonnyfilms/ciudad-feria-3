@@ -8,12 +8,6 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
   const [mesas, setMesas] = useState(configuracionInicial?.mesas || []);
   const [entradasGeneralesMixto, setEntradasGeneralesMixto] = useState(configuracionInicial?.entradas_generales || 0);
 
-  useEffect(() => {
-    // Emitir cambios cuando se actualice la configuración
-    const config = generarConfiguracion();
-    onConfiguracionChange?.(tipoAsientos, config);
-  }, [tipoAsientos, capacidadGeneral, mesas, entradasGeneralesMixto]);
-
   const generarConfiguracion = () => {
     if (tipoAsientos === 'general') {
       return { capacidad: capacidadGeneral };
@@ -24,6 +18,12 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
     }
     return {};
   };
+
+  useEffect(() => {
+    const config = generarConfiguracion();
+    onConfiguracionChange?.(tipoAsientos, config);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tipoAsientos, capacidadGeneral, mesas, entradasGeneralesMixto]);
 
   const agregarMesa = () => {
     const nuevaMesa = {
