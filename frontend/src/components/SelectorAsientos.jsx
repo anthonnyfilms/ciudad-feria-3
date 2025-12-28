@@ -139,57 +139,103 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
     );
   }
 
-  // Modo General
+  // Modo General - Con categorías de entradas
   if (datosAsientos?.tipo_asientos === 'general') {
+    const categoriasGenerales = datosAsientos?.configuracion?.categorias_generales || [
+      { nombre: 'General', precio: precioBase, capacidad: datosAsientos?.capacidad_total || 100 }
+    ];
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
+        className="space-y-4"
       >
-        <div className="glass-card p-6 rounded-2xl">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <h3 className="font-bold text-foreground">Entrada General</h3>
-              <p className="text-sm text-foreground/60">Sin asiento asignado</p>
-            </div>
-            <div className="ml-auto text-right">
-              <p className="text-2xl font-bold text-primary">${precioBase}</p>
-              <p className="text-xs text-foreground/50">por entrada</p>
-            </div>
-          </div>
+        {categoriasGenerales.map((cat, idx) => {
+          const cantidadSeleccionada = seleccionPorCategoria[cat.nombre] || 0;
+          
+          return (
+            <div key={idx} className="glass-card p-6 rounded-2xl">
+              <div className="flex items-center gap-3 mb-4">
+                <div 
+                  className="w-10 h-10 rounded-full flex items-center justify-center"
+                  style={{ backgroundColor: (cat.color || getCategoriaColor(cat.nombre)) + '20' }}
+                >
+                  <Users className="w-5 h-5" style={{ color: cat.color || getCategoriaColor(cat.nombre) }} />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-foreground">{cat.nombre}</h3>
+                  <p className="text-sm text-foreground/60">Sin asiento asignado</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-primary">${cat.precio || precioBase}</p>
+                  <p className="text-xs text-foreground/50">por entrada</p>
+                </div>
+              </div>
 
-          <div className="flex items-center justify-between mt-6">
-            <span className="text-foreground/70">Cantidad:</span>
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => setCantidadGeneral(Math.max(1, cantidadGeneral - 1))}
-                className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors"
-              >
-                -
-              </button>
-              <span className="text-2xl font-bold text-primary w-12 text-center">{cantidadGeneral}</span>
-              <button
-                type="button"
-                onClick={() => setCantidadGeneral(Math.min(maxSeleccion, cantidadGeneral + 1))}
-                className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors"
-              >
-                +
-              </button>
-            </div>
-          </div>
+              <div className="flex items-center justify-between mt-4">
+                <span className="text-foreground/70">Cantidad:</span>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => actualizarCantidadCategoria(cat.nombre, -1, cat.precio || precioBase)}
+                    className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors"
+                  >
+                    -
+                  </button>
+                  <span className="text-2xl font-bold text-primary w-12 text-center">
+                    {cantidadSeleccionada}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => actualizarCantidadCategoria(cat.nombre, 1, cat.precio || precioBase)}
+                    className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
 
-          <div className="mt-4 pt-4 border-t border-white/10">
-            <div className="flex justify-between items-center">
-              <span className="text-foreground/70">Total:</span>
-              <span className="text-2xl font-bold text-primary">${(precioBase * cantidadGeneral).toFixed(2)}</span>
+              {cantidadSeleccionada > 0 && (
+                <div className="mt-3 pt-3 border-t border-white/10 flex justify-between">
+                  <span className="text-foreground/70">Subtotal:</span>
+                  <span className="font-bold text-primary">
+                    ${((cat.precio || precioBase) * cantidadSeleccionada).toFixed(2)}
+                  </span>
+                </div>
+              )}
             </div>
-          </div>
-        </div>
+          );
+        })}
+
+        {/* Resumen total */}
+        {Object.values(seleccionPorCategoria).some(v => v > 0) && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card p-6 rounded-2xl bg-primary/5 border border-primary/20"
+          >
+            <h4 className="font-bold text-foreground mb-4">📋 Detalle de tu compra</h4>
+            
+            {Object.entries(seleccionPorCategoria).filter(([_, cant]) => cant > 0).map(([nombre, cantidad]) => {
+              const cat = categoriasGenerales.find(c => c.nombre === nombre);
+              const precio = cat?.precio || precioBase;
+              return (
+                <div key={nombre} className="flex justify-between items-center py-2 border-b border-white/5">
+                  <span className="text-foreground">{nombre} x{cantidad}</span>
+                  <span className="font-bold text-foreground">${(precio * cantidad).toFixed(2)}</span>
+                </div>
+              );
+            })}
+            
+            <div className="flex justify-between items-center pt-4 mt-2">
+              <span className="text-lg font-bold text-foreground">TOTAL:</span>
+              <span className="text-2xl font-black text-primary">
+                ${calcularTotalGeneral().toFixed(2)}
+              </span>
+            </div>
+          </motion.div>
+        )}
 
         <div className="text-center text-foreground/50 text-sm">
           Disponibles: {datosAsientos.disponibles} de {datosAsientos.capacidad_total}
