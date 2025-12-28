@@ -439,8 +439,17 @@ def main():
     if admin_success and admin_token:
         # Test 8: Admin Statistics
         tester.test_admin_estadisticas(admin_token)
+        
+        # Test 9: SEAT SELECTION SYSTEM (NEW)
+        print("\n🪑 Testing Seat Selection System...")
+        seat_system_success = tester.test_seat_system_complete(admin_token)
+        
+        if seat_system_success:
+            print("✅ Seat selection system fully functional!")
+        else:
+            print("❌ Seat selection system has issues")
     else:
-        print("❌ Cannot test admin statistics without valid token")
+        print("❌ Cannot test admin functionality without valid token")
     
     # Test Category Filtering (check if events have categories)
     print(f"\n📊 Event Categories Found:")
