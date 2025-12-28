@@ -1,8 +1,37 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Calendar, MapPin, Ticket, Shield } from 'lucide-react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const Home = () => {
+  const [config, setConfig] = useState({
+    descripcion_inicio: 'Vive la tradición, cultura y alegría de la feria más importante del Táchira. Asegura tus entradas digitales con códigos QR únicos e incopiables.',
+    banner_principal: 'https://images.unsplash.com/photo-1750323313940-a267ef7d89fa?crop=entropy&cs=srgb&fm=jpg&q=85'
+  });
+
+  useEffect(() => {
+    cargarConfiguracion();
+  }, []);
+
+  const cargarConfiguracion = async () => {
+    try {
+      const response = await axios.get(`${API}/configuracion`);
+      if (response.data) {
+        setConfig(prev => ({
+          ...prev,
+          descripcion_inicio: response.data.descripcion_inicio || prev.descripcion_inicio,
+          banner_principal: response.data.banner_principal || prev.banner_principal
+        }));
+      }
+    } catch (error) {
+      console.error('Error cargando configuración:', error);
+    }
+  };
+
   const features = [
     {
       icon: Calendar,
