@@ -5,6 +5,7 @@ import axios from 'axios';
 import { Calendar, MapPin, Ticket, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../components/ui/sonner';
+import SelectorAsientos from '../components/SelectorAsientos';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -26,6 +27,8 @@ const DetalleEvento = () => {
   const [metodosPago, setMetodosPago] = useState([]);
   const [mostrarEntradas, setMostrarEntradas] = useState(false);
   const [entradasCompradas, setEntradasCompradas] = useState([]);
+  const [seleccionAsientos, setSeleccionAsientos] = useState({ tipo: 'general', cantidad: 1, asientos: [] });
+  const [pasoCompra, setPasoCompra] = useState(1); // 1: Asientos, 2: Datos personales
 
   useEffect(() => {
     cargarEvento();
