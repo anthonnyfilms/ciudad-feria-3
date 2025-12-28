@@ -337,8 +337,26 @@ async def comprar_entrada(compra: CompraEntrada):
     if not evento:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
     
-    if evento['asientos_disponibles'] < compra.cantidad:
-        raise HTTPException(status_code=400, detail="No hay suficientes asientos disponibles")
+    tipo_asientos = evento.get('tipo_asientos', 'general')
+    
+    # Validar según tipo de asientos
+    if tipo_asientos == 'general':
+        if evento['asientos_disponibles'] < compra.cantidad:
+            raise HTTPException(status_code=400, detail="No hay suficientes entradas disponibles")
+    else:
+        # Para mesas o mixto, verificar asientos específicos
+        if compra.asientos:
+            for asiento_id in compra.asientos:
+                entrada_existente = await db.entradas.find_one({
+                    "evento_id": compra.evento_id,
+                    "asiento": asiento_id,
+                    "estado_pago": {"$ne": "rechazado"}
+                })
+                if entrada_existente:
+                    raise HTTPException(
+                        status_code=400, 
+                        detail=f"El asiento {asiento_id} ya no está disponible"
+                    )
     
     entradas = []
     for i in range(compra.cantidad):
@@ -349,6 +367,14 @@ async def comprar_entrada(compra: CompraEntrada):
         
         # Asignar asiento si está especificado
         asiento = compra.asientos[i] if compra.asientos and i < len(compra.asientos) else None
+        
+        # Extraer información de mesa si aplica
+        mesa_info = None
+        if asiento and asiento.startswith('M'):
+            # Formato: M{mesa_id}-S{silla}
+            parts = asiento.split('-')
+            if len(parts) == 2:
+                mesa_info = parts[0].replace('M', '')
         
         datos_entrada = {
             "entrada_id": entrada_id,
@@ -377,6 +403,7 @@ async def comprar_entrada(compra: CompraEntrada):
             codigo_qr=qr_image,
             qr_payload=qr_payload,
             asiento=asiento,
+            mesa=mesa_info,
             estado_pago="pendiente",
             metodo_pago=compra.metodo_pago,
             comprobante_pago=compra.comprobante_pago,
@@ -387,17 +414,20 @@ async def comprar_entrada(compra: CompraEntrada):
         
         doc_entrada = entrada.model_dump()
         doc_entrada['fecha_compra'] = doc_entrada['fecha_compra'].isoformat()
-        doc_entrada['codigo_alfanumerico'] = codigo_alfanumerico  # Guardar el código
+        doc_entrada['codigo_alfanumerico'] = codigo_alfanumerico
+        doc_entrada['categoria_asiento'] = compra.categoria_asiento
         await db.entradas.insert_one(doc_entrada)
         
         entrada_dict = entrada.model_dump()
-        entrada_dict['codigo_alfanumerico'] = codigo_alfanumerico  # Incluir en respuesta
+        entrada_dict['codigo_alfanumerico'] = codigo_alfanumerico
         entradas.append(entrada_dict)
     
-    await db.eventos.update_one(
-        {"id": compra.evento_id},
-        {"$inc": {"asientos_disponibles": -compra.cantidad}}
-    )
+    # Solo decrementar para entradas generales
+    if tipo_asientos == 'general':
+        await db.eventos.update_one(
+            {"id": compra.evento_id},
+            {"$inc": {"asientos_disponibles": -compra.cantidad}}
+        )
     
     return {
         "success": True,
