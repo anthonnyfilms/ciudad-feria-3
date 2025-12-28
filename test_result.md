@@ -303,7 +303,11 @@ metadata:
   run_ui: true
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Admin Configuration - Editable home description"
+    - "Admin Configuration - WhatsApp setup and floating button"
+    - "Event Creation - Image upload by file"
+    - "Seat Categories Management - Create/delete custom categories"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
