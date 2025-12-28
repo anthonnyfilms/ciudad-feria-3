@@ -1,12 +1,65 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Users, Table2, Ticket, Save } from 'lucide-react';
+import { Plus, Trash2, Users, Table2, Ticket, Save, Settings } from 'lucide-react';
+import axios from 'axios';
+
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+const API = `${BACKEND_URL}/api`;
 
 const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionChange }) => {
   const [tipoAsientos, setTipoAsientos] = useState(configuracionInicial?.tipo || 'general');
   const [capacidadGeneral, setCapacidadGeneral] = useState(configuracionInicial?.capacidad || 100);
   const [mesas, setMesas] = useState(configuracionInicial?.mesas || []);
   const [entradasGeneralesMixto, setEntradasGeneralesMixto] = useState(configuracionInicial?.entradas_generales || 0);
+  const [categoriasMesas, setCategoriasMesas] = useState([]);
+  const [mostrarGestionCategorias, setMostrarGestionCategorias] = useState(false);
+  const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '', color: '#10B981' });
+
+  useEffect(() => {
+    cargarCategoriasMesas();
+  }, []);
+
+  const cargarCategoriasMesas = async () => {
+    try {
+      const response = await axios.get(`${API}/categorias-mesas`);
+      setCategoriasMesas(response.data);
+    } catch (error) {
+      console.error('Error cargando categorías de mesas:', error);
+      // Usar categorías por defecto si falla
+      setCategoriasMesas([
+        { id: '1', nombre: 'General', color: '#10B981' },
+        { id: '2', nombre: 'VIP', color: '#F59E0B' },
+        { id: '3', nombre: 'Premium', color: '#8B5CF6' }
+      ]);
+    }
+  };
+
+  const agregarCategoriaMesa = async () => {
+    if (!nuevaCategoria.nombre.trim()) return;
+    
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.post(`${API}/admin/categorias-mesas`, nuevaCategoria, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCategoriasMesas([...categoriasMesas, response.data]);
+      setNuevaCategoria({ nombre: '', color: '#10B981' });
+    } catch (error) {
+      console.error('Error creando categoría:', error);
+    }
+  };
+
+  const eliminarCategoriaMesa = async (categoriaId) => {
+    try {
+      const token = localStorage.getItem('admin_token');
+      await axios.delete(`${API}/admin/categorias-mesas/${categoriaId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setCategoriasMesas(categoriasMesas.filter(c => c.id !== categoriaId));
+    } catch (error) {
+      console.error('Error eliminando categoría:', error);
+    }
+  };
 
   const generarConfiguracion = () => {
     if (tipoAsientos === 'general') {
