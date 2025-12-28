@@ -150,6 +150,28 @@ const AdminConfiguracion = () => {
             </div>
           ) : (
             <div className="space-y-8">
+              {/* Descripción de Inicio */}
+              <div className="glass-card p-8 rounded-3xl">
+                <h3 className="text-2xl font-heading font-bold text-foreground mb-6 flex items-center gap-3">
+                  ✏️ Texto de Inicio
+                </h3>
+                <div>
+                  <label className="block text-foreground/80 mb-2 font-medium">
+                    Descripción de la Página Principal
+                  </label>
+                  <textarea
+                    value={config.descripcion_inicio || ''}
+                    onChange={(e) => setConfig({...config, descripcion_inicio: e.target.value})}
+                    className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    rows="3"
+                    placeholder="Escribe la descripción que verán los visitantes..."
+                  />
+                  <p className="text-xs text-foreground/50 mt-2">
+                    Este texto aparecerá debajo del título en la página de inicio
+                  </p>
+                </div>
+              </div>
+
               {/* Banner y Logo */}
               <div className="glass-card p-8 rounded-3xl">
                 <h3 className="text-2xl font-heading font-bold text-foreground mb-6 flex items-center gap-3">
