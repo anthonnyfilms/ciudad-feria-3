@@ -14,6 +14,11 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
   const [categoriasMesas, setCategoriasMesas] = useState([]);
   const [mostrarGestionCategorias, setMostrarGestionCategorias] = useState(false);
   const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '', color: '#10B981' });
+  // Categorías de entradas generales
+  const [categoriasGenerales, setCategoriasGenerales] = useState(configuracionInicial?.categorias_generales || [
+    { nombre: 'General', precio: 0, capacidad: 100, color: '#10B981' }
+  ]);
+  const [nuevaCategoriaGeneral, setNuevaCategoriaGeneral] = useState({ nombre: '', precio: 0, capacidad: 100, color: '#10B981' });
 
   useEffect(() => {
     cargarCategoriasMesas();
