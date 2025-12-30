@@ -125,6 +125,22 @@ const AdminCompras = () => {
     window.open(`${API}/entrada/${entradaId}/imagen`, '_blank');
   };
 
+  const handleEliminarEntrada = async (entradaId) => {
+    if (!window.confirm('¿Estás seguro de eliminar esta entrada? Esta acción no se puede deshacer.')) return;
+
+    const token = localStorage.getItem('admin_token');
+    try {
+      await axios.delete(`${API}/admin/entradas/${entradaId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Entrada eliminada');
+      cargarDatos();
+    } catch (error) {
+      console.error('Error eliminando entrada:', error);
+      toast.error(error.response?.data?.detail || 'Error al eliminar entrada');
+    }
+  };
+
   const handleRechazar = async (entradaIds) => {
     if (!window.confirm('¿Estás seguro de rechazar esta compra? Se eliminará permanentemente.')) return;
 
