@@ -213,11 +213,14 @@ backend:
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "NEW: Implemented ticket image generation endpoint GET /api/entrada/{id}/imagen. Uses PIL to generate PNG image with event background, QR code positioned according to admin config, and buyer info panel. Returns downloadable image."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Ticket image generation working perfectly. GET /api/entrada/{id}/imagen correctly returns 403 for unapproved tickets and generates valid PNG images (20,268 bytes) for approved tickets. Content-Type: image/png confirmed. Security validation working - unapproved tickets properly blocked."
 
   - task: "Aprobar y enviar email endpoint"
     implemented: true
