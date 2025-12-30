@@ -368,6 +368,30 @@ frontend:
         agent: "main"
         comment: "New feature implemented - category management panel in seat configurator with create/delete functionality"
 
+  - task: "Ticket Designer with drag-drop QR positioning"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/admin/AdminDisenoEntrada.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "IMPROVED: Enhanced ticket designer with better drag-drop QR positioning, touch support for mobile, visual feedback during drag, and better UX. Admin can upload background image and position QR anywhere."
+
+  - task: "Admin Compras - Aprobar y Enviar Email"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/admin/AdminCompras.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: true
+        agent: "main"
+        comment: "NEW: Added 'Aprobar y Enviar' button to approve and send ticket by email, 'Descargar Entrada' to download ticket image, 'Reenviar Email' for approved tickets. Shows banner when email not configured."
+
 metadata:
   created_by: "main_agent"
   version: "1.0"
