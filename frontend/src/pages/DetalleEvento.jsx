@@ -333,19 +333,19 @@ const DetalleEvento = () => {
                       maxSeleccion={10}
                     />
                   
-                  {seleccionAsientos.asientos.length > 0 && (
-                    <motion.button
-                      type="button"
-                      onClick={() => setPasoCompra(2)}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      className="w-full bg-primary text-primary-foreground py-4 rounded-full font-bold text-lg"
-                    >
-                      Continuar ({seleccionAsientos.asientos.length} silla{seleccionAsientos.asientos.length > 1 ? 's' : ''} - ${seleccionAsientos.precioTotal?.toFixed(2) || '0.00'})
-                    </motion.button>
-                  )}
-                </div>
-              )}
+                    {seleccionAsientos.asientos.length > 0 && (
+                      <motion.button
+                        type="button"
+                        onClick={() => setPasoCompra(2)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full bg-primary text-primary-foreground py-4 rounded-full font-bold text-lg"
+                      >
+                        Continuar ({seleccionAsientos.asientos.length} silla{seleccionAsientos.asientos.length > 1 ? 's' : ''} - ${seleccionAsientos.precioTotal?.toFixed(2) || '0.00'})
+                      </motion.button>
+                    )}
+                  </div>
+                )}
 
               {/* Formulario de datos (Paso 2 para mesas, o directo para general) */}
               {(evento.tipo_asientos === 'general' || !evento.tipo_asientos || pasoCompra === 2) && (
