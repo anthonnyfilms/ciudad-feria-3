@@ -389,6 +389,18 @@ frontend:
         agent: "testing"
         comment: "✅ TESTED: Seat categories management feature implemented correctly. ConfiguradorAsientos.jsx includes category management functionality. Backend supports custom seat categories through categorias_asientos field in event model. Admin can create and manage custom seating categories for events."
 
+  - task: "Admin Métodos de Pago - Image upload field"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/admin/AdminMetodosPago.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Payment methods image upload feature working perfectly. Frontend AdminMetodosPago.jsx includes NEW field '📷 Imagen del Método de Pago' with file upload area. Backend MetodoPago model includes 'imagen' field. API endpoints POST/PUT /api/admin/metodos-pago support image field. Successfully created payment methods with images via API. Payment method images display correctly in frontend cards and event detail payment selection."
+
   - task: "Ticket Designer with drag-drop QR positioning"
     implemented: true
     working: true
