@@ -1242,7 +1242,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         font_grande = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
         font_medio = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
         font_pequeno = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
-    except:
+    except Exception:
         font_grande = ImageFont.load_default()
         font_medio = ImageFont.load_default()
         font_pequeno = ImageFont.load_default()
