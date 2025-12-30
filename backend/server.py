@@ -596,6 +596,57 @@ async def validar_entrada(request: Request):
             }
         }
 
+@api_router.post("/admin/regenerar-qr/{entrada_id}")
+async def regenerar_qr_entrada(entrada_id: str, current_admin: dict = Depends(get_current_admin)):
+    """Regenera el código QR de una entrada aprobada"""
+    entrada = await db.entradas.find_one({"id": entrada_id}, {"_id": 0})
+    if not entrada:
+        raise HTTPException(status_code=404, detail="Entrada no encontrada")
+    
+    if entrada.get('estado_pago') != 'aprobado':
+        raise HTTPException(status_code=400, detail="Solo se pueden regenerar QRs de entradas aprobadas")
+    
+    # Obtener evento
+    evento = await db.eventos.find_one({"id": entrada['evento_id']}, {"_id": 0})
+    
+    # Regenerar QR con los nuevos parámetros
+    datos_entrada = {
+        "entrada_id": entrada_id,
+        "evento_id": entrada['evento_id'],
+        "evento_nombre": evento['nombre'] if evento else entrada.get('nombre_evento', ''),
+        "nombre_comprador": entrada['nombre_comprador'],
+        "email_comprador": entrada['email_comprador'],
+        "fecha_compra": entrada.get('fecha_compra', datetime.now(timezone.utc).isoformat()),
+        "asiento": entrada.get('asiento'),
+        "categoria_asiento": entrada.get('categoria_asiento')
+    }
+    
+    qr_image, qr_payload = generar_qr_seguro(datos_entrada)
+    hash_validacion = generar_hash({
+        "entrada_id": entrada_id,
+        "evento_id": entrada['evento_id'],
+        "nombre_comprador": entrada['nombre_comprador'],
+        "email_comprador": entrada['email_comprador']
+    })
+    
+    # Actualizar entrada
+    await db.entradas.update_one(
+        {"id": entrada_id},
+        {
+            "$set": {
+                "codigo_qr": qr_image,
+                "qr_payload": qr_payload,
+                "hash_validacion": hash_validacion
+            }
+        }
+    )
+    
+    return {
+        "success": True,
+        "message": "QR regenerado exitosamente",
+        "entrada_id": entrada_id
+    }
+
 @api_router.get("/mis-entradas/{email}")
 async def obtener_mis_entradas(email: str):
     entradas = await db.entradas.find({"email_comprador": email}, {"_id": 0}).to_list(100)
