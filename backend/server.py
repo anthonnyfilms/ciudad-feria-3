@@ -180,6 +180,7 @@ class MetodoPagoCreate(BaseModel):
     tipo: str
     informacion: str
     icono: Optional[str] = None
+    imagen: Optional[str] = None  # URL o base64 de la imagen del método de pago
     orden: int = 0
 
 class Entrada(BaseModel):
@@ -211,6 +212,7 @@ class MetodoPago(BaseModel):
     tipo: str
     informacion: str
     icono: Optional[str] = None
+    imagen: Optional[str] = None  # URL o base64 de la imagen del método de pago
     activo: bool = True
     orden: int = 0
 
