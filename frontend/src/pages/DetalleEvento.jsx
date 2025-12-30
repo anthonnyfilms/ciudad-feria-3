@@ -495,6 +495,20 @@ const DetalleEvento = () => {
                   </div>
 
                   <div className="glass-card p-6 rounded-2xl">
+                    {/* Logo/Imagen del evento en resumen */}
+                    {evento.imagen && (
+                      <div className="mb-4 flex items-center gap-4">
+                        <img 
+                          src={evento.imagen} 
+                          alt={evento.nombre} 
+                          className="w-16 h-16 rounded-xl object-cover"
+                        />
+                        <div>
+                          <h4 className="font-bold text-foreground">{evento.nombre}</h4>
+                          <p className="text-xs text-foreground/60">{evento.fecha} - {evento.hora}</p>
+                        </div>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-foreground/70">Precio por entrada:</span>
                       <span className="text-foreground font-bold">${evento.precio}</span>
