@@ -383,11 +383,14 @@ frontend:
     file: "/app/frontend/src/pages/admin/AdminDisenoEntrada.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "IMPROVED: Enhanced ticket designer with better drag-drop QR positioning, touch support for mobile, visual feedback during drag, and better UX. Admin can upload background image and position QR anywhere."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin Diseño Entrada page loads perfectly. QR positioning interface fully functional with sliders for X/Y position and size controls. Preview area shows draggable QR code with visual feedback. 'Guardar Diseño' button present and working. Event selector dropdown operational. Upload interface for background images working. All drag-drop functionality and touch support operational."
 
   - task: "Admin Compras - Aprobar y Enviar Email"
     implemented: true
@@ -395,11 +398,14 @@ frontend:
     file: "/app/frontend/src/pages/admin/AdminCompras.jsx"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: true
         agent: "main"
         comment: "NEW: Added 'Aprobar y Enviar' button to approve and send ticket by email, 'Descargar Entrada' to download ticket image, 'Reenviar Email' for approved tickets. Shows banner when email not configured."
+      - working: true
+        agent: "testing"
+        comment: "✅ TESTED: Admin Compras page fully functional. Found 24 active purchases with approve buttons. Email configuration banner displays correctly (Gmail not configured). Filter dropdowns working for events and status. All purchase management functionality operational including approve/reject actions."
 
 metadata:
   created_by: "main_agent"
