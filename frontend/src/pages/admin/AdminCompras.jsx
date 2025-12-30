@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users, CreditCard, Shield, Table2 } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users, CreditCard, Shield, Table2, Mail, Download, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -17,10 +17,25 @@ const AdminCompras = () => {
   const [eventoFiltro, setEventoFiltro] = useState('');
   const [estadoFiltro, setEstadoFiltro] = useState('');
   const [comprobanteModal, setComprobanteModal] = useState(null);
+  const [emailConfigured, setEmailConfigured] = useState(false);
+  const [enviandoEmail, setEnviandoEmail] = useState(null);
 
   useEffect(() => {
     cargarDatos();
+    verificarEmailConfig();
   }, [eventoFiltro, estadoFiltro]);
+
+  const verificarEmailConfig = async () => {
+    try {
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.get(`${API}/admin/email-config`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setEmailConfigured(response.data.configurado);
+    } catch (error) {
+      console.error('Error verificando config email:', error);
+    }
+  };
 
   const cargarDatos = async () => {
     try {
@@ -59,6 +74,55 @@ const AdminCompras = () => {
       console.error('Error aprobando compra:', error);
       toast.error('Error al aprobar compra');
     }
+  };
+
+  const handleAprobarYEnviar = async (entradaIds) => {
+    const token = localStorage.getItem('admin_token');
+    setEnviandoEmail(entradaIds);
+    try {
+      const response = await axios.post(
+        `${API}/admin/aprobar-y-enviar`,
+        { entrada_ids: Array.isArray(entradaIds) ? entradaIds : [entradaIds] },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      if (response.data.emails_enviados > 0) {
+        toast.success(`✅ Aprobada y enviada por email (${response.data.emails_enviados} email(s))`);
+      } else if (!response.data.email_configurado) {
+        toast.warning('Aprobada pero el email no está configurado');
+      } else {
+        toast.warning('Aprobada pero hubo error al enviar email');
+      }
+      cargarDatos();
+    } catch (error) {
+      console.error('Error aprobando y enviando:', error);
+      toast.error('Error al aprobar compra');
+    } finally {
+      setEnviandoEmail(null);
+    }
+  };
+
+  const handleReenviarEmail = async (entradaId) => {
+    const token = localStorage.getItem('admin_token');
+    setEnviandoEmail(entradaId);
+    try {
+      await axios.post(
+        `${API}/admin/reenviar-entrada/${entradaId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success('✉️ Email reenviado exitosamente');
+      cargarDatos();
+    } catch (error) {
+      console.error('Error reenviando email:', error);
+      toast.error(error.response?.data?.detail || 'Error al reenviar email');
+    } finally {
+      setEnviandoEmail(null);
+    }
+  };
+
+  const handleDescargarEntrada = (entradaId) => {
+    window.open(`${API}/entrada/${entradaId}/imagen`, '_blank');
   };
 
   const handleRechazar = async (entradaIds) => {
