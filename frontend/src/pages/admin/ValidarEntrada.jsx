@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Html5Qrcode } from 'html5-qrcode';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CreditCard, CheckCircle, XCircle, Scan, Shield, Table2, Camera, RefreshCw, Menu, X, User, Clock } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CreditCard, CheckCircle, XCircle, Scan, Shield, Table2, Camera, RefreshCw, Menu, X, User, Clock BarChart3, } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -51,6 +51,7 @@ const ValidarEntrada = () => {
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras' },
     { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar', active: true },
+    { icon: BarChart3, label: 'Asistencia', path: '/admin/asistencia' },
     { icon: Tag, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];

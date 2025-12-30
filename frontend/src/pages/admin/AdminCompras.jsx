@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users, CreditCard, Shield, Table2, Mail, Download, Send, Trash2 } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users, CreditCard, Shield, Table2, Mail, Download, Send, Trash2 BarChart3, } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -173,6 +173,7 @@ const AdminCompras = () => {
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras', active: true },
     { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
+    { icon: BarChart3, label: 'Asistencia', path: '/admin/asistencia' },
     { icon: Tag, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: Users, label: 'Usuarios', path: '/admin/usuarios' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
