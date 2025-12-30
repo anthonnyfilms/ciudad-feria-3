@@ -68,13 +68,43 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
 
   const generarConfiguracion = () => {
     if (tipoAsientos === 'general') {
-      return { capacidad: capacidadGeneral };
+      return { 
+        capacidad: capacidadGeneral,
+        categorias_generales: categoriasGenerales 
+      };
     } else if (tipoAsientos === 'mesas') {
-      return { mesas };
+      return { 
+        mesas,
+        categorias_generales: categoriasGenerales 
+      };
     } else if (tipoAsientos === 'mixto') {
-      return { mesas, entradas_generales: entradasGeneralesMixto };
+      return { 
+        mesas, 
+        entradas_generales: entradasGeneralesMixto,
+        categorias_generales: categoriasGenerales 
+      };
     }
     return {};
+  };
+
+  // Funciones para zonas generales
+  const agregarCategoriaGeneral = () => {
+    if (!nuevaCategoriaGeneral.nombre.trim()) return;
+    setCategoriasGenerales([...categoriasGenerales, { 
+      ...nuevaCategoriaGeneral, 
+      id: Date.now().toString() 
+    }]);
+    setNuevaCategoriaGeneral({ nombre: '', precio: 0, capacidad: 100, color: '#10B981' });
+  };
+
+  const actualizarCategoriaGeneral = (index, campo, valor) => {
+    const nuevas = [...categoriasGenerales];
+    nuevas[index] = { ...nuevas[index], [campo]: valor };
+    setCategoriasGenerales(nuevas);
+  };
+
+  const eliminarCategoriaGeneral = (index) => {
+    setCategoriasGenerales(categoriasGenerales.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
