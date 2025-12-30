@@ -976,7 +976,7 @@ async def configurar_asientos_evento(
     
     return {
         "success": True,
-        "message": f"Configuración de asientos actualizada",
+        "message": "Configuración de asientos actualizada",
         "tipo": tipo_asientos,
         "capacidad_total": capacidad_total,
         "asientos_creados": len(asientos_docs)
