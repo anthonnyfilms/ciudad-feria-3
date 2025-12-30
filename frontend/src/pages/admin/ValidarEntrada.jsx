@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import axios from 'axios';
 import { Html5Qrcode } from 'html5-qrcode';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CreditCard, CheckCircle, XCircle, Scan, Shield, Table2, Camera, RefreshCw } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CreditCard, CheckCircle, XCircle, Scan, Shield, Table2, Camera, RefreshCw, Menu, X, User, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -16,8 +16,26 @@ const ValidarEntrada = () => {
   const [resultado, setResultado] = useState(null);
   const [modoEscaneo, setModoEscaneo] = useState('entrada');
   const [cameraError, setCameraError] = useState(null);
+  const [menuAbierto, setMenuAbierto] = useState(false);
+  const [userRole, setUserRole] = useState(null);
   const html5QrCodeRef = useRef(null);
-  const videoContainerRef = useRef(null);
+
+  useEffect(() => {
+    // Check user role
+    const token = localStorage.getItem('admin_token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        setUserRole(payload.role || 'admin');
+      } catch (e) {
+        setUserRole('admin');
+      }
+    }
+    
+    return () => {
+      stopScanner();
+    };
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
@@ -37,17 +55,16 @@ const ValidarEntrada = () => {
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
   ];
 
-  useEffect(() => {
-    return () => {
-      stopScanner();
-    };
-  }, []);
+  // Filter menu items for validator role
+  const visibleMenuItems = userRole === 'validador' 
+    ? menuItems.filter(item => item.path === '/admin/validar')
+    : menuItems;
 
   const stopScanner = async () => {
     if (html5QrCodeRef.current) {
       try {
         const state = html5QrCodeRef.current.getState();
-        if (state === 2) { // SCANNING state
+        if (state === 2) {
           await html5QrCodeRef.current.stop();
         }
         html5QrCodeRef.current = null;
@@ -62,15 +79,12 @@ const ValidarEntrada = () => {
     setResultado(null);
     setCameraError(null);
 
-    // Small delay to ensure DOM is ready
     await new Promise(resolve => setTimeout(resolve, 300));
 
     try {
-      // Create new instance
       html5QrCodeRef.current = new Html5Qrcode("qr-reader-container");
       
       const qrCodeSuccessCallback = async (decodedText) => {
-        // Stop scanning immediately after detecting
         await stopScanner();
         setEscaneando(false);
         await validarQR(decodedText);
@@ -78,49 +92,43 @@ const ValidarEntrada = () => {
 
       const config = { 
         fps: 10, 
-        qrbox: { width: 250, height: 250 },
+        qrbox: { width: 220, height: 220 },
         aspectRatio: 1.0
       };
 
-      // Try back camera first, then any camera
       try {
         await html5QrCodeRef.current.start(
           { facingMode: "environment" },
           config,
           qrCodeSuccessCallback,
-          (errorMessage) => {
-            // Ignore "No QR code found" messages
-          }
+          () => {}
         );
       } catch (err) {
-        console.log('Back camera failed, trying front camera:', err);
-        // Try front camera
         try {
           await html5QrCodeRef.current.start(
             { facingMode: "user" },
             config,
             qrCodeSuccessCallback,
-            (errorMessage) => {}
+            () => {}
           );
         } catch (err2) {
-          // Try any available camera
           const cameras = await Html5Qrcode.getCameras();
           if (cameras && cameras.length > 0) {
             await html5QrCodeRef.current.start(
               cameras[0].id,
               config,
               qrCodeSuccessCallback,
-              (errorMessage) => {}
+              () => {}
             );
           } else {
-            throw new Error('No se encontraron cámaras disponibles');
+            throw new Error('No se encontraron cámaras');
           }
         }
       }
     } catch (err) {
       console.error('Error starting scanner:', err);
       setCameraError(err.message || 'Error al iniciar la cámara');
-      toast.error('Error al iniciar la cámara: ' + (err.message || 'Verifica los permisos'));
+      toast.error('Error al iniciar la cámara');
       setEscaneando(false);
     }
   };
@@ -139,13 +147,11 @@ const ValidarEntrada = () => {
         playSound(true);
       } else {
         toast.error(response.data.mensaje);
-        if (response.data.tipo_alerta) {
-          playSound(false);
-        }
+        playSound(false);
       }
     } catch (error) {
       console.error('Error validando entrada:', error);
-      const mensajeError = error.response?.data?.detail || 'Error al validar la entrada';
+      const mensajeError = error.response?.data?.detail || 'Error al validar';
       setResultado({
         valido: false,
         mensaje: mensajeError,
@@ -172,7 +178,7 @@ const ValidarEntrada = () => {
         oscillator.start(audioContext.currentTime);
         oscillator.stop(audioContext.currentTime + 0.2);
       } else {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 2; i++) {
           setTimeout(() => {
             const osc = audioContext.createOscillator();
             const gain = audioContext.createGain();
@@ -180,10 +186,10 @@ const ValidarEntrada = () => {
             gain.connect(audioContext.destination);
             osc.frequency.value = 300;
             osc.type = 'square';
-            gain.gain.value = 0.5;
+            gain.gain.value = 0.4;
             osc.start(audioContext.currentTime);
-            osc.stop(audioContext.currentTime + 0.3);
-          }, i * 400);
+            osc.stop(audioContext.currentTime + 0.15);
+          }, i * 200);
         }
       }
     }
@@ -196,37 +202,93 @@ const ValidarEntrada = () => {
     setCameraError(null);
   };
 
+  // Mobile-optimized layout
   return (
     <div className="min-h-screen bg-background">
       <Toaster richColors position="top-center" />
       
-      {/* Header */}
+      {/* Mobile Header */}
       <header className="glass-card border-b border-white/10 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">🎪</span>
-              <div>
-                <h1 className="text-xl font-heading font-black text-primary">Panel Admin</h1>
-                <p className="text-xs text-foreground/50">Ciudad Feria 2026</p>
-              </div>
+        <div className="px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">🎪</span>
+            <div>
+              <h1 className="text-lg font-heading font-bold text-primary">Ciudad Feria</h1>
+              <p className="text-[10px] text-foreground/50">Validador de Entradas</p>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            {/* Mobile menu toggle */}
+            <button
+              onClick={() => setMenuAbierto(!menuAbierto)}
+              className="lg:hidden p-2 rounded-lg glass-card"
+            >
+              {menuAbierto ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+            
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-6 py-3 rounded-full glass-card hover:border-accent/50 transition-all text-foreground/80 hover:text-accent"
+              className="hidden lg:flex items-center gap-2 px-4 py-2 rounded-full glass-card hover:border-accent/50 transition-all text-foreground/80 text-sm"
             >
               <LogOut className="w-4 h-4" />
-              Cerrar Sesión
+              Salir
             </button>
           </div>
         </div>
       </header>
 
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {menuAbierto && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 z-40 lg:hidden"
+            onClick={() => setMenuAbierto(false)}
+          >
+            <motion.div
+              initial={{ x: -300 }}
+              animate={{ x: 0 }}
+              exit={{ x: -300 }}
+              className="w-64 h-full glass-card p-4"
+              onClick={e => e.stopPropagation()}
+            >
+              <nav className="space-y-2 mt-4">
+                {visibleMenuItems.map((item) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setMenuAbierto(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                      item.active
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-foreground/70 hover:bg-white/5'
+                    }`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                ))}
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-accent hover:bg-accent/10 transition-all"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="font-medium">Cerrar Sesión</span>
+                </button>
+              </nav>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 glass-card border-r border-white/10 min-h-screen p-6">
+        {/* Desktop Sidebar */}
+        <aside className="hidden lg:block w-64 glass-card border-r border-white/10 min-h-screen p-6">
           <nav className="space-y-2">
-            {menuItems.map((item) => (
+            {visibleMenuItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
@@ -243,154 +305,201 @@ const ValidarEntrada = () => {
           </nav>
         </aside>
 
-        {/* Main Content */}
-        <main className="flex-1 p-8">
-          <div className="max-w-4xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center mb-12"
-            >
-              <h1 className="text-5xl font-heading font-black text-primary glow-text mb-4">
-                Validar Entradas
-              </h1>
-              <p className="text-lg text-foreground/70">
-                Escanea el código QR para validar entradas
-              </p>
-            </motion.div>
-
-        {!escaneando && !resultado && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-12 rounded-3xl text-center"
-          >
-            <Scan className="w-24 h-24 text-primary mx-auto mb-6" />
-            <h2 className="text-2xl font-heading font-bold text-foreground mb-4">
-              Escanear Código QR
-            </h2>
-            <p className="text-foreground/70 mb-8">
-              Haz clic en el botón para iniciar el escaneo
-            </p>
-            <motion.button
-              onClick={iniciarEscaneo}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-primary text-primary-foreground px-12 py-5 rounded-full font-bold text-lg btn-glow"
-              data-testid="button-iniciar-escaneo"
-            >
-              Iniciar Escaneo
-            </motion.button>
-          </motion.div>
-        )}
-
-        {escaneando && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="glass-card p-6 rounded-3xl"
-          >
-            <div className="flex items-center gap-2 mb-4">
-              <Camera className="w-5 h-5 text-primary animate-pulse" />
-              <span className="text-foreground font-medium">Cámara activa - Apunta al código QR</span>
-            </div>
+        {/* Main Content - Mobile Optimized */}
+        <main className="flex-1 p-4 lg:p-8">
+          <div className="max-w-lg mx-auto">
             
-            {/* Video container with explicit dimensions */}
-            <div 
-              id="qr-reader-container" 
-              ref={videoContainerRef}
-              className="rounded-xl overflow-hidden mb-6 bg-black"
-              style={{ 
-                width: '100%', 
-                minHeight: '350px',
-                maxWidth: '500px',
-                margin: '0 auto'
-              }}
-            ></div>
-
-            {cameraError && (
-              <div className="bg-accent/20 border border-accent/50 rounded-xl p-4 mb-4 text-center">
-                <p className="text-accent font-medium">{cameraError}</p>
-                <p className="text-foreground/60 text-sm mt-2">
-                  Verifica que has dado permisos de cámara al navegador
-                </p>
-              </div>
-            )}
-
-            <div className="flex gap-3">
+            {/* Mode Toggle */}
+            <div className="flex gap-2 mb-6">
               <button
-                onClick={reiniciarEscaneo}
-                className="flex-1 glass-card px-6 py-4 rounded-full font-bold text-foreground hover:border-accent/50 transition-all flex items-center justify-center gap-2"
-                data-testid="button-cancelar-escaneo"
+                onClick={() => setModoEscaneo('entrada')}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                  modoEscaneo === 'entrada'
+                    ? 'bg-green-500 text-white'
+                    : 'glass-card text-foreground/70'
+                }`}
               >
-                <XCircle className="w-5 h-5" />
-                Cancelar
+                <CheckCircle className="w-4 h-4" />
+                Entrada
               </button>
               <button
-                onClick={async () => {
-                  await reiniciarEscaneo();
-                  setTimeout(() => iniciarEscaneo(), 500);
-                }}
-                className="flex-1 glass-card px-6 py-4 rounded-full font-bold text-foreground hover:border-primary/50 transition-all flex items-center justify-center gap-2"
+                onClick={() => setModoEscaneo('salida')}
+                className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
+                  modoEscaneo === 'salida'
+                    ? 'bg-orange-500 text-white'
+                    : 'glass-card text-foreground/70'
+                }`}
               >
-                <RefreshCw className="w-5 h-5" />
-                Reiniciar
+                <XCircle className="w-4 h-4" />
+                Salida
               </button>
             </div>
-          </motion.div>
-        )}
 
-        {resultado && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`glass-card p-12 rounded-3xl text-center ${
-              resultado.valido ? 'border-2 border-primary' : 'border-2 border-accent'
-            }`}
-            data-testid="resultado-validacion"
-          >
-            {resultado.valido ? (
-              <CheckCircle className="w-24 h-24 text-primary mx-auto mb-6" />
-            ) : (
-              <XCircle className="w-24 h-24 text-accent mx-auto mb-6" />
-            )}
-
-            <h2 className={`text-3xl font-heading font-bold mb-4 ${
-              resultado.valido ? 'text-primary' : 'text-accent'
-            }`}>
-              {resultado.valido ? 'Entrada Válida' : 'Entrada Inválida'}
-            </h2>
-
-            <p className="text-lg text-foreground/80 mb-8">
-              {resultado.mensaje}
-            </p>
-
-            {resultado.entrada && (
-              <div className="glass-card p-6 rounded-2xl mb-8 text-left">
-                <h3 className="text-xl font-bold text-foreground mb-4">Detalles de la Entrada</h3>
-                <div className="space-y-2 text-foreground/70">
-                  <p><strong>Evento:</strong> {resultado.entrada.nombre_evento}</p>
-                  <p><strong>Nombre:</strong> {resultado.entrada.nombre_comprador}</p>
-                  <p><strong>Email:</strong> {resultado.entrada.email_comprador}</p>
+            {/* Scanner Start Button */}
+            {!escaneando && !resultado && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card p-8 rounded-3xl text-center"
+              >
+                <div className="w-20 h-20 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Scan className="w-10 h-10 text-primary" />
                 </div>
-              </div>
+                <h2 className="text-xl font-heading font-bold text-foreground mb-2">
+                  Escanear QR
+                </h2>
+                <p className="text-foreground/60 text-sm mb-6">
+                  Presiona para activar la cámara
+                </p>
+                <motion.button
+                  onClick={iniciarEscaneo}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-primary text-primary-foreground py-4 rounded-2xl font-bold text-lg"
+                >
+                  <Camera className="w-5 h-5 inline mr-2" />
+                  Iniciar Escaneo
+                </motion.button>
+              </motion.div>
             )}
 
-            <motion.button
-              onClick={reiniciarEscaneo}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="bg-primary text-primary-foreground px-12 py-5 rounded-full font-bold text-lg btn-glow"
-              data-testid="button-escanear-otra"
-            >
-              Escanear Otra Entrada
-            </motion.button>
-          </motion.div>
-        )}
+            {/* Active Scanner */}
+            {escaneando && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="glass-card rounded-3xl overflow-hidden"
+              >
+                {/* Scanner Header */}
+                <div className="p-4 border-b border-white/10 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span className="text-foreground text-sm font-medium">Cámara activa</span>
+                  </div>
+                  <span className="text-xs text-foreground/50">
+                    {modoEscaneo === 'entrada' ? '🟢 Registrando entrada' : '🟠 Registrando salida'}
+                  </span>
+                </div>
+                
+                {/* Video Container */}
+                <div 
+                  id="qr-reader-container" 
+                  className="bg-black relative"
+                  style={{ 
+                    width: '100%', 
+                    minHeight: '300px',
+                    maxHeight: '60vh'
+                  }}
+                ></div>
+
+                {cameraError && (
+                  <div className="p-4 bg-accent/20 text-center">
+                    <p className="text-accent text-sm">{cameraError}</p>
+                  </div>
+                )}
+
+                {/* Scanner Controls */}
+                <div className="p-4 flex gap-3">
+                  <button
+                    onClick={reiniciarEscaneo}
+                    className="flex-1 py-3 rounded-xl glass-card font-medium text-foreground/80 flex items-center justify-center gap-2"
+                  >
+                    <X className="w-4 h-4" />
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={async () => {
+                      await reiniciarEscaneo();
+                      setTimeout(() => iniciarEscaneo(), 300);
+                    }}
+                    className="flex-1 py-3 rounded-xl bg-primary/20 text-primary font-medium flex items-center justify-center gap-2"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    Reiniciar
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Result Display */}
+            {resultado && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className={`glass-card rounded-3xl overflow-hidden ${
+                  resultado.valido 
+                    ? 'border-2 border-green-500/50' 
+                    : 'border-2 border-red-500/50'
+                }`}
+              >
+                {/* Result Header */}
+                <div className={`p-6 text-center ${
+                  resultado.valido 
+                    ? 'bg-green-500/20' 
+                    : 'bg-red-500/20'
+                }`}>
+                  {resultado.valido ? (
+                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-3" />
+                  ) : (
+                    <XCircle className="w-16 h-16 text-red-500 mx-auto mb-3" />
+                  )}
+                  <h3 className={`text-2xl font-bold ${
+                    resultado.valido ? 'text-green-500' : 'text-red-500'
+                  }`}>
+                    {resultado.valido ? '¡Entrada Válida!' : 'Entrada No Válida'}
+                  </h3>
+                  <p className="text-foreground/70 mt-2">{resultado.mensaje}</p>
+                </div>
+
+                {/* Entry Details */}
+                {resultado.entrada && (
+                  <div className="p-6 space-y-4">
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                      <User className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-xs text-foreground/50">Comprador</p>
+                        <p className="font-medium text-foreground">{resultado.entrada.nombre_comprador}</p>
+                      </div>
+                    </div>
+                    
+                    {resultado.entrada.asiento && (
+                      <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                        <Table2 className="w-5 h-5 text-primary" />
+                        <div>
+                          <p className="text-xs text-foreground/50">Ubicación</p>
+                          <p className="font-medium text-foreground">{resultado.entrada.asiento}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5">
+                      <Clock className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="text-xs text-foreground/50">Registro</p>
+                        <p className="font-medium text-foreground">
+                          {resultado.entrada.hora_entrada || resultado.entrada.hora_salida || new Date().toLocaleTimeString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Button */}
+                <div className="p-4 border-t border-white/10">
+                  <button
+                    onClick={reiniciarEscaneo}
+                    className="w-full py-4 rounded-2xl bg-primary text-primary-foreground font-bold"
+                  >
+                    Escanear Otra Entrada
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+          </div>
+        </main>
       </div>
-    </main>
     </div>
-  </div>
   );
 };
 
