@@ -110,7 +110,7 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
   useEffect(() => {
     const config = generarConfiguracion();
     onConfiguracionChange?.(tipoAsientos, config);
-  }, [tipoAsientos, capacidadGeneral, mesas, entradasGeneralesMixto, onConfiguracionChange]);
+  }, [tipoAsientos, capacidadGeneral, mesas, entradasGeneralesMixto, categoriasGenerales]);
 
   const agregarMesa = () => {
     const nuevaMesa = {
