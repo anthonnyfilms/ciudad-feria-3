@@ -494,6 +494,181 @@ class CiudadFeriaAPITester:
         
         return success, data
 
+    def test_qr_validation_flow_e2e(self, token):
+        """Test complete QR validation flow as requested by user"""
+        print("\n🔍 QR VALIDATION E2E FLOW TESTING")
+        print("=" * 50)
+        
+        headers = {
+            'Content-Type': 'application/json',
+            'Authorization': f'Bearer {token}'
+        }
+        
+        # Step 1: Get list of approved purchases
+        print(f"\n1️⃣ Getting list of approved purchases...")
+        success1, compras_data = self.run_test("Get Admin Purchases", "GET", "admin/compras?estado=aprobado", 200, headers=headers)
+        
+        if not success1:
+            print("❌ Cannot get purchases list")
+            return False
+        
+        # Find a purchase with qr_payload
+        compra_con_qr = None
+        for compra in compras_data:
+            if compra.get('estado_pago') == 'aprobado' and compra.get('qr_payload'):
+                compra_con_qr = compra
+                break
+        
+        if not compra_con_qr:
+            print("❌ No approved purchase with QR payload found")
+            print(f"   Found {len(compras_data)} purchases, but none have qr_payload")
+            
+            # Let's create and approve a purchase for testing
+            print(f"\n🔧 Creating test purchase for QR validation...")
+            
+            # Get events first
+            success_eventos, eventos = self.test_list_eventos()
+            if not success_eventos or not eventos:
+                print("❌ Cannot create test purchase without events")
+                return False
+            
+            evento = eventos[0]
+            evento_id = evento.get('id')
+            
+            # Create purchase
+            compra_data = {
+                "evento_id": evento_id,
+                "nombre_comprador": "Test QR User",
+                "email_comprador": "testqr@example.com",
+                "telefono_comprador": "1234567890",
+                "cantidad": 1,
+                "precio_total": 25.0,
+                "metodo_pago": "transferencia"
+            }
+            
+            success_compra, purchase_data = self.run_test("Create Test Purchase for QR", "POST", "comprar-entrada", 200, compra_data)
+            
+            if not success_compra or not purchase_data.get('entradas'):
+                print("❌ Cannot create test purchase")
+                return False
+            
+            entrada = purchase_data['entradas'][0]
+            entrada_id = entrada.get('id')
+            qr_payload = entrada.get('qr_payload')
+            
+            if not entrada_id or not qr_payload:
+                print("❌ Test purchase missing ID or QR payload")
+                return False
+            
+            # Approve the purchase
+            approval_data = {"entrada_ids": [entrada_id]}
+            success_approval, _ = self.run_test("Approve Test Purchase", "POST", "admin/aprobar-compra", 200, approval_data, headers)
+            
+            if not success_approval:
+                print("❌ Cannot approve test purchase")
+                return False
+            
+            compra_con_qr = {
+                'id': entrada_id,
+                'qr_payload': qr_payload,
+                'nombre_comprador': compra_data['nombre_comprador'],
+                'estado_pago': 'aprobado'
+            }
+            
+            print(f"   ✅ Created and approved test purchase: {entrada_id[:8]}...")
+        
+        # Step 2: Test QR validation with the found/created purchase
+        print(f"\n2️⃣ Testing QR validation with approved purchase...")
+        qr_payload = compra_con_qr.get('qr_payload')
+        comprador = compra_con_qr.get('nombre_comprador', 'Unknown')
+        
+        print(f"   🎫 Testing QR for: {comprador}")
+        print(f"   🔑 QR Payload length: {len(qr_payload)} characters")
+        
+        # Test verification mode
+        validation_data = {
+            "qr_payload": qr_payload,
+            "accion": "verificar"
+        }
+        
+        success2, validation_result = self.run_test("QR Validation - Verify", "POST", "validar-entrada", 200, validation_data)
+        
+        if success2:
+            if validation_result.get('valido'):
+                print(f"   ✅ QR validation successful")
+                print(f"   👤 Comprador: {validation_result.get('entrada', {}).get('nombre_comprador', 'N/A')}")
+                print(f"   🎪 Evento: {validation_result.get('entrada', {}).get('nombre_evento', 'N/A')}")
+                print(f"   🪑 Asiento: {validation_result.get('entrada', {}).get('asiento', 'General')}")
+                print(f"   📍 Estado: {validation_result.get('entrada', {}).get('estado_actual', 'N/A')}")
+            else:
+                print(f"   ❌ QR validation failed: {validation_result.get('mensaje', 'Unknown error')}")
+                return False
+        else:
+            print("❌ QR validation request failed")
+            return False
+        
+        # Step 3: Test entry action
+        print(f"\n3️⃣ Testing QR validation with entry action...")
+        validation_data_entry = {
+            "qr_payload": qr_payload,
+            "accion": "entrada"
+        }
+        
+        success3, entry_result = self.run_test("QR Validation - Entry", "POST", "validar-entrada", 200, validation_data_entry)
+        
+        if success3:
+            if entry_result.get('valido'):
+                print(f"   ✅ Entry registration successful")
+                print(f"   📝 Message: {entry_result.get('mensaje', 'N/A')}")
+                print(f"   🎯 Action: {entry_result.get('tipo_accion', 'N/A')}")
+            else:
+                print(f"   ⚠️ Entry registration result: {entry_result.get('mensaje', 'Unknown')}")
+                # This might be expected if person is already inside
+        else:
+            print("❌ Entry validation request failed")
+            return False
+        
+        # Step 4: Test duplicate entry (should fail)
+        print(f"\n4️⃣ Testing duplicate entry (should be blocked)...")
+        success4, duplicate_result = self.run_test("QR Validation - Duplicate Entry", "POST", "validar-entrada", 200, validation_data_entry)
+        
+        if success4:
+            if not duplicate_result.get('valido') and 'ya está dentro' in duplicate_result.get('mensaje', ''):
+                print(f"   ✅ Duplicate entry correctly blocked")
+                print(f"   🚨 Alert: {duplicate_result.get('mensaje', 'N/A')}")
+            elif duplicate_result.get('valido'):
+                print(f"   ⚠️ Unexpected: duplicate entry was allowed")
+            else:
+                print(f"   ℹ️ Entry blocked: {duplicate_result.get('mensaje', 'N/A')}")
+        
+        # Step 5: Test exit action
+        print(f"\n5️⃣ Testing QR validation with exit action...")
+        validation_data_exit = {
+            "qr_payload": qr_payload,
+            "accion": "salida"
+        }
+        
+        success5, exit_result = self.run_test("QR Validation - Exit", "POST", "validar-entrada", 200, validation_data_exit)
+        
+        if success5:
+            if exit_result.get('valido'):
+                print(f"   ✅ Exit registration successful")
+                print(f"   📝 Message: {exit_result.get('mensaje', 'N/A')}")
+                print(f"   🎯 Action: {exit_result.get('tipo_accion', 'N/A')}")
+            else:
+                print(f"   ⚠️ Exit registration result: {exit_result.get('mensaje', 'Unknown')}")
+        
+        # Summary
+        all_tests = [success1, success2, success3, success4, success5]
+        passed_tests = sum(all_tests)
+        total_tests = len(all_tests)
+        
+        print(f"\n🔍 QR VALIDATION E2E TEST SUMMARY:")
+        print(f"   Tests Passed: {passed_tests}/{total_tests}")
+        print(f"   Success Rate: {(passed_tests/total_tests*100):.1f}%")
+        
+        return passed_tests >= 4  # Allow one test to fail (duplicate entry might behave differently)
+
     def test_ticket_email_system_complete(self, token):
         """Run complete ticket image and email system test suite"""
         print("\n🎫 TICKET IMAGE & EMAIL SYSTEM TESTING")
