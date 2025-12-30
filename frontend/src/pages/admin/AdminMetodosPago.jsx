@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, Plus, Edit, Trash2, CreditCard, Shield, Table2, Upload, Image Users, } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, Plus, Edit, Trash2, CreditCard, Shield, Table2, Upload, Image, Users, } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
