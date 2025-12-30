@@ -14,6 +14,7 @@ import AdminMetodosPago from './pages/admin/AdminMetodosPago';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion';
 import AdminDisenoEntrada from './pages/admin/AdminDisenoEntrada';
 import AdminUsuarios from './pages/admin/AdminUsuarios';
+import AdminAsistencia from './pages/admin/AdminAsistencia';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
