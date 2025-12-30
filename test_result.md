@@ -475,8 +475,9 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Admin Métodos de Pago - Image upload field"
-    - "Admin Configuration - Editable home description"
+    - "Admin Usuarios - User management page"
+    - "Validador role-based access and QR scanner"
+    - "Event category filtering on public page"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
