@@ -161,6 +161,9 @@ backend:
       - working: true
         agent: "testing"
         comment: "✅ TESTED: QR validation endpoint working correctly. Successfully validated QR payload from newly purchased ticket. Endpoint properly handles encrypted QR data and returns validation status."
+      - working: true
+        agent: "testing"
+        comment: "✅ E2E QR VALIDATION FLOW TESTED: Complete flow working perfectly. Admin login successful (admin/admin123), found 9 approved purchases with QR payloads. QR validation endpoint /api/validar-entrada functioning correctly with all actions: 1) verificar mode - validates QR and returns ticket info, 2) entrada mode - registers entry and prevents duplicates, 3) salida mode - registers exit properly, 4) Invalid QR payloads correctly rejected with 400 status. Hash validation working, entry/exit tracking operational, duplicate entry prevention active. Test success rate: 100% (7/7 tests passed)."
 
   - task: "Sistema de asientos - Configurador Admin"
     implemented: true
