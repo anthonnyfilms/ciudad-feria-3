@@ -49,6 +49,13 @@ ALGORITHM = "HS256"
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 security = HTTPBearer()
 
+# Email Configuration
+GMAIL_USER = os.environ.get('GMAIL_USER', '')
+GMAIL_APP_PASSWORD = os.environ.get('GMAIL_APP_PASSWORD', '')
+
+# HMAC Key para QR seguro (anti-hackeo)
+HMAC_SECRET_KEY = b'ciudad_feria_hmac_2026_inhackeable_qr_secret'
+
 # Models
 class AdminLogin(BaseModel):
     username: str
