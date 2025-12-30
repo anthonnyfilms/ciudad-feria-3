@@ -92,9 +92,13 @@ const ValidarEntrada = () => {
       };
 
       const config = { 
-        fps: 10, 
-        qrbox: { width: 220, height: 220 },
-        aspectRatio: 1.0
+        fps: 15, 
+        qrbox: { width: 280, height: 280 },
+        aspectRatio: 1.0,
+        experimentalFeatures: {
+          useBarCodeDetectorIfSupported: true
+        },
+        formatsToSupport: [ 0 ] // Solo QR Code
       };
 
       try {
