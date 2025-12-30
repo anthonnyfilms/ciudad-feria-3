@@ -560,4 +560,4 @@ const DetalleEvento = () => {
   );
 };
 
-export default DetalleEvento;
+export default DetalleEvento;// build-fix-1767085501
