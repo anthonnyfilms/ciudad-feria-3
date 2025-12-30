@@ -608,26 +608,27 @@ async def regenerar_qr_entrada(entrada_id: str, current_user: str = Depends(get_
     
     # Obtener evento
     evento = await db.eventos.find_one({"id": entrada['evento_id']}, {"_id": 0})
+    nombre_evento = evento['nombre'] if evento else entrada.get('nombre_evento', '')
     
-    # Regenerar QR con los nuevos parámetros
+    # Regenerar QR con los mismos datos que se usan en la validación
     datos_entrada = {
         "entrada_id": entrada_id,
+        "codigo_alfanumerico": entrada.get('codigo_alfanumerico', ''),
         "evento_id": entrada['evento_id'],
-        "evento_nombre": evento['nombre'] if evento else entrada.get('nombre_evento', ''),
+        "nombre_evento": nombre_evento,
         "nombre_comprador": entrada['nombre_comprador'],
         "email_comprador": entrada['email_comprador'],
-        "fecha_compra": entrada.get('fecha_compra', datetime.now(timezone.utc).isoformat()),
-        "asiento": entrada.get('asiento'),
-        "categoria_asiento": entrada.get('categoria_asiento')
+        "telefono_comprador": entrada.get('telefono_comprador'),
+        "numero_entrada": entrada.get('numero_entrada', 1),
+        "asiento": entrada.get('asiento')
     }
     
+    # Generar hash con los mismos datos
+    hash_validacion = generar_hash(datos_entrada)
+    datos_entrada['hash'] = hash_validacion
+    
+    # Generar QR
     qr_image, qr_payload = generar_qr_seguro(datos_entrada)
-    hash_validacion = generar_hash({
-        "entrada_id": entrada_id,
-        "evento_id": entrada['evento_id'],
-        "nombre_comprador": entrada['nombre_comprador'],
-        "email_comprador": entrada['email_comprador']
-    })
     
     # Actualizar entrada
     await db.entradas.update_one(
@@ -636,7 +637,8 @@ async def regenerar_qr_entrada(entrada_id: str, current_user: str = Depends(get_
             "$set": {
                 "codigo_qr": qr_image,
                 "qr_payload": qr_payload,
-                "hash_validacion": hash_validacion
+                "hash_validacion": hash_validacion,
+                "nombre_evento": nombre_evento
             }
         }
     )
