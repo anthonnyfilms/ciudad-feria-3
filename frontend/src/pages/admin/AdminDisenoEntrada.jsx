@@ -38,10 +38,8 @@ const AdminDisenoEntrada = () => {
 
   const cargarEventos = async () => {
     try {
-      const token = localStorage.getItem('admin_token');
-      const response = await axios.get(`${API}/admin/eventos`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      // Usar endpoint público de eventos
+      const response = await axios.get(`${API}/eventos`);
       setEventos(response.data);
       if (response.data.length > 0 && !eventoSeleccionado) {
         setEventoSeleccionado(response.data[0].id);
