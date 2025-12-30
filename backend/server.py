@@ -597,7 +597,7 @@ async def validar_entrada(request: Request):
         }
 
 @api_router.post("/admin/regenerar-qr/{entrada_id}")
-async def regenerar_qr_entrada(entrada_id: str, current_admin: dict = Depends(get_current_admin)):
+async def regenerar_qr_entrada(entrada_id: str, current_user: str = Depends(get_current_user)):
     """Regenera el código QR de una entrada aprobada"""
     entrada = await db.entradas.find_one({"id": entrada_id}, {"_id": 0})
     if not entrada:
