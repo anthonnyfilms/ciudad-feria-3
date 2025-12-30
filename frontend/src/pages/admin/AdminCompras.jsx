@@ -292,11 +292,23 @@ const AdminCompras = () => {
                       {compra.estado_pago === 'pendiente' && (
                         <>
                           <button
+                            onClick={() => handleAprobarYEnviar(compra.id)}
+                            disabled={enviandoEmail === compra.id}
+                            className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all font-medium disabled:opacity-50"
+                          >
+                            {enviandoEmail === compra.id ? (
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                            ) : (
+                              <Send className="w-4 h-4" />
+                            )}
+                            Aprobar y Enviar
+                          </button>
+                          <button
                             onClick={() => handleAprobar(compra.id)}
                             className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all font-medium"
                           >
                             <CheckCircle className="w-4 h-4" />
-                            Aprobar
+                            Solo Aprobar
                           </button>
                           <button
                             onClick={() => handleRechazar(compra.id)}
@@ -308,8 +320,36 @@ const AdminCompras = () => {
                         </>
                       )}
                       {compra.estado_pago === 'aprobado' && (
-                        <div className="text-center text-primary font-medium">
-                          ✓ Compra aprobada
+                        <div className="space-y-2">
+                          <div className="text-center text-primary font-medium mb-2">
+                            ✓ Compra aprobada
+                          </div>
+                          <button
+                            onClick={() => handleDescargarEntrada(compra.id)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-full glass-card hover:border-primary/50 transition-all font-medium text-foreground"
+                          >
+                            <Download className="w-4 h-4" />
+                            Descargar Entrada
+                          </button>
+                          {emailConfigured && (
+                            <button
+                              onClick={() => handleReenviarEmail(compra.id)}
+                              disabled={enviandoEmail === compra.id}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-full glass-card hover:border-primary/50 transition-all font-medium text-foreground disabled:opacity-50"
+                            >
+                              {enviandoEmail === compra.id ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary border-t-transparent" />
+                              ) : (
+                                <Mail className="w-4 h-4" />
+                              )}
+                              Reenviar Email
+                            </button>
+                          )}
+                          {compra.email_enviado && (
+                            <p className="text-xs text-center text-foreground/50">
+                              ✉️ Email enviado
+                            </p>
+                          )}
                         </div>
                       )}
                     </div>
