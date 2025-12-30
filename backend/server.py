@@ -488,6 +488,7 @@ async def validar_entrada(request: Request):
     # Verificar hash
     hash_verificacion = generar_hash({
         "entrada_id": datos_entrada['entrada_id'],
+        "codigo_alfanumerico": datos_entrada.get('codigo_alfanumerico', ''),
         "evento_id": datos_entrada['evento_id'],
         "nombre_evento": datos_entrada['nombre_evento'],
         "nombre_comprador": datos_entrada['nombre_comprador'],
