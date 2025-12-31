@@ -144,6 +144,29 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
     }
   };
 
+  const toggleMesaCompleta = (mesa, mesaNombre, numSillas) => {
+    // Verificar si todas las sillas de la mesa están seleccionadas
+    const sillasMesa = Array.from({ length: numSillas }, (_, i) => `${mesaNombre}-Silla${i + 1}`);
+    const todasSeleccionadas = sillasMesa.every(s => asientosSeleccionados.includes(s));
+    
+    if (todasSeleccionadas) {
+      // Deseleccionar toda la mesa
+      setAsientosSeleccionados(asientosSeleccionados.filter(a => !a.startsWith(mesaNombre + '-')));
+    } else {
+      // Seleccionar toda la mesa (solo sillas disponibles)
+      const sillasDisponibles = sillasMesa.filter(s => {
+        const estado = getEstadoAsiento(s);
+        return estado === 'disponible' || estado === 'seleccionado';
+      });
+      
+      // Verificar si hay suficiente espacio en maxSeleccion
+      const otrasSelecciones = asientosSeleccionados.filter(a => !a.startsWith(mesaNombre + '-'));
+      if (otrasSelecciones.length + sillasDisponibles.length <= maxSeleccion) {
+        setAsientosSeleccionados([...otrasSelecciones, ...sillasDisponibles]);
+      }
+    }
+  };
+
   const getEstadoAsiento = (asientoId) => {
     if (datosAsientos?.asientos_ocupados?.includes(asientoId)) return 'ocupado';
     if (datosAsientos?.asientos_pendientes?.includes(asientoId)) return 'pendiente';
