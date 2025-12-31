@@ -118,7 +118,8 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
       nombre: `Mesa ${mesas.length + 1}`,
       sillas: 10,
       precio: 0,
-      categoria: categoriasMesas.length > 0 ? categoriasMesas[0].nombre : 'General'
+      categoria: categoriasMesas.length > 0 ? categoriasMesas[0].nombre : 'General',
+      ventaCompleta: false
     };
     setMesas([...mesas, nuevaMesa]);
   };
