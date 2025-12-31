@@ -367,7 +367,7 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
                     <Table2 className="w-6 h-6 text-primary" />
                   </div>
                   
-                  <div className="flex-1 grid grid-cols-4 gap-3">
+                  <div className="flex-1 grid grid-cols-5 gap-3">
                     <div>
                       <label className="text-xs text-foreground/50">Nombre</label>
                       <input
@@ -391,7 +391,7 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
                     </div>
                     
                     <div>
-                      <label className="text-xs text-foreground/50">Precio por silla</label>
+                      <label className="text-xs text-foreground/50">Precio/silla</label>
                       <input
                         type="number"
                         value={mesa.precio}
@@ -414,6 +414,21 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
                         ))}
                       </select>
                     </div>
+
+                    <div>
+                      <label className="text-xs text-foreground/50">Venta</label>
+                      <button
+                        type="button"
+                        onClick={() => actualizarMesa(index, 'ventaCompleta', !mesa.ventaCompleta)}
+                        className={`w-full px-3 py-2 text-xs font-medium rounded-lg transition-all ${
+                          mesa.ventaCompleta 
+                            ? 'bg-amber-500/20 border border-amber-500/50 text-amber-400' 
+                            : 'bg-background/50 border border-white/10 text-foreground/60 hover:border-white/30'
+                        }`}
+                      >
+                        {mesa.ventaCompleta ? '🎯 Completa' : 'Individual'}
+                      </button>
+                    </div>
                   </div>
                   
                   <button
@@ -424,6 +439,18 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
                     <Trash2 className="w-5 h-5" />
                   </button>
                 </div>
+                
+                {/* Indicador de venta completa */}
+                {mesa.ventaCompleta && (
+                  <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between">
+                    <span className="text-xs text-amber-400">
+                      🎯 Esta mesa solo se vende completa
+                    </span>
+                    <span className="text-sm font-bold text-amber-400">
+                      Total: ${(mesa.precio * mesa.sillas).toFixed(2)}
+                    </span>
+                  </div>
+                )}
               </div>
             ))}
           </div>
