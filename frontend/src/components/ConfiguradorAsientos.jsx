@@ -20,10 +20,6 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
   ]);
   const [nuevaCategoriaGeneral, setNuevaCategoriaGeneral] = useState({ nombre: '', precio: 0, capacidad: 100, color: '#10B981' });
 
-  useEffect(() => {
-    cargarCategoriasMesas();
-  }, []);
-
   const cargarCategoriasMesas = async () => {
     try {
       const response = await axios.get(`${API}/categorias-mesas`);
@@ -38,6 +34,10 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
       ]);
     }
   };
+
+  useEffect(() => {
+    cargarCategoriasMesas();
+  }, []);
 
   const agregarCategoriaMesa = async () => {
     if (!nuevaCategoria.nombre.trim()) return;
