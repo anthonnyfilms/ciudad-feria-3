@@ -50,6 +50,8 @@ function App() {
                 <Route path="usuarios" element={<AdminUsuarios />} />
                 <Route path="asistencia" element={<AdminAsistencia />} />
                 <Route path="configuracion" element={<AdminConfiguracion />} />
+                <Route path="acreditaciones" element={<AdminAcreditaciones />} />
+                <Route path="aforo" element={<AdminAforo />} />
               </Routes>
             </PrivateRoute>
           } />
