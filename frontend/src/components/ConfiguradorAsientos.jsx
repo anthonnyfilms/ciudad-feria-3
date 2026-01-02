@@ -69,18 +69,18 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
   const generarConfiguracion = () => {
     if (tipoAsientos === 'general') {
       return { 
-        capacidad: capacidadGeneral,
+        capacidad: categoriasGenerales.reduce((acc, cat) => acc + (cat.capacidad || 0), 0),
         categorias_generales: categoriasGenerales 
       };
     } else if (tipoAsientos === 'mesas') {
       return { 
         mesas,
-        categorias_generales: categoriasGenerales 
+        categorias_generales: [] 
       };
     } else if (tipoAsientos === 'mixto') {
       return { 
         mesas, 
-        entradas_generales: entradasGeneralesMixto,
+        entradas_generales: categoriasGenerales.reduce((acc, cat) => acc + (cat.capacidad || 0), 0),
         categorias_generales: categoriasGenerales 
       };
     }
