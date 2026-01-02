@@ -18,6 +18,8 @@ const ValidarEntrada = () => {
   const [cameraError, setCameraError] = useState(null);
   const [menuAbierto, setMenuAbierto] = useState(false);
   const [userRole, setUserRole] = useState(null);
+  const [codigoManual, setCodigoManual] = useState('');
+  const [modoManual, setModoManual] = useState(false);
   const html5QrCodeRef = useRef(null);
 
   useEffect(() => {
