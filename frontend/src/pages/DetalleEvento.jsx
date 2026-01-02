@@ -537,18 +537,34 @@ const DetalleEvento = () => {
                         </div>
                       </div>
                     )}
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-foreground/70">Precio por entrada:</span>
-                      <span className="text-foreground font-bold">${evento.precio}</span>
-                    </div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-foreground/70">Cantidad:</span>
-                      <span className="text-foreground font-bold">{seleccionAsientos.total || cantidad}</span>
-                    </div>
+                    
+                    {/* Detalle de la compra */}
+                    {seleccionAsientos.detalles && seleccionAsientos.detalles.length > 0 ? (
+                      <div className="space-y-2 mb-4">
+                        {seleccionAsientos.detalles.map((detalle, idx) => (
+                          <div key={idx} className="flex justify-between items-center">
+                            <span className="text-foreground/70">{detalle.tipo} x{detalle.cantidad}</span>
+                            <span className="text-foreground font-bold">${(detalle.precioUnitario * detalle.cantidad).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-foreground/70">Precio por entrada:</span>
+                          <span className="text-foreground font-bold">${evento.precio}</span>
+                        </div>
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-foreground/70">Cantidad:</span>
+                          <span className="text-foreground font-bold">{seleccionAsientos.total || cantidad}</span>
+                        </div>
+                      </>
+                    )}
+                    
                     <div className="flex justify-between items-center text-xl border-t border-foreground/10 pt-2 mt-2">
                       <span className="text-foreground font-bold">Total:</span>
                       <span className="text-primary font-black text-2xl">
-                        ${(evento.precio * (seleccionAsientos.total || cantidad)).toFixed(2)}
+                        ${(seleccionAsientos.precioTotal || (evento.precio * (seleccionAsientos.total || cantidad))).toFixed(2)}
                       </span>
                     </div>
                   </div>
