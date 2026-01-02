@@ -333,6 +333,7 @@ const DetalleEvento = () => {
                       maxSeleccion={10}
                     />
                   
+                    {/* Botón continuar para sillas de mesas */}
                     {seleccionAsientos.asientos.length > 0 && (
                       <motion.button
                         type="button"
@@ -342,6 +343,19 @@ const DetalleEvento = () => {
                         className="w-full bg-primary text-primary-foreground py-4 rounded-full font-bold text-lg"
                       >
                         Continuar ({seleccionAsientos.asientos.length} silla{seleccionAsientos.asientos.length > 1 ? 's' : ''} - ${seleccionAsientos.precioTotal?.toFixed(2) || '0.00'})
+                      </motion.button>
+                    )}
+
+                    {/* Botón continuar para entradas generales en eventos mixtos */}
+                    {seleccionAsientos.asientos.length === 0 && seleccionAsientos.cantidad > 0 && seleccionAsientos.precioTotal > 0 && (
+                      <motion.button
+                        type="button"
+                        onClick={() => setPasoCompra(2)}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full bg-primary text-primary-foreground py-4 rounded-full font-bold text-lg"
+                      >
+                        Continuar ({seleccionAsientos.cantidad} entrada{seleccionAsientos.cantidad > 1 ? 's' : ''} - ${seleccionAsientos.precioTotal?.toFixed(2) || '0.00'})
                       </motion.button>
                     )}
                   </div>
