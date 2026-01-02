@@ -1044,7 +1044,16 @@ def main():
         # Test 8: Admin Statistics
         tester.test_admin_estadisticas(admin_token)
         
-        # Test 9: SEAT SELECTION SYSTEM (NEW)
+        # Test 9: COMPLETE TICKET PURCHASE FLOW (REQUESTED BY USER)
+        print("\n🎫 Testing Complete Ticket Purchase Flow...")
+        complete_flow_success = tester.test_complete_ticket_purchase_flow()
+        
+        if complete_flow_success:
+            print("✅ Complete ticket purchase flow fully functional!")
+        else:
+            print("❌ Complete ticket purchase flow has issues")
+        
+        # Test 10: SEAT SELECTION SYSTEM (NEW)
         print("\n🪑 Testing Seat Selection System...")
         seat_system_success = tester.test_seat_system_complete(admin_token)
         
@@ -1053,7 +1062,7 @@ def main():
         else:
             print("❌ Seat selection system has issues")
         
-        # Test 10: QR VALIDATION E2E FLOW (REQUESTED BY USER)
+        # Test 11: QR VALIDATION E2E FLOW (REQUESTED BY USER)
         print("\n🔍 Testing QR Validation E2E Flow...")
         qr_validation_success = tester.test_qr_validation_flow_e2e(admin_token)
         
@@ -1062,7 +1071,7 @@ def main():
         else:
             print("❌ QR validation E2E flow has issues")
         
-        # Test 11: TICKET IMAGE & EMAIL SYSTEM (NEW)
+        # Test 12: TICKET IMAGE & EMAIL SYSTEM (NEW)
         print("\n🎫 Testing Ticket Image & Email System...")
         ticket_system_success = tester.test_ticket_email_system_complete(admin_token)
         
