@@ -239,6 +239,8 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
 
         {categoriasGenerales.map((cat, idx) => {
           const cantidadSeleccionada = seleccionPorCategoria[cat.nombre] || 0;
+          const capacidadCategoria = cat.capacidad || 100;
+          const disponiblesCategoria = Math.max(0, capacidadCategoria - cantidadSeleccionada);
           
           return (
             <div key={idx} className="glass-card p-6 rounded-2xl">
@@ -251,7 +253,9 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-foreground">{cat.nombre}</h3>
-                  <p className="text-sm text-foreground/60">Sin asiento asignado</p>
+                  <p className="text-sm text-foreground/60">
+                    {disponiblesCategoria} disponibles de {capacidadCategoria}
+                  </p>
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold text-primary">${cat.precio || precioBase}</p>
@@ -265,7 +269,8 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
                   <button
                     type="button"
                     onClick={() => actualizarCantidadCategoria(cat.nombre, -1, cat.precio || precioBase)}
-                    className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors"
+                    disabled={cantidadSeleccionada <= 0}
+                    className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors disabled:opacity-50"
                   >
                     -
                   </button>
@@ -275,7 +280,8 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
                   <button
                     type="button"
                     onClick={() => actualizarCantidadCategoria(cat.nombre, 1, cat.precio || precioBase)}
-                    className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors"
+                    disabled={cantidadSeleccionada >= capacidadCategoria}
+                    className="w-10 h-10 rounded-full glass-card flex items-center justify-center text-xl font-bold hover:border-primary transition-colors disabled:opacity-50"
                   >
                     +
                   </button>
