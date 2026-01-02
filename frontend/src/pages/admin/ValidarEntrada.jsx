@@ -476,7 +476,7 @@ const ValidarEntrada = () => {
             )}
 
             {/* Active Scanner */}
-            {escaneando && (
+            {!modoManual && escaneando && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
