@@ -539,9 +539,10 @@ class CiudadFeriaAPITester:
             "email_comprador": "anthonnyjfpro@gmail.com",
             "telefono_comprador": "04121234567",
             "cantidad": 1,
+            "precio_total": 50.0,  # Added required field
             "metodo_pago": "Transferencia",
             "comprobante_pago": "comprobante_test_123",
-            "asientos_seleccionados": ["Mesa 2-Silla1"]
+            "asientos": ["Mesa 2-Silla1"]  # Fixed field name
         }
         
         success2, purchase_data = self.run_test("Create Test Purchase", "POST", "comprar-entrada", 200, compra_data)
