@@ -8,9 +8,7 @@ const API = `${BACKEND_URL}/api`;
 
 const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionChange }) => {
   const [tipoAsientos, setTipoAsientos] = useState(configuracionInicial?.tipo || 'general');
-  const [capacidadGeneral, setCapacidadGeneral] = useState(configuracionInicial?.capacidad || 100);
   const [mesas, setMesas] = useState(configuracionInicial?.mesas || []);
-  const [entradasGeneralesMixto, setEntradasGeneralesMixto] = useState(configuracionInicial?.entradas_generales || 0);
   const [categoriasMesas, setCategoriasMesas] = useState([]);
   const [mostrarGestionCategorias, setMostrarGestionCategorias] = useState(false);
   const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '', color: '#10B981' });
