@@ -753,16 +753,16 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
       )}
 
       {/* Mensaje si no hay mesas expandidas y no hay selección */}
-      {asientosSeleccionados.length === 0 && !mesaExpandida && (
+      {asientosSeleccionados.length === 0 && !mesaExpandida && Object.values(seleccionPorCategoria).every(v => v === 0) && (
         <div className="text-center py-6">
           <MousePointerClick className="w-8 h-8 text-foreground/30 mx-auto mb-2" />
-          <p className="text-foreground/50">Haz clic en una mesa para ver las sillas disponibles</p>
+          <p className="text-foreground/50">Haz clic en una mesa para ver las sillas disponibles o selecciona entradas generales</p>
         </div>
       )}
 
       {/* Resumen de selección con factura */}
       <AnimatePresence>
-        {asientosSeleccionados.length > 0 && (
+        {(asientosSeleccionados.length > 0 || Object.values(seleccionPorCategoria).some(v => v > 0)) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -771,37 +771,58 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
           >
             <h4 className="font-bold text-foreground mb-4 flex items-center gap-2">
               <Ticket className="w-5 h-5 text-primary" />
-              Tu selección ({asientosSeleccionados.length} {asientosSeleccionados.length === 1 ? 'silla' : 'sillas'})
+              Tu selección
             </h4>
             
-            {/* Lista de asientos seleccionados */}
-            <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
-              {asientosSeleccionados.map(asiento => {
-                const parts = asiento.split('-');
-                const mesaNombre = parts[0];
-                const sillaNombre = parts[1];
-                const mesa = mesas.find(m => m.nombre === mesaNombre);
-                const precio = mesa?.precio || precioBase;
-                
-                return (
-                  <div key={asiento} className="flex justify-between items-center py-2 border-b border-white/5">
-                    <div className="flex items-center gap-2">
-                      <Table2 className="w-4 h-4 text-foreground/50" />
-                      <span className="text-foreground">{mesaNombre}</span>
-                      <ArrowRight className="w-3 h-3 text-foreground/30" />
-                      <span className="text-foreground/70">{sillaNombre}</span>
+            {/* Lista de sillas seleccionadas */}
+            {asientosSeleccionados.length > 0 && (
+              <div className="space-y-2 mb-4 max-h-40 overflow-y-auto">
+                {asientosSeleccionados.map(asiento => {
+                  const parts = asiento.split('-');
+                  const mesaNombre = parts[0];
+                  const sillaNombre = parts[1];
+                  const mesa = mesas.find(m => m.nombre === mesaNombre);
+                  const precio = mesa?.precio || precioBase;
+                  
+                  return (
+                    <div key={asiento} className="flex justify-between items-center py-2 border-b border-white/5">
+                      <div className="flex items-center gap-2">
+                        <Table2 className="w-4 h-4 text-foreground/50" />
+                        <span className="text-foreground">{mesaNombre}</span>
+                        <ArrowRight className="w-3 h-3 text-foreground/30" />
+                        <span className="text-foreground/70">{sillaNombre}</span>
+                      </div>
+                      <span className="font-bold text-primary">${precio.toFixed(2)}</span>
                     </div>
-                    <span className="font-bold text-primary">${precio.toFixed(2)}</span>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Lista de entradas generales seleccionadas */}
+            {Object.entries(seleccionPorCategoria).filter(([_, cant]) => cant > 0).map(([nombre, cantidad]) => {
+              const cat = configuracion.categorias_generales?.find(c => c.nombre === nombre);
+              const precio = cat?.precio || precioBase;
+              return (
+                <div key={nombre} className="flex justify-between items-center py-2 border-b border-white/5">
+                  <div className="flex items-center gap-2">
+                    <Users className="w-4 h-4 text-foreground/50" />
+                    <span className="text-foreground">{nombre}</span>
+                    <span className="text-foreground/50">x{cantidad}</span>
                   </div>
-                );
-              })}
-            </div>
+                  <span className="font-bold text-primary">${(precio * cantidad).toFixed(2)}</span>
+                </div>
+              );
+            })}
             
             {/* Total */}
             <div className="flex justify-between items-center pt-4 border-t border-white/20">
               <span className="text-lg font-bold text-foreground">TOTAL:</span>
               <span className="text-2xl font-black text-primary">
-                ${calcularDetallesSeleccion().reduce((sum, d) => sum + (d.precioUnitario * d.cantidad), 0).toFixed(2)}
+                ${(
+                  calcularDetallesSeleccion().reduce((sum, d) => sum + (d.precioUnitario * d.cantidad), 0) +
+                  calcularTotalGeneral()
+                ).toFixed(2)}
               </span>
             </div>
           </motion.div>
