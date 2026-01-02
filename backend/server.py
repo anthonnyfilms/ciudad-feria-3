@@ -324,13 +324,28 @@ async def listar_eventos():
             evento['fecha_creacion'] = datetime.fromisoformat(evento['fecha_creacion'])
     return eventos
 
-@api_router.get("/eventos/{evento_id}", response_model=Evento)
+@api_router.get("/eventos/{evento_id}")
 async def obtener_evento(evento_id: str):
     evento = await db.eventos.find_one({"id": evento_id}, {"_id": 0})
     if not evento:
         raise HTTPException(status_code=404, detail="Evento no encontrado")
     if isinstance(evento.get('fecha_creacion'), str):
         evento['fecha_creacion'] = datetime.fromisoformat(evento['fecha_creacion'])
+    
+    # Calcular entradas disponibles reales
+    entradas = await db.entradas.find({
+        "evento_id": evento_id,
+        "estado_pago": {"$in": ["aprobado", "pendiente"]}
+    }, {"_id": 0}).to_list(1000)
+    
+    entradas_vendidas = len([e for e in entradas if e.get('estado_pago') == 'aprobado'])
+    entradas_pendientes = len([e for e in entradas if e.get('estado_pago') == 'pendiente'])
+    capacidad_total = evento.get('asientos_disponibles', 0)
+    
+    evento['entradas_disponibles'] = capacidad_total - entradas_vendidas - entradas_pendientes
+    evento['entradas_vendidas'] = entradas_vendidas
+    evento['entradas_pendientes'] = entradas_pendientes
+    
     return evento
 
 @api_router.get("/categorias", response_model=List[Categoria])
