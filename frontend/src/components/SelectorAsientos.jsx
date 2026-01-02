@@ -541,50 +541,22 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
                               }
                             </p>
                             
-                            {/* Mesa en forma de U */}
-                            <div className="relative py-8">
-                              {/* Parte frontal libre (escenario) */}
-                              <div className="text-center mb-2">
-                                <span className="text-xs text-foreground/40 uppercase tracking-wider">↑ Frente</span>
+                            {/* Mesa en forma de U - Frente libre hacia el escenario */}
+                            <div className="relative py-6">
+                              {/* Indicador del frente (escenario) - SIN SILLAS */}
+                              <div className="text-center mb-4">
+                                <div className="inline-block px-8 py-2 bg-gradient-to-b from-foreground/10 to-transparent rounded-t-xl border-t border-l border-r border-foreground/20">
+                                  <span className="text-xs text-foreground/50 uppercase tracking-wider">🎭 Frente al Escenario</span>
+                                </div>
                               </div>
                               
                               {/* Contenedor de la mesa en U */}
                               <div className="flex flex-col items-center gap-2">
-                                {/* Sillas de arriba (3 sillas: 1, 2, 3) */}
-                                <div className="flex gap-2 justify-center">
-                                  {[1, 2, 3].filter(n => n <= numSillas).map((sillaNum) => {
-                                    const asientoId = `${mesaNombre}-Silla${sillaNum}`;
-                                    const estado = getEstadoAsiento(asientoId);
-                                    const seleccionarTodas = mesa.ventaCompleta && estado === 'disponible';
-
-                                    return (
-                                      <motion.button
-                                        key={sillaNum}
-                                        type="button"
-                                        disabled={estado === 'ocupado' || estado === 'pendiente'}
-                                        onClick={() => mesa.ventaCompleta 
-                                          ? toggleMesaCompleta(mesa, mesaNombre, numSillas)
-                                          : toggleAsiento(asientoId, mesa.precio || precioBase)
-                                        }
-                                        whileHover={{ scale: estado === 'disponible' ? 1.1 : 1 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className={`w-10 h-10 rounded-lg transition-all duration-200 flex flex-col items-center justify-center text-white text-xs font-bold ${getColorAsiento(estado, categoriaColor)}`}
-                                        style={{
-                                          backgroundColor: estado === 'disponible' ? categoriaColor : undefined
-                                        }}
-                                        title={`Silla ${sillaNum} - $${mesa.precio || precioBase}`}
-                                      >
-                                        {estado === 'seleccionado' ? <Check className="w-4 h-4" /> : estado === 'ocupado' ? <X className="w-4 h-4" /> : sillaNum}
-                                      </motion.button>
-                                    );
-                                  })}
-                                </div>
-
-                                {/* Fila del medio con mesa */}
-                                <div className="flex items-center gap-2">
-                                  {/* Sillas izquierda (4, 5) */}
+                                {/* Fila con sillas izquierda, mesa central y sillas derecha */}
+                                <div className="flex items-center gap-3">
+                                  {/* Sillas IZQUIERDA (1, 2, 3) */}
                                   <div className="flex flex-col gap-2">
-                                    {[4, 5].filter(n => n <= numSillas).map((sillaNum) => {
+                                    {[1, 2, 3].filter(n => n <= numSillas).map((sillaNum) => {
                                       const asientoId = `${mesaNombre}-Silla${sillaNum}`;
                                       const estado = getEstadoAsiento(asientoId);
 
@@ -613,20 +585,20 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
 
                                   {/* Mesa central */}
                                   <div 
-                                    className="w-24 h-16 rounded-lg flex items-center justify-center border-2 border-dashed"
+                                    className="w-28 h-24 rounded-lg flex items-center justify-center border-2 border-dashed"
                                     style={{ 
                                       borderColor: categoriaColor + '60',
                                       backgroundColor: categoriaColor + '10'
                                     }}
                                   >
-                                    <span className="text-xs font-bold" style={{ color: categoriaColor }}>
+                                    <span className="text-sm font-bold" style={{ color: categoriaColor }}>
                                       {mesaNombre.replace('Mesa ', 'M')}
                                     </span>
                                   </div>
 
-                                  {/* Sillas derecha (6, 7) */}
+                                  {/* Sillas DERECHA (8, 9, 10) */}
                                   <div className="flex flex-col gap-2">
-                                    {[6, 7].filter(n => n <= numSillas).map((sillaNum) => {
+                                    {[8, 9, 10].filter(n => n <= numSillas).map((sillaNum) => {
                                       const asientoId = `${mesaNombre}-Silla${sillaNum}`;
                                       const estado = getEstadoAsiento(asientoId);
 
@@ -654,9 +626,9 @@ const SelectorAsientos = ({ eventoId, precioBase = 0, onSeleccionChange, maxSele
                                   </div>
                                 </div>
 
-                                {/* Sillas de abajo (8, 9, 10) */}
-                                <div className="flex gap-2 justify-center">
-                                  {[8, 9, 10].filter(n => n <= numSillas).map((sillaNum) => {
+                                {/* Sillas de ABAJO (4, 5, 6, 7) */}
+                                <div className="flex gap-2 justify-center mt-1">
+                                  {[4, 5, 6, 7].filter(n => n <= numSillas).map((sillaNum) => {
                                     const asientoId = `${mesaNombre}-Silla${sillaNum}`;
                                     const estado = getEstadoAsiento(asientoId);
 
