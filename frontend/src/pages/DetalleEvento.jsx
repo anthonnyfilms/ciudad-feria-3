@@ -299,7 +299,7 @@ const DetalleEvento = () => {
                 <div className="flex items-center gap-3">
                   <Ticket className="w-5 h-5 text-primary" />
                   <span className="text-foreground">
-                    {evento.asientos_disponibles} asientos disponibles
+                    {evento.entradas_disponibles || evento.asientos_disponibles} entradas disponibles
                   </span>
                 </div>
                 <div className="border-t border-white/10 pt-4 mt-4">
