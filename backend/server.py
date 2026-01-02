@@ -632,6 +632,102 @@ async def validar_entrada(request: Request):
             }
         }
 
+@api_router.post("/validar-entrada-codigo")
+async def validar_entrada_por_codigo(request: Request):
+    """Valida una entrada por su código alfanumérico"""
+    body = await request.json()
+    codigo = body.get('codigo', '').strip().upper()
+    accion = body.get('accion', 'verificar')
+    
+    if not codigo:
+        raise HTTPException(status_code=400, detail="Código requerido")
+    
+    # Buscar entrada por código alfanumérico
+    entrada = await db.entradas.find_one({
+        "codigo_alfanumerico": codigo,
+        "estado_pago": "aprobado"
+    }, {"_id": 0})
+    
+    if not entrada:
+        return {
+            "valido": False,
+            "mensaje": "❌ Código no encontrado o entrada no aprobada"
+        }
+    
+    entrada_id = entrada['id']
+    
+    if accion == 'verificar':
+        return {
+            "valido": True,
+            "mensaje": "✅ Entrada válida",
+            "entrada": {
+                "nombre_evento": entrada.get('nombre_evento'),
+                "nombre_comprador": entrada['nombre_comprador'],
+                "email_comprador": entrada['email_comprador'],
+                "asiento": entrada.get('asiento'),
+                "mesa": entrada.get('mesa'),
+                "estado_actual": entrada.get('estado_entrada', 'fuera')
+            }
+        }
+    
+    elif accion == 'entrada':
+        if entrada.get('estado_entrada') == 'dentro':
+            return {
+                "valido": False,
+                "mensaje": "🚨 Esta persona ya está dentro del evento",
+                "entrada": {
+                    "nombre_comprador": entrada['nombre_comprador'],
+                    "asiento": entrada.get('asiento')
+                }
+            }
+        
+        historial = entrada.get('historial_acceso', [])
+        historial.append({
+            "tipo": "entrada",
+            "fecha": datetime.now(timezone.utc).isoformat()
+        })
+        
+        await db.entradas.update_one(
+            {"id": entrada_id},
+            {"$set": {"estado_entrada": "dentro", "historial_acceso": historial}}
+        )
+        
+        return {
+            "valido": True,
+            "mensaje": f"✅ Entrada registrada - {entrada['nombre_comprador']}",
+            "entrada": {
+                "nombre_comprador": entrada['nombre_comprador'],
+                "asiento": entrada.get('asiento')
+            }
+        }
+    
+    elif accion == 'salida':
+        if entrada.get('estado_entrada') != 'dentro':
+            return {
+                "valido": False,
+                "mensaje": "Esta persona no está registrada dentro"
+            }
+        
+        historial = entrada.get('historial_acceso', [])
+        historial.append({
+            "tipo": "salida",
+            "fecha": datetime.now(timezone.utc).isoformat()
+        })
+        
+        await db.entradas.update_one(
+            {"id": entrada_id},
+            {"$set": {"estado_entrada": "fuera", "historial_acceso": historial}}
+        )
+        
+        return {
+            "valido": True,
+            "mensaje": "✅ Salida registrada",
+            "entrada": {
+                "nombre_comprador": entrada['nombre_comprador'],
+                "asiento": entrada.get('asiento')
+            }
+        }
+
 @api_router.post("/admin/regenerar-qr/{entrada_id}")
 async def regenerar_qr_entrada(entrada_id: str, current_user: str = Depends(get_current_user)):
     """Regenera el código QR de una entrada aprobada"""
