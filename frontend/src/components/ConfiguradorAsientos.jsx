@@ -686,11 +686,21 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
           <span className="text-foreground/70">Capacidad Total:</span>
           <span className="text-2xl font-bold text-primary">{calcularCapacidadTotal()} lugares</span>
         </div>
-        {tipoAsientos !== 'general' && mesas.length > 0 && (
+        {tipoAsientos === 'general' && categoriasGenerales.length > 0 && (
+          <div className="mt-2 text-sm text-foreground/50">
+            {categoriasGenerales.length} zona(s) de entrada
+          </div>
+        )}
+        {tipoAsientos === 'mesas' && mesas.length > 0 && (
           <div className="mt-2 text-sm text-foreground/50">
             {mesas.length} mesa(s) · {mesas.reduce((acc, m) => acc + m.sillas, 0)} sillas
-            {tipoAsientos === 'mixto' && entradasGeneralesMixto > 0 && (
-              <> + {entradasGeneralesMixto} generales</>
+          </div>
+        )}
+        {tipoAsientos === 'mixto' && (
+          <div className="mt-2 text-sm text-foreground/50">
+            {mesas.length > 0 && <>{mesas.length} mesa(s) · {mesas.reduce((acc, m) => acc + m.sillas, 0)} sillas</>}
+            {categoriasGenerales.length > 0 && (
+              <> + {categoriasGenerales.reduce((acc, cat) => acc + (cat.capacidad || 0), 0)} entradas generales ({categoriasGenerales.length} zona(s))</>
             )}
           </div>
         )}
