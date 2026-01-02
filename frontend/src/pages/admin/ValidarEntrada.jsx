@@ -352,8 +352,8 @@ const ValidarEntrada = () => {
         <main className="flex-1 p-4 lg:p-8">
           <div className="max-w-lg mx-auto">
             
-            {/* Mode Toggle */}
-            <div className="flex gap-2 mb-6">
+            {/* Mode Toggle - Entrada/Salida */}
+            <div className="flex gap-2 mb-4">
               <button
                 onClick={() => setModoEscaneo('entrada')}
                 className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 ${
@@ -378,8 +378,77 @@ const ValidarEntrada = () => {
               </button>
             </div>
 
+            {/* Mode Toggle - QR/Manual */}
+            <div className="flex gap-2 mb-6">
+              <button
+                onClick={() => { setModoManual(false); setResultado(null); }}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  !modoManual
+                    ? 'bg-primary text-white'
+                    : 'glass-card text-foreground/70'
+                }`}
+              >
+                <Camera className="w-4 h-4" />
+                Escanear QR
+              </button>
+              <button
+                onClick={() => { setModoManual(true); setResultado(null); stopScanner(); setEscaneando(false); }}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 ${
+                  modoManual
+                    ? 'bg-primary text-white'
+                    : 'glass-card text-foreground/70'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                Código Manual
+              </button>
+            </div>
+
+            {/* Manual Code Input */}
+            {modoManual && !resultado && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card p-6 rounded-3xl"
+              >
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Shield className="w-8 h-8 text-primary" />
+                  </div>
+                  <h2 className="text-lg font-heading font-bold text-foreground mb-1">
+                    Validación Manual
+                  </h2>
+                  <p className="text-foreground/60 text-sm">
+                    Ingresa el código de la entrada (ej: CF-2026-ABC123)
+                  </p>
+                </div>
+                
+                <input
+                  type="text"
+                  value={codigoManual}
+                  onChange={(e) => setCodigoManual(e.target.value.toUpperCase())}
+                  placeholder="CF-2026-XXXXXX"
+                  className="w-full bg-background/50 border border-white/20 rounded-xl px-4 py-4 text-center text-xl font-mono text-foreground focus:outline-none focus:border-primary mb-4"
+                  onKeyDown={(e) => e.key === 'Enter' && validarCodigoManual()}
+                />
+                
+                <motion.button
+                  onClick={validarCodigoManual}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full py-4 rounded-xl font-bold text-lg ${
+                    modoEscaneo === 'entrada'
+                      ? 'bg-green-500 hover:bg-green-600'
+                      : 'bg-orange-500 hover:bg-orange-600'
+                  } text-white`}
+                >
+                  Validar {modoEscaneo === 'entrada' ? 'Entrada' : 'Salida'}
+                </motion.button>
+              </motion.div>
+            )}
+
             {/* Scanner Start Button */}
-            {!escaneando && !resultado && (
+            {!modoManual && !escaneando && !resultado && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
