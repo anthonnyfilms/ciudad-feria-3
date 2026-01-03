@@ -310,6 +310,21 @@ const AdminAcreditaciones = () => {
             </div>
             <div className="flex gap-3">
               <button
+                onClick={descargarTodosPdf}
+                disabled={downloadingPdf || acreditaciones.length === 0}
+                className="bg-blue-600 text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2 hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                <FileText className="w-4 h-4" />
+                {downloadingPdf ? 'Descargando...' : 'Descargar Todas (PDF)'}
+              </button>
+              <Link
+                to="/admin/diseno-acreditacion"
+                className="bg-purple-600 text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2 hover:bg-purple-700 transition-colors"
+              >
+                <Palette className="w-4 h-4" />
+                Diseñar
+              </Link>
+              <button
                 onClick={() => setShowCategoriaModal(true)}
                 className="bg-secondary text-secondary-foreground px-4 py-2 rounded-xl font-medium flex items-center gap-2"
               >
