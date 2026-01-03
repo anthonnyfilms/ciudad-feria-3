@@ -2408,11 +2408,11 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     
     # Fondo con gradiente simulado
     c.setFillColorRGB(r * 0.3, g * 0.3, b * 0.3)  # Fondo oscuro
-    c.roundRect(x, y, width, height, 5, fill=1, stroke=0)
+    c.roundRect(x, y, width, height, 8, fill=1, stroke=0)
     
-    # Barra de color superior
+    # Barra de color superior (más alta para el nuevo tamaño)
     c.setFillColorRGB(r, g, b)
-    c.rect(x, y + height - 12*mm, width, 12*mm, fill=1, stroke=0)
+    c.rect(x, y + height - 18*mm, width, 18*mm, fill=1, stroke=0)
     
     # Imagen de fondo personalizada si existe
     if template_img and template_img.startswith("http"):
