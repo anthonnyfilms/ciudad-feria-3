@@ -53,6 +53,7 @@ const AdminDashboard = () => {
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
     { icon: Ticket, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: BadgeCheck, label: 'Acreditaciones', path: '/admin/acreditaciones' },
+    { icon: BadgeCheck, label: 'Diseño Acreditación', path: '/admin/diseno-acreditacion' },
     { icon: Activity, label: 'Aforo', path: '/admin/aforo' },
     { icon: Users, label: 'Usuarios', path: '/admin/usuarios' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
