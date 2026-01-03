@@ -603,12 +603,23 @@ const AdminAcreditaciones = () => {
                 </div>
                 
                 <div>
-                  <label className="text-foreground/70 text-sm">Organización</label>
+                  <label className="text-foreground/70 text-sm">Cédula</label>
+                  <input
+                    type="text"
+                    value={nuevaAcreditacion.cedula}
+                    onChange={(e) => setNuevaAcreditacion({...nuevaAcreditacion, cedula: e.target.value})}
+                    placeholder="V-12.345.678"
+                    className="w-full bg-background/50 border border-white/20 rounded-xl px-4 py-3 text-foreground mt-1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="text-foreground/70 text-sm">Organización / Departamento</label>
                   <input
                     type="text"
                     value={nuevaAcreditacion.organizacion}
                     onChange={(e) => setNuevaAcreditacion({...nuevaAcreditacion, organizacion: e.target.value})}
-                    placeholder="Empresa o medio"
+                    placeholder="Empresa, medio o departamento"
                     className="w-full bg-background/50 border border-white/20 rounded-xl px-4 py-3 text-foreground mt-1"
                   />
                 </div>
