@@ -2274,6 +2274,212 @@ async def obtener_entrada_termica(entrada_id: str, current_user: str = Depends(g
     from fastapi.responses import Response
     return Response(content=buffer.getvalue(), media_type="image/png")
 
+# ============== ENDPOINTS PARA PDF DE ACREDITACIONES ==============
+
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.units import mm, cm
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+import tempfile
+
+# Tamaño de credencial (similar a una tarjeta de identificación)
+CREDENCIAL_WIDTH = 85.6 * mm  # Tamaño estándar de tarjeta
+CREDENCIAL_HEIGHT = 53.98 * mm
+
+@api_router.get("/admin/acreditaciones/{acreditacion_id}/pdf")
+async def generar_pdf_acreditacion(acreditacion_id: str, current_user: str = Depends(get_current_user)):
+    """Genera PDF de una acreditación individual"""
+    acreditacion = await db.acreditaciones.find_one({"id": acreditacion_id}, {"_id": 0})
+    if not acreditacion:
+        raise HTTPException(status_code=404, detail="Acreditación no encontrada")
+    
+    # Obtener configuración de diseño de la categoría
+    categoria = await db.categorias_acreditacion.find_one({"id": acreditacion.get("categoria_id")}, {"_id": 0})
+    
+    # Crear PDF
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=(CREDENCIAL_WIDTH, CREDENCIAL_HEIGHT))
+    
+    # Dibujar la acreditación
+    await dibujar_acreditacion(c, acreditacion, categoria, 0, 0, CREDENCIAL_WIDTH, CREDENCIAL_HEIGHT)
+    
+    c.save()
+    buffer.seek(0)
+    
+    from fastapi.responses import Response
+    return Response(
+        content=buffer.getvalue(), 
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=acreditacion_{acreditacion.get('nombre_persona', 'sin_nombre').replace(' ', '_')}.pdf"}
+    )
+
+@api_router.get("/admin/acreditaciones/evento/{evento_id}/pdf")
+async def generar_pdf_todas_acreditaciones(evento_id: str, current_user: str = Depends(get_current_user)):
+    """Genera PDF con todas las acreditaciones de un evento (múltiples por página)"""
+    acreditaciones = await db.acreditaciones.find({"evento_id": evento_id}, {"_id": 0}).to_list(1000)
+    
+    if not acreditaciones:
+        raise HTTPException(status_code=404, detail="No hay acreditaciones para este evento")
+    
+    # Obtener evento
+    evento = await db.eventos.find_one({"id": evento_id}, {"_id": 0})
+    
+    # Obtener todas las categorías
+    categorias = await db.categorias_acreditacion.find({}, {"_id": 0}).to_list(100)
+    categorias_dict = {cat["id"]: cat for cat in categorias}
+    
+    # Crear PDF tamaño carta con múltiples credenciales por página
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    page_width, page_height = letter
+    
+    # Configuración de layout: 2 columnas x 4 filas = 8 credenciales por página
+    margin = 10 * mm
+    cred_width = 90 * mm
+    cred_height = 55 * mm
+    spacing_x = 5 * mm
+    spacing_y = 5 * mm
+    
+    cols = 2
+    rows = 4
+    
+    for i, acred in enumerate(acreditaciones):
+        # Calcular posición en la página
+        page_index = i // (cols * rows)
+        pos_in_page = i % (cols * rows)
+        col = pos_in_page % cols
+        row = pos_in_page // cols
+        
+        # Nueva página si es necesario
+        if pos_in_page == 0 and i > 0:
+            c.showPage()
+        
+        # Calcular coordenadas
+        x = margin + col * (cred_width + spacing_x)
+        y = page_height - margin - (row + 1) * (cred_height + spacing_y)
+        
+        # Obtener categoría
+        categoria = categorias_dict.get(acred.get("categoria_id"))
+        
+        # Dibujar la acreditación
+        await dibujar_acreditacion(c, acred, categoria, x, y, cred_width, cred_height)
+    
+    c.save()
+    buffer.seek(0)
+    
+    from fastapi.responses import Response
+    nombre_evento = evento.get("nombre", "evento").replace(" ", "_") if evento else "evento"
+    return Response(
+        content=buffer.getvalue(), 
+        media_type="application/pdf",
+        headers={"Content-Disposition": f"attachment; filename=acreditaciones_{nombre_evento}.pdf"}
+    )
+
+async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float, y: float, width: float, height: float):
+    """Dibuja una acreditación en el canvas PDF"""
+    # Color de fondo basado en la categoría
+    color_hex = categoria.get("color", "#8B5CF6") if categoria else "#8B5CF6"
+    # Convertir hex a RGB
+    r = int(color_hex[1:3], 16) / 255
+    g = int(color_hex[3:5], 16) / 255
+    b = int(color_hex[5:7], 16) / 255
+    
+    # Obtener configuración de elementos de la categoría
+    config = categoria.get("config_elementos") if categoria else None
+    
+    # Fondo con gradiente simulado
+    c.setFillColorRGB(r * 0.3, g * 0.3, b * 0.3)  # Fondo oscuro
+    c.roundRect(x, y, width, height, 5, fill=1, stroke=0)
+    
+    # Barra de color superior
+    c.setFillColorRGB(r, g, b)
+    c.rect(x, y + height - 12*mm, width, 12*mm, fill=1, stroke=0)
+    
+    # Imagen de fondo personalizada si existe
+    template_img = categoria.get("template_imagen") if categoria else None
+    if template_img and template_img.startswith("http"):
+        try:
+            import urllib.request
+            with urllib.request.urlopen(template_img) as response:
+                img_data = BytesIO(response.read())
+                img = ImageReader(img_data)
+                c.drawImage(img, x, y, width, height, preserveAspectRatio=True, mask='auto')
+        except:
+            pass  # Si falla, usar diseño por defecto
+    
+    # Nombre de la categoría (arriba)
+    c.setFillColorRGB(1, 1, 1)
+    c.setFont("Helvetica-Bold", 14)
+    categoria_nombre = categoria.get("nombre", "GENERAL") if categoria else "GENERAL"
+    c.drawCentredString(x + width/2, y + height - 8*mm, categoria_nombre.upper())
+    
+    # Nombre de la persona
+    c.setFont("Helvetica-Bold", 12)
+    nombre = acreditacion.get("nombre_persona", "SIN NOMBRE")
+    # Ajustar posición según configuración o usar defecto
+    if config and config.get("nombre", {}).get("visible", True):
+        nombre_y = y + height * (1 - config["nombre"].get("y", 35) / 100)
+    else:
+        nombre_y = y + height - 18*mm
+    c.drawCentredString(x + width/2, nombre_y, nombre.upper())
+    
+    # Cédula
+    c.setFont("Helvetica", 9)
+    cedula = acreditacion.get("cedula", "")
+    if config and config.get("cedula", {}).get("visible", True):
+        cedula_y = y + height * (1 - config["cedula"].get("y", 45) / 100)
+    else:
+        cedula_y = y + height - 24*mm
+    if cedula:
+        c.drawCentredString(x + width/2, cedula_y, f"C.I.: {cedula}")
+    
+    # Departamento/Organización
+    c.setFont("Helvetica-Bold", 10)
+    departamento = acreditacion.get("organizacion", "") or acreditacion.get("cargo", "")
+    if config and config.get("departamento", {}).get("visible", True):
+        dept_y = y + height * (1 - config["departamento"].get("y", 55) / 100)
+    else:
+        dept_y = y + height - 30*mm
+    if departamento:
+        c.drawCentredString(x + width/2, dept_y, departamento.upper())
+    
+    # QR Code
+    qr_data = acreditacion.get("codigo_qr")
+    if qr_data:
+        try:
+            # Extraer imagen base64 del QR
+            if qr_data.startswith("data:image"):
+                qr_base64 = qr_data.split(",")[1]
+                qr_bytes = base64.b64decode(qr_base64)
+                qr_img = ImageReader(BytesIO(qr_bytes))
+                
+                # Posición del QR
+                qr_size = 18 * mm
+                if config and config.get("qr", {}).get("visible", True):
+                    qr_x = x + width * config["qr"].get("x", 85) / 100 - qr_size/2
+                    qr_y = y + height * (1 - config["qr"].get("y", 75) / 100) - qr_size/2
+                else:
+                    qr_x = x + width - qr_size - 3*mm
+                    qr_y = y + 3*mm
+                
+                c.drawImage(qr_img, qr_x, qr_y, qr_size, qr_size)
+        except Exception as e:
+            logging.error(f"Error dibujando QR: {e}")
+    
+    # Código alfanumérico
+    codigo = acreditacion.get("codigo_alfanumerico", "")
+    if codigo:
+        c.setFont("Helvetica", 7)
+        c.setFillColorRGB(0.7, 0.7, 0.7)
+        c.drawString(x + 3*mm, y + 2*mm, codigo)
+    
+    # Borde
+    c.setStrokeColorRGB(r, g, b)
+    c.setLineWidth(1)
+    c.roundRect(x, y, width, height, 5, fill=0, stroke=1)
+
 app.include_router(api_router)
 
 app.add_middleware(
