@@ -227,6 +227,9 @@ class CategoriaAcreditacion(BaseModel):
     capacidad: int = 100
     descripcion: Optional[str] = None
     activa: bool = True
+    # Campos de diseño
+    template_imagen: Optional[str] = None  # Imagen de fondo
+    config_elementos: Optional[dict] = None  # Posición de elementos
 
 class Acreditacion(BaseModel):
     model_config = ConfigDict(extra="ignore")
