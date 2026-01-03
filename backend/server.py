@@ -2369,7 +2369,7 @@ async def generar_pdf_todas_acreditaciones(evento_id: str, current_user: str = D
         categoria = categorias_dict.get(acred.get("categoria_id"))
         
         # Dibujar la acreditación
-        await dibujar_acreditacion(c, acred, categoria, x, y, cred_width, cred_height)
+        await dibujar_acreditacion(c, acred, categoria, x, y, cred_width, cred_height, evento)
     
     c.save()
     buffer.seek(0)
