@@ -13,6 +13,7 @@ import AdminCompras from './pages/admin/AdminCompras';
 import AdminMetodosPago from './pages/admin/AdminMetodosPago';
 import AdminConfiguracion from './pages/admin/AdminConfiguracion';
 import AdminDisenoEntrada from './pages/admin/AdminDisenoEntrada';
+import AdminDisenoAcreditacion from './pages/admin/AdminDisenoAcreditacion';
 import AdminUsuarios from './pages/admin/AdminUsuarios';
 import AdminAsistencia from './pages/admin/AdminAsistencia';
 import AdminAcreditaciones from './pages/admin/AdminAcreditaciones';
