@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CreditCard, Shield, Table2, Upload, Move, ZoomIn, ZoomOut, RotateCw, Save, Eye, Users, BarChart3, BadgeCheck, Activity, Type, QrCode, Building, CreditCard as IdCard, Trash2, Download, FileText } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CreditCard, Shield, Table2, Upload, Save, Eye, Users, BadgeCheck, Activity, Type, QrCode, Building, CreditCard as IdCard, Trash2, Download, FileText, Palette } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 
@@ -13,6 +13,8 @@ const AdminDisenoAcreditacion = () => {
   const navigate = useNavigate();
   const previewRef = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [eventos, setEventos] = useState([]);
+  const [eventoSeleccionado, setEventoSeleccionado] = useState('');
   const [categorias, setCategorias] = useState([]);
   const [categoriaSeleccionada, setCategoriaSeleccionada] = useState('');
   const [fondoImagen, setFondoImagen] = useState(null);
@@ -38,69 +40,93 @@ const AdminDisenoAcreditacion = () => {
     cedula: 'V-12.345.678',
     departamento: 'PRENSA DIGITAL',
     categoria: 'PRENSA',
-    evento: 'FESTIVAL DEL HUMOR 2026'
+    evento: 'EVENTO 2026'
   });
 
   useEffect(() => {
-    cargarCategorias();
+    cargarDatos();
   }, []);
 
   useEffect(() => {
-    if (categoriaSeleccionada && categorias.length > 0) {
-      cargarConfiguracionCategoria();
+    if (eventoSeleccionado && categoriaSeleccionada) {
+      cargarConfiguracion();
     }
-  }, [categoriaSeleccionada, categorias]);
+  }, [eventoSeleccionado, categoriaSeleccionada]);
 
-  const cargarCategorias = async () => {
+  const cargarDatos = async () => {
     try {
       const token = localStorage.getItem('admin_token');
-      const response = await axios.get(`${API}/admin/categorias-acreditacion`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setCategorias(response.data);
-      if (response.data.length > 0 && !categoriaSeleccionada) {
-        setCategoriaSeleccionada(response.data[0].id);
+      const [eventosRes, categoriasRes] = await Promise.all([
+        axios.get(`${API}/eventos`),
+        axios.get(`${API}/admin/categorias-acreditacion`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
+      ]);
+      
+      setEventos(eventosRes.data);
+      setCategorias(categoriasRes.data);
+      
+      if (eventosRes.data.length > 0 && !eventoSeleccionado) {
+        setEventoSeleccionado(eventosRes.data[0].id);
+      }
+      if (categoriasRes.data.length > 0 && !categoriaSeleccionada) {
+        setCategoriaSeleccionada(categoriasRes.data[0].id);
       }
     } catch (error) {
-      console.error('Error cargando categorías:', error);
-      toast.error('Error al cargar categorías de acreditación');
+      console.error('Error cargando datos:', error);
+      toast.error('Error al cargar datos');
     }
   };
 
-  const cargarConfiguracionCategoria = () => {
+  const cargarConfiguracion = () => {
+    const evento = eventos.find(e => e.id === eventoSeleccionado);
     const categoria = categorias.find(c => c.id === categoriaSeleccionada);
-    if (categoria) {
-      // Actualizar datos de ejemplo con el nombre de la categoría
-      setDatosEjemplo(prev => ({
-        ...prev,
-        categoria: categoria.nombre
-      }));
-      
-      if (categoria.template_imagen) {
-        setFondoPreview(categoria.template_imagen);
-        setFondoImagen(categoria.template_imagen);
+    
+    // Actualizar datos de ejemplo
+    setDatosEjemplo(prev => ({
+      ...prev,
+      categoria: categoria?.nombre || 'CATEGORÍA',
+      evento: evento?.nombre || 'EVENTO 2026'
+    }));
+    
+    // Buscar configuración guardada para este evento + categoría
+    const configAcreditaciones = evento?.config_acreditaciones || {};
+    const configCategoria = configAcreditaciones[categoriaSeleccionada];
+    
+    if (configCategoria) {
+      if (configCategoria.template_imagen) {
+        setFondoPreview(configCategoria.template_imagen);
+        setFondoImagen(configCategoria.template_imagen);
       } else {
         setFondoPreview(null);
         setFondoImagen(null);
       }
       
-      if (categoria.config_elementos) {
+      if (configCategoria.config_elementos) {
         setElementos(prev => ({
           ...prev,
-          ...categoria.config_elementos
+          ...configCategoria.config_elementos
         }));
       } else {
-        // Reset to default
-        setElementos({
-          nombre: { visible: true, x: 50, y: 35, size: 24, color: '#FFFFFF', rotation: 0 },
-          cedula: { visible: true, x: 50, y: 45, size: 14, color: '#FFFFFF', rotation: 0 },
-          departamento: { visible: true, x: 50, y: 55, size: 16, color: '#FFFFFF', rotation: 0 },
-          categoria: { visible: true, x: 50, y: 15, size: 18, color: '#FFD700', rotation: 0 },
-          evento: { visible: true, x: 50, y: 90, size: 10, color: '#CCCCCC', rotation: 0 },
-          qr: { visible: true, x: 85, y: 75, size: 60, rotation: 0 }
-        });
+        resetElementos();
       }
+    } else {
+      // Sin configuración guardada, usar defaults
+      setFondoPreview(null);
+      setFondoImagen(null);
+      resetElementos();
     }
+  };
+
+  const resetElementos = () => {
+    setElementos({
+      nombre: { visible: true, x: 50, y: 35, size: 24, color: '#FFFFFF', rotation: 0 },
+      cedula: { visible: true, x: 50, y: 45, size: 14, color: '#FFFFFF', rotation: 0 },
+      departamento: { visible: true, x: 50, y: 55, size: 16, color: '#FFFFFF', rotation: 0 },
+      categoria: { visible: true, x: 50, y: 15, size: 18, color: '#FFD700', rotation: 0 },
+      evento: { visible: true, x: 50, y: 90, size: 10, color: '#CCCCCC', rotation: 0 },
+      qr: { visible: true, x: 85, y: 75, size: 60, rotation: 0 }
+    });
   };
 
   const handleFondoUpload = async (e) => {
@@ -219,25 +245,39 @@ const AdminDisenoAcreditacion = () => {
   };
 
   const guardarConfiguracion = async () => {
-    if (!categoriaSeleccionada) {
-      toast.error('Selecciona una categoría');
+    if (!eventoSeleccionado || !categoriaSeleccionada) {
+      toast.error('Selecciona un evento y una categoría');
       return;
     }
 
     setLoading(true);
     try {
       const token = localStorage.getItem('admin_token');
-      await axios.put(
-        `${API}/admin/categorias-acreditacion/${categoriaSeleccionada}`,
-        {
+      
+      // Obtener configuración actual del evento
+      const evento = eventos.find(e => e.id === eventoSeleccionado);
+      const configActual = evento?.config_acreditaciones || {};
+      
+      // Actualizar solo la configuración de esta categoría
+      const nuevaConfig = {
+        ...configActual,
+        [categoriaSeleccionada]: {
           template_imagen: fondoImagen || fondoPreview,
           config_elementos: elementos
-        },
+        }
+      };
+      
+      await axios.put(
+        `${API}/admin/eventos/${eventoSeleccionado}`,
+        { config_acreditaciones: nuevaConfig },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      toast.success('✅ Diseño de acreditación guardado');
-      // Recargar categorías para actualizar los datos
-      cargarCategorias();
+      
+      toast.success('✅ Diseño guardado para este evento y categoría');
+      
+      // Recargar datos para actualizar el estado
+      const eventosRes = await axios.get(`${API}/eventos`);
+      setEventos(eventosRes.data);
     } catch (error) {
       console.error('Error guardando:', error);
       toast.error('Error al guardar configuración');
@@ -266,7 +306,7 @@ const AdminDisenoAcreditacion = () => {
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
     { icon: Tag, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: BadgeCheck, label: 'Acreditaciones', path: '/admin/acreditaciones' },
-    { icon: BadgeCheck, label: 'Diseño Acreditación', path: '/admin/diseno-acreditacion', active: true },
+    { icon: Palette, label: 'Diseño Acreditación', path: '/admin/diseno-acreditacion', active: true },
     { icon: Activity, label: 'Aforo', path: '/admin/aforo' },
     { icon: Users, label: 'Usuarios', path: '/admin/usuarios' },
     { icon: Settings, label: 'Configuración', path: '/admin/configuracion' },
@@ -325,10 +365,10 @@ const AdminDisenoAcreditacion = () => {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-heading font-bold text-foreground">
-                  🎫 Diseño de Acreditación por Categoría
+                  🎫 Diseño de Acreditación
                 </h1>
                 <p className="text-foreground/60 mt-1">
-                  Personaliza el diseño de credenciales para cada categoría
+                  Personaliza el diseño de credenciales para cada evento y categoría
                 </p>
               </div>
             </div>
@@ -352,6 +392,23 @@ const AdminDisenoAcreditacion = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Panel de Controles */}
                 <div className="space-y-6">
+                  {/* Selector de Evento */}
+                  <div className="glass-card p-6 rounded-2xl">
+                    <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
+                      <Calendar className="w-5 h-5 text-primary" />
+                      Evento
+                    </h3>
+                    <select
+                      value={eventoSeleccionado}
+                      onChange={(e) => setEventoSeleccionado(e.target.value)}
+                      className="w-full bg-background/50 border border-white/10 rounded-xl px-4 py-3 text-foreground focus:border-primary outline-none"
+                    >
+                      {eventos.map(evento => (
+                        <option key={evento.id} value={evento.id}>{evento.nombre}</option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* Selector de Categoría */}
                   <div className="glass-card p-6 rounded-2xl">
                     <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
@@ -385,12 +442,12 @@ const AdminDisenoAcreditacion = () => {
                       Fondo de Credencial
                     </h3>
                     <label className="block">
-                      <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 transition-colors">
-                        <Upload className="w-10 h-10 text-foreground/40 mx-auto mb-2" />
+                      <div className="border-2 border-dashed border-white/20 rounded-xl p-4 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                        <Upload className="w-8 h-8 text-foreground/40 mx-auto mb-2" />
                         <p className="text-foreground/60 text-sm">
-                          {fondoPreview ? 'Cambiar imagen' : 'Subir imagen de fondo'}
+                          {fondoPreview ? 'Cambiar imagen' : 'Subir imagen'}
                         </p>
-                        <p className="text-foreground/40 text-xs mt-1">PNG, JPG (Recomendado: 400x250px)</p>
+                        <p className="text-foreground/40 text-xs mt-1">PNG, JPG (400x250px)</p>
                       </div>
                       <input 
                         type="file" 
@@ -416,10 +473,10 @@ const AdminDisenoAcreditacion = () => {
                       Elementos
                     </h3>
                     <p className="text-foreground/50 text-xs mb-4">
-                      Arrastra los elementos en la vista previa para posicionarlos
+                      Arrastra en la vista previa para posicionar
                     </p>
                     
-                    <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+                    <div className="space-y-3 max-h-[280px] overflow-y-auto pr-2">
                       {elementosConfig.map(({ key, label, icon: Icon }) => (
                         <div 
                           key={key} 
@@ -465,7 +522,7 @@ const AdminDisenoAcreditacion = () => {
                                     type="color"
                                     value={elementos[key].color}
                                     onChange={(e) => actualizarElemento(key, 'color', e.target.value)}
-                                    className="w-full h-8 rounded-lg cursor-pointer border border-white/10"
+                                    className="w-full h-7 rounded-lg cursor-pointer border border-white/10"
                                   />
                                 </div>
                               )}
@@ -503,10 +560,15 @@ const AdminDisenoAcreditacion = () => {
                 {/* Vista Previa */}
                 <div className="lg:col-span-2">
                   <div className="glass-card p-6 rounded-2xl">
-                    <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
-                      <Eye className="w-5 h-5 text-primary" />
-                      Vista Previa de Credencial
-                    </h3>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-bold text-foreground flex items-center gap-2">
+                        <Eye className="w-5 h-5 text-primary" />
+                        Vista Previa de Credencial
+                      </h3>
+                      <div className="text-sm text-foreground/50 bg-background/30 px-3 py-1 rounded-full">
+                        {eventos.find(e => e.id === eventoSeleccionado)?.nombre || 'Evento'} • {categorias.find(c => c.id === categoriaSeleccionada)?.nombre || 'Categoría'}
+                      </div>
+                    </div>
                     <p className="text-foreground/50 text-xs mb-4">
                       Arrastra los elementos para posicionarlos donde desees
                     </p>
@@ -667,10 +729,10 @@ const AdminDisenoAcreditacion = () => {
                     <div className="mt-6 p-4 bg-primary/10 rounded-xl border border-primary/20">
                       <h4 className="font-bold text-foreground mb-2">💡 Instrucciones</h4>
                       <ul className="text-sm text-foreground/70 space-y-1">
+                        <li>• <strong>Selecciona</strong> el evento y la categoría</li>
                         <li>• <strong>Arrastra</strong> cada elemento para posicionarlo</li>
-                        <li>• Usa los controles para ajustar <strong>tamaño, color y rotación</strong></li>
-                        <li>• Cada <strong>categoría</strong> tiene su propio diseño independiente</li>
-                        <li>• <strong>Guarda</strong> el diseño antes de cambiar de categoría</li>
+                        <li>• Ajusta <strong>tamaño, color y rotación</strong> en el panel</li>
+                        <li>• <strong>Guarda</strong> el diseño (se guarda por evento + categoría)</li>
                       </ul>
                     </div>
 
