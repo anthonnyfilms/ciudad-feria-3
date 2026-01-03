@@ -2379,7 +2379,7 @@ async def generar_pdf_todas_acreditaciones(evento_id: str, current_user: str = D
         headers={"Content-Disposition": f"attachment; filename=acreditaciones_{nombre_evento}.pdf"}
     )
 
-async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float, y: float, width: float, height: float):
+async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float, y: float, width: float, height: float, evento: dict = None):
     """Dibuja una acreditación en el canvas PDF"""
     # Color de fondo basado en la categoría
     color_hex = categoria.get("color", "#8B5CF6") if categoria else "#8B5CF6"
@@ -2388,8 +2388,22 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     g = int(color_hex[3:5], 16) / 255
     b = int(color_hex[5:7], 16) / 255
     
-    # Obtener configuración de elementos de la categoría
-    config = categoria.get("config_elementos") if categoria else None
+    # Obtener configuración de elementos - primero del evento, luego de la categoría
+    config = None
+    template_img = None
+    
+    # Buscar config en el evento (por categoría)
+    if evento and evento.get("config_acreditaciones"):
+        config_evento = evento["config_acreditaciones"].get(acreditacion.get("categoria_id"))
+        if config_evento:
+            config = config_evento.get("config_elementos")
+            template_img = config_evento.get("template_imagen")
+    
+    # Fallback a config de categoría
+    if not config and categoria:
+        config = categoria.get("config_elementos")
+    if not template_img and categoria:
+        template_img = categoria.get("template_imagen")
     
     # Fondo con gradiente simulado
     c.setFillColorRGB(r * 0.3, g * 0.3, b * 0.3)  # Fondo oscuro
