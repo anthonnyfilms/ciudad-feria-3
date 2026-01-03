@@ -2417,7 +2417,6 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     c.rect(x, y + height - 12*mm, width, 12*mm, fill=1, stroke=0)
     
     # Imagen de fondo personalizada si existe
-    template_img = categoria.get("template_imagen") if categoria else None
     if template_img and template_img.startswith("http"):
         try:
             import urllib.request
