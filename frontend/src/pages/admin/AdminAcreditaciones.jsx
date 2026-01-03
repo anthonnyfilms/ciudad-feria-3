@@ -394,41 +394,48 @@ const AdminAcreditaciones = () => {
             <h2 className="text-xl font-bold text-foreground mb-4">
               Acreditaciones ({acreditaciones.length})
             </h2>
-            <div className="space-y-3">
-              {acreditaciones.map(acred => (
-                <motion.div
-                  key={acred.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="glass-card p-4 rounded-xl"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div 
-                        className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: categorias.find(c => c.id === acred.categoria_id)?.color || '#8B5CF6' }}
-                      >
-                        {acred.nombre_persona?.charAt(0)?.toUpperCase()}
+            {acreditaciones.length === 0 ? (
+              <div className="glass-card p-8 rounded-xl text-center">
+                <BadgeCheck className="w-12 h-12 text-foreground/30 mx-auto mb-3" />
+                <p className="text-foreground/60">No hay acreditaciones para este evento</p>
+                <p className="text-foreground/40 text-sm mt-1">Crea una nueva acreditación para comenzar</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {acreditaciones.map(acred => (
+                  <motion.div
+                    key={acred.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-card p-4 rounded-xl"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div 
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-white font-bold"
+                          style={{ backgroundColor: categorias.find(c => c.id === acred.categoria_id)?.color || '#8B5CF6' }}
+                        >
+                          {acred.nombre_persona?.charAt(0)?.toUpperCase()}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-foreground">{acred.nombre_persona}</h3>
+                          <p className="text-foreground/60 text-sm">
+                            {acred.categoria_nombre} • {acred.cedula || 'Sin cédula'} • {acred.organizacion || 'Sin organización'}
+                          </p>
+                          <p className="text-foreground/40 text-xs">{acred.codigo_alfanumerico}</p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-foreground">{acred.nombre_persona}</h3>
-                        <p className="text-foreground/60 text-sm">
-                          {acred.categoria_nombre} • {acred.organizacion || 'Sin organización'}
-                        </p>
-                        <p className="text-foreground/40 text-xs">{acred.codigo_alfanumerico}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        acred.estado_entrada === 'dentro' 
-                          ? 'bg-green-500/20 text-green-400' 
-                          : 'bg-gray-500/20 text-gray-400'
-                      }`}>
-                        {acred.estado_entrada === 'dentro' ? 'Dentro' : 'Fuera'}
-                      </span>
-                      <div className="flex flex-wrap gap-1 max-w-xs">
-                        {acred.zonas_acceso?.slice(0, 3).map(zona => (
-                          <span key={zona} className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
+                      <div className="flex items-center gap-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          acred.estado_entrada === 'dentro' 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-gray-500/20 text-gray-400'
+                        }`}>
+                          {acred.estado_entrada === 'dentro' ? 'Dentro' : 'Fuera'}
+                        </span>
+                        <div className="flex flex-wrap gap-1 max-w-xs">
+                          {acred.zonas_acceso?.slice(0, 3).map(zona => (
+                            <span key={zona} className="text-xs bg-primary/20 text-primary px-2 py-0.5 rounded">
                             {zona}
                           </span>
                         ))}
