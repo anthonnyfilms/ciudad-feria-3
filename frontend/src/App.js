@@ -48,6 +48,7 @@ function App() {
                 <Route path="metodos-pago" element={<AdminMetodosPago />} />
                 <Route path="validar" element={<ValidarEntrada />} />
                 <Route path="diseno-entrada" element={<AdminDisenoEntrada />} />
+                <Route path="diseno-acreditacion" element={<AdminDisenoAcreditacion />} />
                 <Route path="usuarios" element={<AdminUsuarios />} />
                 <Route path="asistencia" element={<AdminAsistencia />} />
                 <Route path="configuracion" element={<AdminConfiguracion />} />
