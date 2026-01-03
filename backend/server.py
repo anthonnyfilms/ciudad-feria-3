@@ -2452,16 +2452,16 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
         c.drawCentredString(x + width/2, cedula_y, f"C.I.: {cedula}")
     
     # Departamento/Organización
-    c.setFont("Helvetica-Bold", 10)
+    c.setFont("Helvetica-Bold", 12)
     departamento = acreditacion.get("organizacion", "") or acreditacion.get("cargo", "")
     if config and config.get("departamento", {}).get("visible", True):
         dept_y = y + height * (1 - config["departamento"].get("y", 55) / 100)
     else:
-        dept_y = y + height - 30*mm
+        dept_y = y + height - 35*mm
     if departamento:
         c.drawCentredString(x + width/2, dept_y, departamento.upper())
     
-    # QR Code
+    # QR Code - GRANDE para fácil escaneo (35mm = 3.5cm)
     qr_data = acreditacion.get("codigo_qr")
     if qr_data:
         try:
@@ -2471,14 +2471,16 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
                 qr_bytes = base64.b64decode(qr_base64)
                 qr_img = ImageReader(BytesIO(qr_bytes))
                 
-                # Posición del QR
-                qr_size = 18 * mm
+                # QR grande: 35mm (3.5 cm) para fácil escaneo
+                qr_size = 35 * mm
                 if config and config.get("qr", {}).get("visible", True):
+                    # Usar posición del config pero escalar el tamaño
                     qr_x = x + width * config["qr"].get("x", 85) / 100 - qr_size/2
-                    qr_y = y + height * (1 - config["qr"].get("y", 75) / 100) - qr_size/2
+                    qr_y = y + height * (1 - config["qr"].get("y", 70) / 100) - qr_size/2
                 else:
-                    qr_x = x + width - qr_size - 3*mm
-                    qr_y = y + 3*mm
+                    # Posición por defecto: esquina inferior derecha
+                    qr_x = x + width - qr_size - 8*mm
+                    qr_y = y + 8*mm
                 
                 c.drawImage(qr_img, qr_x, qr_y, qr_size, qr_size)
         except Exception as e:
