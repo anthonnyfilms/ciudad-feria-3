@@ -254,18 +254,20 @@ const AdminDisenoAcreditacion = () => {
     try {
       const token = localStorage.getItem('admin_token');
       
-      // Obtener configuración actual del evento
-      const evento = eventos.find(e => e.id === eventoSeleccionado);
-      const configActual = evento?.config_acreditaciones || {};
+      // Obtener configuración FRESCA del servidor (no del estado local)
+      const eventoRes = await axios.get(`${API}/eventos/${eventoSeleccionado}`);
+      const configActual = eventoRes.data?.config_acreditaciones || {};
       
       // Actualizar solo la configuración de esta categoría
       const nuevaConfig = {
         ...configActual,
         [categoriaSeleccionada]: {
-          template_imagen: fondoImagen || fondoPreview,
+          template_imagen: fondoImagen || fondoPreview || null,
           config_elementos: elementos
         }
       };
+      
+      console.log('Guardando config:', JSON.stringify(nuevaConfig, null, 2));
       
       await axios.put(
         `${API}/admin/eventos/${eventoSeleccionado}`,
@@ -273,14 +275,14 @@ const AdminDisenoAcreditacion = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       
-      toast.success('✅ Diseño guardado para este evento y categoría');
+      toast.success('✅ Diseño guardado correctamente');
       
       // Recargar datos para actualizar el estado
       const eventosRes = await axios.get(`${API}/eventos`);
       setEventos(eventosRes.data);
     } catch (error) {
       console.error('Error guardando:', error);
-      toast.error('Error al guardar configuración');
+      toast.error('Error al guardar: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
     }
