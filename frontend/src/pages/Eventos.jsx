@@ -137,7 +137,7 @@ const Eventos = () => {
                   </div>
                   <div className="flex items-center gap-2 text-foreground/60">
                     <Ticket className="w-4 h-4" />
-                    <span className="text-sm">{evento.asientos_disponibles} disponibles</span>
+                    <span className="text-sm">{evento.entradas_disponibles || evento.asientos_disponibles || 0} entradas disponibles</span>
                   </div>
                 </div>
 
