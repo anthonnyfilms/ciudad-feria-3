@@ -43,8 +43,10 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
     cargarCategoriasMesas();
   }, []);
 
+  // Crear una referencia serializada para detectar cambios profundos en configuracionInicial
+  const configSerialized = JSON.stringify(configuracionInicial);
+  
   // Actualizar estados cuando cambia configuracionInicial (para edición de eventos)
-  // Usamos JSON.stringify para detectar cambios profundos en el objeto
   useEffect(() => {
     if (configuracionInicial) {
       if (configuracionInicial.tipo) {
@@ -59,7 +61,8 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
         setCategoriasGenerales([...configuracionInicial.categorias_generales]);
       }
     }
-  }, [JSON.stringify(configuracionInicial)]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [configSerialized]);
 
   const agregarCategoriaMesa = async () => {
     if (!nuevaCategoria.nombre.trim()) return;
