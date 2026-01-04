@@ -594,13 +594,20 @@ async def validar_entrada(request: Request):
         }
     
     if accion == 'verificar':
+        # Obtener info del evento para la ubicación
+        evento_info = await db.eventos.find_one({"id": entrada.get('evento_id')}, {"_id": 0, "ubicacion": 1})
+        ubicacion = evento_info.get('ubicacion', '') if evento_info else ''
+        categoria = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or 'General'
+        
         return {
             "valido": True,
-            "mensaje": "Entrada válida",
+            "mensaje": f"✅ Entrada válida - {categoria.upper()}",
             "entrada": {
                 "nombre_evento": entrada['nombre_evento'],
                 "nombre_comprador": entrada['nombre_comprador'],
                 "email_comprador": entrada['email_comprador'],
+                "categoria": categoria,
+                "ubicacion": ubicacion,
                 "asiento": entrada.get('asiento'),
                 "mesa": entrada.get('mesa'),
                 "estado_actual": entrada.get('estado_entrada', 'fuera')
@@ -608,13 +615,16 @@ async def validar_entrada(request: Request):
         }
     
     elif accion == 'entrada':
+        categoria = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or 'General'
+        
         if entrada.get('estado_entrada') == 'dentro':
             return {
                 "valido": False,
-                "mensaje": "🚨 ALERTA: Esta persona ya está dentro del evento",
+                "mensaje": f"🚨 ALERTA: Esta persona ya está dentro del evento ({categoria.upper()})",
                 "tipo_alerta": "ya_dentro",
                 "entrada": {
                     "nombre_comprador": entrada['nombre_comprador'],
+                    "categoria": categoria,
                     "asiento": entrada.get('asiento')
                 }
             }
@@ -638,12 +648,18 @@ async def validar_entrada(request: Request):
             }
         )
         
+        # Obtener ubicación
+        evento_info = await db.eventos.find_one({"id": entrada.get('evento_id')}, {"_id": 0, "ubicacion": 1})
+        ubicacion = evento_info.get('ubicacion', '') if evento_info else ''
+        
         return {
             "valido": True,
-            "mensaje": "✅ Entrada registrada exitosamente",
+            "mensaje": f"✅ Entrada registrada - {categoria.upper()}",
             "tipo_accion": "entrada",
             "entrada": {
                 "nombre_comprador": entrada['nombre_comprador'],
+                "categoria": categoria,
+                "ubicacion": ubicacion,
                 "asiento": entrada.get('asiento'),
                 "mesa": entrada.get('mesa')
             }
