@@ -254,13 +254,18 @@ const AdminDisenoAcreditacion = () => {
   };
 
   const actualizarElemento = (key, campo, valor) => {
-    setElementos(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [campo]: valor
-      }
-    }));
+    console.log(`Actualizando ${key}.${campo} = ${valor}`);
+    setElementos(prev => {
+      const nuevo = {
+        ...prev,
+        [key]: {
+          ...prev[key],
+          [campo]: valor
+        }
+      };
+      console.log('Nuevo estado elementos:', nuevo);
+      return nuevo;
+    });
   };
 
   const guardarConfiguracion = async () => {
