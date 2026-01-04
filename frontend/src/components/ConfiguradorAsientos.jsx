@@ -44,19 +44,22 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
   }, []);
 
   // Actualizar estados cuando cambia configuracionInicial (para edición de eventos)
+  // Usamos JSON.stringify para detectar cambios profundos en el objeto
   useEffect(() => {
     if (configuracionInicial) {
       if (configuracionInicial.tipo) {
         setTipoAsientos(configuracionInicial.tipo);
       }
-      if (configuracionInicial.mesas) {
+      if (configuracionInicial.mesas && Array.isArray(configuracionInicial.mesas)) {
         setMesas(configuracionInicial.mesas);
       }
-      if (configuracionInicial.categorias_generales && configuracionInicial.categorias_generales.length > 0) {
-        setCategoriasGenerales(configuracionInicial.categorias_generales);
+      // IMPORTANTE: Cargar TODAS las categorías generales cuando se edita un evento
+      if (configuracionInicial.categorias_generales && Array.isArray(configuracionInicial.categorias_generales) && configuracionInicial.categorias_generales.length > 0) {
+        // Forzar actualización con todos los elementos del array
+        setCategoriasGenerales([...configuracionInicial.categorias_generales]);
       }
     }
-  }, [configuracionInicial]);
+  }, [JSON.stringify(configuracionInicial)]);
 
   const agregarCategoriaMesa = async () => {
     if (!nuevaCategoria.nombre.trim()) return;
