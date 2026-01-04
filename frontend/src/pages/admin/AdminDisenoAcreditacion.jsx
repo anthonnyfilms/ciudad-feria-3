@@ -506,6 +506,28 @@ const AdminDisenoAcreditacion = () => {
                           {elementos[key].visible && (
                             <div className="grid grid-cols-2 gap-2 mt-2">
                               <div>
+                                <label className="text-xs text-foreground/50">Pos X %</label>
+                                <input
+                                  type="number"
+                                  value={Math.round(elementos[key].x)}
+                                  onChange={(e) => actualizarElemento(key, 'x', Math.max(5, Math.min(95, parseInt(e.target.value) || 50)))}
+                                  min="5"
+                                  max="95"
+                                  className="w-full bg-background/50 border border-white/10 rounded-lg px-2 py-1 text-sm text-foreground"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs text-foreground/50">Pos Y %</label>
+                                <input
+                                  type="number"
+                                  value={Math.round(elementos[key].y)}
+                                  onChange={(e) => actualizarElemento(key, 'y', Math.max(5, Math.min(95, parseInt(e.target.value) || 50)))}
+                                  min="5"
+                                  max="95"
+                                  className="w-full bg-background/50 border border-white/10 rounded-lg px-2 py-1 text-sm text-foreground"
+                                />
+                              </div>
+                              <div>
                                 <label className="text-xs text-foreground/50">Tamaño</label>
                                 <input
                                   type="number"
@@ -527,17 +549,6 @@ const AdminDisenoAcreditacion = () => {
                                   />
                                 </div>
                               )}
-                              <div>
-                                <label className="text-xs text-foreground/50">Rotación°</label>
-                                <input
-                                  type="number"
-                                  value={elementos[key].rotation}
-                                  onChange={(e) => actualizarElemento(key, 'rotation', parseInt(e.target.value) || 0)}
-                                  min="-45"
-                                  max="45"
-                                  className="w-full bg-background/50 border border-white/10 rounded-lg px-2 py-1 text-sm text-foreground"
-                                />
-                              </div>
                             </div>
                           )}
                         </div>
