@@ -10,7 +10,8 @@ const API = `${BACKEND_URL}/api`;
 const Home = () => {
   const [config, setConfig] = useState({
     descripcion_inicio: 'Vive la tradición, cultura y alegría de la feria más importante del Táchira. Asegura tus entradas digitales con códigos QR únicos e incopiables.',
-    banner_principal: 'https://images.unsplash.com/photo-1750323313940-a267ef7d89fa?crop=entropy&cs=srgb&fm=jpg&q=85'
+    banner_principal: 'https://images.unsplash.com/photo-1750323313940-a267ef7d89fa?crop=entropy&cs=srgb&fm=jpg&q=85',
+    imagen_fondo_home: ''
   });
 
   useEffect(() => {
@@ -24,7 +25,8 @@ const Home = () => {
         setConfig(prev => ({
           ...prev,
           descripcion_inicio: response.data.descripcion_inicio || prev.descripcion_inicio,
-          banner_principal: response.data.banner_principal || prev.banner_principal
+          banner_principal: response.data.banner_principal || prev.banner_principal,
+          imagen_fondo_home: response.data.imagen_fondo_home || ''
         }));
       }
     } catch (error) {
