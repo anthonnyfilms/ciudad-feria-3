@@ -200,6 +200,7 @@ const AdminEventos = () => {
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras' },
     { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
+    { icon: Printer, label: 'Tickets Térmicos', path: '/admin/tickets-termicos' },
     { icon: Upload, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: BadgeCheck, label: 'Acreditaciones', path: '/admin/acreditaciones' },
     { icon: Activity, label: 'Aforo', path: '/admin/aforo' },
