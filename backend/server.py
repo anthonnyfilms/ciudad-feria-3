@@ -542,11 +542,81 @@ async def validar_entrada(request: Request):
     if not qr_payload:
         raise HTTPException(status_code=400, detail="Payload QR no proporcionado")
     
-    datos_entrada = validar_qr(qr_payload)
-    if not datos_entrada:
+    datos_qr = validar_qr(qr_payload)
+    if not datos_qr:
         raise HTTPException(status_code=400, detail="Código QR inválido o corrupto")
     
-    entrada_id = datos_entrada.get('entrada_id')
+    # Detectar si es ACREDITACIÓN o ENTRADA
+    tipo_qr = datos_qr.get('tipo', 'entrada')
+    
+    if tipo_qr == 'acreditacion':
+        # Es una acreditación - buscar y validar
+        acreditacion_id = datos_qr.get('acreditacion_id')
+        acreditacion = await db.acreditaciones.find_one({"id": acreditacion_id}, {"_id": 0})
+        
+        if not acreditacion:
+            return {
+                "valido": False,
+                "tipo": "acreditacion",
+                "mensaje": "❌ Acreditación no encontrada"
+            }
+        
+        categoria = acreditacion.get('categoria_nombre', 'N/A')
+        nombre = acreditacion.get('nombre_persona', 'N/A')
+        
+        if accion == 'verificar':
+            return {
+                "valido": True,
+                "tipo": "acreditacion",
+                "mensaje": f"✅ ACREDITACIÓN VÁLIDA - {categoria.upper()}",
+                "entrada": {
+                    "nombre_comprador": nombre,
+                    "nombre_evento": "ACREDITACIÓN",
+                    "categoria": categoria,
+                    "cargo": acreditacion.get('cargo'),
+                    "organizacion": acreditacion.get('organizacion'),
+                    "cedula": acreditacion.get('cedula'),
+                    "estado_actual": acreditacion.get('estado_entrada', 'fuera')
+                }
+            }
+        elif accion == 'entrada':
+            if acreditacion.get('estado_entrada') == 'dentro':
+                return {
+                    "valido": False,
+                    "tipo": "acreditacion",
+                    "mensaje": f"🚨 {nombre} YA ESTÁ DENTRO ({categoria})",
+                    "entrada": {"nombre_comprador": nombre, "categoria": categoria}
+                }
+            
+            # Registrar entrada
+            historial = acreditacion.get('historial_acceso', [])
+            historial.append({"tipo": "entrada", "fecha": datetime.now(timezone.utc).isoformat()})
+            
+            await db.acreditaciones.update_one(
+                {"id": acreditacion_id},
+                {"$set": {"estado_entrada": "dentro", "historial_acceso": historial}}
+            )
+            
+            return {
+                "valido": True,
+                "tipo": "acreditacion",
+                "mensaje": f"✅ ENTRADA REGISTRADA - {categoria.upper()} - {nombre}",
+                "entrada": {"nombre_comprador": nombre, "categoria": categoria}
+            }
+        elif accion == 'salida':
+            await db.acreditaciones.update_one(
+                {"id": acreditacion_id},
+                {"$set": {"estado_entrada": "fuera"}}
+            )
+            return {
+                "valido": True,
+                "tipo": "acreditacion", 
+                "mensaje": f"✅ SALIDA REGISTRADA - {nombre}",
+                "entrada": {"nombre_comprador": nombre}
+            }
+    
+    # Es una ENTRADA normal
+    entrada_id = datos_qr.get('entrada_id')
     entrada = await db.entradas.find_one({"id": entrada_id}, {"_id": 0})
     
     if not entrada:
