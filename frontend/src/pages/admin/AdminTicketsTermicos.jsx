@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, 
   CreditCard, Shield, Table2, Users, Printer, Plus, Trash2, 
-  Download, Eye, BadgeCheck, Activity, Ticket, Package, ChevronDown
+  Download, Eye, BadgeCheck, Activity, Ticket, Package
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
@@ -15,101 +15,54 @@ const API = `${BACKEND_URL}/api`;
 
 const AdminTicketsTermicos = () => {
   const navigate = useNavigate();
-  const [eventos, setEventos] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [generando, setGenerando] = useState(false);
   const [entradasGeneradas, setEntradasGeneradas] = useState([]);
   const [entradaPreview, setEntradaPreview] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const printRef = useRef(null);
+  const [ultimoNumero, setUltimoNumero] = useState(1);
   
-  // Form state
+  // Form state - SIN evento, solo Ciudad Feria
   const [formData, setFormData] = useState({
-    evento_id: '',
     categoria: 'General',
     cantidad: 10,
-    precio: 0
+    precio: 1.00,
+    numero_inicio: 1
   });
 
-  // Categorías disponibles para el evento seleccionado
-  const [categoriasDisponibles, setCategoriasDisponibles] = useState([]);
+  // Categorías predefinidas para Ciudad Feria
+  const categoriasPredefinidas = [
+    { nombre: 'General', precio: 1.00 },
+    { nombre: 'Gradas', precio: 2.50 },
+    { nombre: 'VIP', precio: 5.00 },
+    { nombre: 'Premium', precio: 10.00 }
+  ];
 
   useEffect(() => {
-    cargarEventos();
+    obtenerUltimoNumero();
   }, []);
 
-  useEffect(() => {
-    if (formData.evento_id) {
-      const evento = eventos.find(e => e.id === formData.evento_id);
-      if (evento) {
-        actualizarCategoriasDisponibles(evento);
-      }
-    }
-  }, [formData.evento_id, eventos]);
-
-  const actualizarCategoriasDisponibles = (evento) => {
-    const categorias = [];
-    
-    if (evento.tipo_asientos === 'general' || evento.tipo_asientos === 'mixto') {
-      const zonasGenerales = evento.configuracion_asientos?.categorias_generales || [];
-      zonasGenerales.forEach(zona => {
-        categorias.push({
-          nombre: zona.nombre,
-          precio: zona.precio || 0,
-          tipo: 'general'
-        });
-      });
-    }
-    
-    if (evento.tipo_asientos === 'mesas' || evento.tipo_asientos === 'mixto') {
-      const mesas = evento.configuracion_asientos?.mesas || [];
-      const categMesas = [...new Set(mesas.map(m => m.categoria))];
-      categMesas.forEach(cat => {
-        const mesaEjemplo = mesas.find(m => m.categoria === cat);
-        categorias.push({
-          nombre: `Mesa - ${cat}`,
-          precio: mesaEjemplo?.precio || 0,
-          tipo: 'mesa'
-        });
-      });
-    }
-    
-    // Si no hay categorías configuradas, usar una por defecto
-    if (categorias.length === 0) {
-      categorias.push({
-        nombre: 'General',
-        precio: evento.precio || 0,
-        tipo: 'general'
-      });
-    }
-    
-    setCategoriasDisponibles(categorias);
-    
-    // Seleccionar la primera categoría por defecto
-    if (categorias.length > 0) {
-      setFormData(prev => ({
-        ...prev,
-        categoria: categorias[0].nombre,
-        precio: categorias[0].precio
-      }));
-    }
-  };
-
-  const cargarEventos = async () => {
+  const obtenerUltimoNumero = async () => {
     try {
-      const response = await axios.get(`${API}/eventos`);
-      setEventos(response.data);
-      if (response.data.length > 0) {
-        setFormData(prev => ({
-          ...prev,
-          evento_id: response.data[0].id
-        }));
-      }
+      const token = localStorage.getItem('admin_token');
+      const response = await axios.get(`${API}/admin/compras`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      // Buscar el número más alto de tickets de taquilla
+      const ticketsTaquilla = response.data.filter(c => c.tipo_venta === 'taquilla');
+      let maxNumero = 0;
+      ticketsTaquilla.forEach(t => {
+        if (t.numero_ticket && t.numero_ticket > maxNumero) {
+          maxNumero = t.numero_ticket;
+        }
+      });
+      
+      const siguienteNumero = maxNumero + 1;
+      setUltimoNumero(siguienteNumero);
+      setFormData(prev => ({ ...prev, numero_inicio: siguienteNumero }));
     } catch (error) {
-      console.error('Error cargando eventos:', error);
-      toast.error('Error al cargar eventos');
-    } finally {
-      setLoading(false);
+      console.error('Error obteniendo último número:', error);
     }
   };
 
@@ -121,20 +74,15 @@ const AdminTicketsTermicos = () => {
 
   const handleCategoriaChange = (e) => {
     const categoriaNombre = e.target.value;
-    const categoria = categoriasDisponibles.find(c => c.nombre === categoriaNombre);
+    const categoria = categoriasPredefinidas.find(c => c.nombre === categoriaNombre);
     setFormData(prev => ({
       ...prev,
       categoria: categoriaNombre,
-      precio: categoria?.precio || 0
+      precio: categoria?.precio || prev.precio
     }));
   };
 
   const generarEntradas = async () => {
-    if (!formData.evento_id) {
-      toast.error('Selecciona un evento');
-      return;
-    }
-    
     if (formData.cantidad < 1 || formData.cantidad > 100) {
       toast.error('La cantidad debe ser entre 1 y 100');
       return;
@@ -150,7 +98,11 @@ const AdminTicketsTermicos = () => {
       );
       
       setEntradasGeneradas(response.data.entradas);
-      toast.success(`${response.data.cantidad} tickets generados correctamente`);
+      toast.success(`${response.data.cantidad} tickets generados (${response.data.numero_inicio} - ${response.data.numero_fin})`);
+      
+      // Actualizar número siguiente
+      setUltimoNumero(response.data.numero_fin + 1);
+      setFormData(prev => ({ ...prev, numero_inicio: response.data.numero_fin + 1 }));
     } catch (error) {
       console.error('Error generando entradas:', error);
       toast.error(error.response?.data?.detail || 'Error al generar tickets');
@@ -193,7 +145,7 @@ const AdminTicketsTermicos = () => {
       const url = window.URL.createObjectURL(response.data);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `ticket-${entrada.codigo_alfanumerico}.png`;
+      link.download = `ticket-${entrada.numero_ticket || entrada.codigo_alfanumerico}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -210,58 +162,31 @@ const AdminTicketsTermicos = () => {
       return;
     }
 
-    // Crear ventana de impresión con todos los tickets
     const printWindow = window.open('', '_blank');
     const token = localStorage.getItem('admin_token');
     
     printWindow.document.write(`
       <html>
         <head>
-          <title>Tickets - Ciudad Feria 2026</title>
+          <title>Tickets Ciudad Feria 2026</title>
           <style>
-            @page {
-              size: 80mm auto;
-              margin: 0;
-            }
-            body {
-              margin: 0;
-              padding: 0;
-              font-family: Arial, sans-serif;
-            }
-            .ticket {
-              width: 80mm;
-              page-break-after: always;
-              margin: 0;
-              padding: 0;
-            }
-            .ticket img {
-              width: 100%;
-              height: auto;
-              display: block;
-            }
-            .loading {
-              text-align: center;
-              padding: 20px;
-              font-size: 14px;
-            }
+            @page { size: 80mm auto; margin: 0; }
+            body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+            .ticket { width: 80mm; page-break-after: always; margin: 0; padding: 0; }
+            .ticket img { width: 100%; height: auto; display: block; }
+            .loading { text-align: center; padding: 20px; font-size: 14px; }
           </style>
         </head>
-        <body>
-          <div class="loading">Cargando tickets...</div>
-        </body>
+        <body><div class="loading">Cargando tickets...</div></body>
       </html>
     `);
 
-    // Cargar todas las imágenes
     let ticketsHtml = '';
     for (const entrada of entradasGeneradas) {
       try {
         const response = await axios.get(
           `${API}/admin/entrada-termica/${entrada.id}`,
-          { 
-            headers: { Authorization: `Bearer ${token}` },
-            responseType: 'blob'
-          }
+          { headers: { Authorization: `Bearer ${token}` }, responseType: 'blob' }
         );
         const imageUrl = URL.createObjectURL(response.data);
         ticketsHtml += `<div class="ticket"><img src="${imageUrl}" /></div>`;
@@ -271,11 +196,7 @@ const AdminTicketsTermicos = () => {
     }
 
     printWindow.document.body.innerHTML = ticketsHtml;
-    
-    // Esperar a que las imágenes carguen y luego imprimir
-    setTimeout(() => {
-      printWindow.print();
-    }, 1500);
+    setTimeout(() => { printWindow.print(); }, 1500);
   };
 
   const limpiarLista = () => {
@@ -352,7 +273,7 @@ const AdminTicketsTermicos = () => {
               Tickets Térmicos 80mm
             </h2>
             <p className="text-foreground/60 mt-2">
-              Genera tickets para impresora térmica de 80mm - Venta en taquilla
+              Genera tickets genéricos <strong>Ciudad Feria</strong> para impresora térmica de 80mm - Venta en taquilla
             </p>
           </div>
 
@@ -365,31 +286,18 @@ const AdminTicketsTermicos = () => {
                   Generar Tickets
                 </h3>
 
-                <div className="space-y-4">
-                  {/* Selector de evento */}
-                  <div>
-                    <label className="block text-sm font-medium text-foreground/70 mb-2">
-                      Evento
-                    </label>
-                    <select
-                      data-testid="evento-select"
-                      value={formData.evento_id}
-                      onChange={(e) => setFormData({ ...formData, evento_id: e.target.value })}
-                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    >
-                      <option value="">Seleccionar evento...</option>
-                      {eventos.map((evento) => (
-                        <option key={evento.id} value={evento.id}>
-                          {evento.nombre}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                {/* Banner Ciudad Feria */}
+                <div className="bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 rounded-xl p-4 mb-6 text-center">
+                  <span className="text-2xl">🎪</span>
+                  <h4 className="font-bold text-primary text-lg">CIUDAD FERIA 2026</h4>
+                  <p className="text-xs text-foreground/60">Feria de San Sebastián</p>
+                </div>
 
+                <div className="space-y-4">
                   {/* Selector de categoría */}
                   <div>
                     <label className="block text-sm font-medium text-foreground/70 mb-2">
-                      Categoría / Zona
+                      Categoría
                     </label>
                     <select
                       data-testid="categoria-select"
@@ -397,12 +305,28 @@ const AdminTicketsTermicos = () => {
                       onChange={handleCategoriaChange}
                       className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     >
-                      {categoriasDisponibles.map((cat, idx) => (
-                        <option key={idx} value={cat.nombre}>
+                      {categoriasPredefinidas.map((cat) => (
+                        <option key={cat.nombre} value={cat.nombre}>
                           {cat.nombre} - ${cat.precio.toFixed(2)}
                         </option>
                       ))}
                     </select>
+                  </div>
+
+                  {/* Número de inicio */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground/70 mb-2">
+                      Número inicial
+                    </label>
+                    <input
+                      type="number"
+                      data-testid="numero-inicio-input"
+                      min="1"
+                      value={formData.numero_inicio}
+                      onChange={(e) => setFormData({ ...formData, numero_inicio: parseInt(e.target.value) || 1 })}
+                      className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    />
+                    <p className="text-xs text-foreground/50 mt-1">Numeración secuencial desde #{formData.numero_inicio}</p>
                   </div>
 
                   {/* Cantidad */}
@@ -419,7 +343,9 @@ const AdminTicketsTermicos = () => {
                       onChange={(e) => setFormData({ ...formData, cantidad: parseInt(e.target.value) || 1 })}
                       className="w-full bg-input border border-border rounded-xl px-4 py-3 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                     />
-                    <p className="text-xs text-foreground/50 mt-1">Máximo 100 por lote</p>
+                    <p className="text-xs text-foreground/50 mt-1">
+                      Generará tickets #{formData.numero_inicio} al #{formData.numero_inicio + formData.cantidad - 1}
+                    </p>
                   </div>
 
                   {/* Precio */}
@@ -445,6 +371,10 @@ const AdminTicketsTermicos = () => {
                       <span className="font-bold text-foreground">{formData.cantidad}</span>
                     </div>
                     <div className="flex justify-between items-center mb-2">
+                      <span className="text-foreground/70">Rango:</span>
+                      <span className="font-bold text-foreground">#{formData.numero_inicio} - #{formData.numero_inicio + formData.cantidad - 1}</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-2">
                       <span className="text-foreground/70">Precio c/u:</span>
                       <span className="font-bold text-foreground">${formData.precio.toFixed(2)}</span>
                     </div>
@@ -462,7 +392,7 @@ const AdminTicketsTermicos = () => {
                   <motion.button
                     data-testid="generar-btn"
                     onClick={generarEntradas}
-                    disabled={generando || !formData.evento_id}
+                    disabled={generando}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-bold text-lg btn-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -523,7 +453,7 @@ const AdminTicketsTermicos = () => {
                     <Ticket className="w-16 h-16 text-foreground/20 mx-auto mb-4" />
                     <p className="text-foreground/50">
                       No hay tickets generados aún.<br />
-                      Usa el formulario para generar un lote.
+                      Usa el formulario para generar un lote de tickets Ciudad Feria.
                     </p>
                   </div>
                 ) : (
@@ -537,15 +467,17 @@ const AdminTicketsTermicos = () => {
                         className="bg-background/50 border border-white/10 rounded-xl p-4"
                       >
                         <div className="text-center mb-3">
-                          <span className="text-xs text-foreground/50">#{index + 1}</span>
-                          <h4 className="font-mono font-bold text-primary text-sm">
+                          <span className="text-3xl font-black text-primary">
+                            #{entrada.numero_ticket?.toString().padStart(4, '0') || (index + 1)}
+                          </span>
+                          <h4 className="font-mono font-bold text-foreground/70 text-xs mt-1">
                             {entrada.codigo_alfanumerico}
                           </h4>
                         </div>
                         
                         <div className="text-xs text-foreground/60 space-y-1 mb-3">
                           <p><span className="font-medium">Categoría:</span> {entrada.categoria_entrada}</p>
-                          <p><span className="font-medium">Precio:</span> ${entrada.precio_total.toFixed(2)}</p>
+                          <p><span className="font-medium">Precio:</span> ${entrada.precio_total?.toFixed(2)}</p>
                         </div>
 
                         <div className="flex gap-2">
@@ -585,7 +517,7 @@ const AdminTicketsTermicos = () => {
             className="glass-card p-6 rounded-3xl max-w-md w-full"
           >
             <h3 className="text-xl font-bold text-foreground mb-4 text-center">
-              Preview del Ticket
+              Ticket #{entradaPreview.numero_ticket?.toString().padStart(4, '0')}
             </h3>
             
             <div className="bg-white rounded-xl p-2 mb-4">
