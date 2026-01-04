@@ -5,7 +5,7 @@ import axios from 'axios';
 import { 
   LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, 
   CreditCard, Shield, Table2, Users, Printer, Plus, Trash2, 
-  Download, Eye, BadgeCheck, Activity, Ticket, Package
+  Download, Eye, BadgeCheck, Activity, Ticket, Package, Palette, Upload, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
@@ -21,6 +21,21 @@ const AdminTicketsTermicos = () => {
   const [entradaPreview, setEntradaPreview] = useState(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [ultimoNumero, setUltimoNumero] = useState(1);
+  const [mostrarDiseno, setMostrarDiseno] = useState(false);
+  
+  // Configuración de diseño del ticket térmico
+  const [disenoTicket, setDisenoTicket] = useState({
+    titulo: 'CIUDAD FERIA 2026',
+    subtitulo: 'FERIA DE SAN SEBASTIÁN',
+    ubicacion: 'San Cristóbal, Táchira - Venezuela',
+    colorHeader: '#000000',
+    colorPrecio: '#FFD700',
+    mostrarNumero: true,
+    mostrarCategoria: true,
+    mostrarPrecio: true,
+    mostrarUbicacion: true,
+    logoBase64: null
+  });
   
   // Form state - SIN evento, solo Ciudad Feria
   const [formData, setFormData] = useState({
