@@ -2146,28 +2146,29 @@ async def obtener_aforo_evento(evento_id: str, current_user: str = Depends(get_c
 
 @api_router.post("/admin/generar-entradas-termicas")
 async def generar_entradas_termicas(request: Request, current_user: str = Depends(get_current_user)):
-    """Genera entradas para impresora térmica 80mm"""
+    """Genera entradas genéricas Ciudad Feria para impresora térmica 80mm"""
     body = await request.json()
-    evento_id = body.get('evento_id')
     categoria = body.get('categoria', 'General')
     cantidad = body.get('cantidad', 1)
     precio = body.get('precio', 0)
+    numero_inicio = body.get('numero_inicio', 1)  # Numeración inicial
     
-    evento = await db.eventos.find_one({"id": evento_id}, {"_id": 0})
-    if not evento:
-        raise HTTPException(status_code=404, detail="Evento no encontrado")
+    # Validar cantidad máxima
+    if cantidad > 100:
+        raise HTTPException(status_code=400, detail="Máximo 100 tickets por lote")
     
     entradas_generadas = []
     
     for i in range(cantidad):
-        # Generar código único
-        codigo_unico = str(uuid.uuid4())[:8].upper()
-        codigo_alfanumerico = f"CF-{categoria[:3].upper()}-{codigo_unico}"
+        numero_ticket = numero_inicio + i
+        # Generar código único con número secuencial
+        codigo_unico = str(uuid.uuid4())[:6].upper()
+        codigo_alfanumerico = f"CF-{categoria[:3].upper()}-{numero_ticket:04d}-{codigo_unico}"
         
         entrada_data = {
             "id": str(uuid.uuid4()),
-            "evento_id": evento_id,
-            "nombre_evento": evento['nombre'],
+            "evento_id": "ciudad-feria-general",  # ID genérico
+            "nombre_evento": "CIUDAD FERIA 2026",
             "nombre_comprador": "Venta Taquilla",
             "email_comprador": "",
             "telefono_comprador": "",
@@ -2176,6 +2177,7 @@ async def generar_entradas_termicas(request: Request, current_user: str = Depend
             "precio_total": precio,
             "categoria_entrada": categoria,
             "codigo_alfanumerico": codigo_alfanumerico,
+            "numero_ticket": numero_ticket,  # Guardar número de ticket
             "metodo_pago": "Efectivo Taquilla",
             "estado_pago": "aprobado",
             "fecha_compra": datetime.now(timezone.utc).isoformat(),
@@ -2184,12 +2186,12 @@ async def generar_entradas_termicas(request: Request, current_user: str = Depend
             "tipo_venta": "taquilla"
         }
         
-        # Generar QR
+        # Generar QR con datos simplificados
         datos_qr = {
-            "tipo": "entrada",
+            "tipo": "entrada_taquilla",
             "entrada_id": entrada_data["id"],
             "codigo": codigo_alfanumerico,
-            "evento": evento['nombre'],
+            "numero": numero_ticket,
             "categoria": categoria
         }
         
@@ -2208,6 +2210,8 @@ async def generar_entradas_termicas(request: Request, current_user: str = Depend
     return {
         "success": True,
         "cantidad": len(entradas_generadas),
+        "numero_inicio": numero_inicio,
+        "numero_fin": numero_inicio + cantidad - 1,
         "entradas": entradas_generadas
     }
 
