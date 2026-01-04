@@ -2469,14 +2469,25 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     c.rect(x, y + height - 18*mm, width, 18*mm, fill=1, stroke=0)
     
     # Imagen de fondo personalizada si existe
-    if template_img and template_img.startswith("http"):
+    if template_img:
         try:
-            import urllib.request
-            with urllib.request.urlopen(template_img) as response:
-                img_data = BytesIO(response.read())
+            if template_img.startswith("data:image"):
+                # Base64
+                img_data = BytesIO(base64.b64decode(template_img.split(',')[1]))
                 img = ImageReader(img_data)
                 c.drawImage(img, x, y, width, height, preserveAspectRatio=True, mask='auto')
-        except:
+            elif '/api/uploads/' in template_img or '/uploads/' in template_img:
+                # Archivo local
+                if '/api/uploads/' in template_img:
+                    filename = template_img.split('/api/uploads/')[-1]
+                else:
+                    filename = template_img.split('/uploads/')[-1]
+                file_path = UPLOADS_DIR / filename
+                if file_path.exists():
+                    img = ImageReader(str(file_path))
+                    c.drawImage(img, x, y, width, height, preserveAspectRatio=True, mask='auto')
+        except Exception as e:
+            logging.warning(f"Error cargando template de acreditación: {e}")
             pass  # Si falla, usar diseño por defecto
     
     # Nombre de la categoría (arriba) - Fuente grande para credencial de 14.5 x 9.5 cm
