@@ -1987,9 +1987,11 @@ async def crear_acreditacion(request: Request, current_user: str = Depends(get_c
     acreditacion_data["codigo_qr"] = qr_image
     acreditacion_data["qr_payload"] = qr_payload
     
+    # Crear copia para respuesta antes de insert (insert_one agrega _id)
+    acreditacion_respuesta = {k: v for k, v in acreditacion_data.items()}
     await db.acreditaciones.insert_one(acreditacion_data)
     
-    return {"success": True, "acreditacion": acreditacion_data}
+    return {"success": True, "acreditacion": acreditacion_respuesta}
 
 @api_router.delete("/admin/acreditaciones/{acreditacion_id}")
 async def eliminar_acreditacion(acreditacion_id: str, current_user: str = Depends(get_current_user)):
