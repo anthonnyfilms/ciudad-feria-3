@@ -2200,8 +2200,10 @@ async def generar_entradas_termicas(request: Request, current_user: str = Depend
         entrada_data["qr_payload"] = qr_payload
         entrada_data["hash_validacion"] = hash_validacion
         
+        # Crear copia para la respuesta antes de insertar (insert_one agrega _id)
+        entrada_respuesta = {k: v for k, v in entrada_data.items() if k != "_id"}
         await db.entradas.insert_one(entrada_data)
-        entradas_generadas.append(entrada_data)
+        entradas_generadas.append(entrada_respuesta)
     
     return {
         "success": True,
