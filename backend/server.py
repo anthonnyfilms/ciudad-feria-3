@@ -1652,7 +1652,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             logging.error(f"Error procesando QR: {e}")
     
     # Agregar información en panel inferior
-    panel_height = 150
+    panel_height = 180  # Más alto para incluir ubicación
     panel_y = alto - panel_height
     
     # Panel semi-transparente
@@ -1666,31 +1666,43 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     draw = ImageDraw.Draw(img)
     
     # Nombre del evento
-    draw.text((30, panel_y + 20), evento.get('nombre', 'Evento')[:40], 
+    draw.text((30, panel_y + 15), evento.get('nombre', 'Evento')[:40], 
               fill='#FACC15', font=font_grande)
     
+    # Ubicación del evento
+    ubicacion = evento.get('ubicacion', '')
+    if ubicacion:
+        draw.text((30, panel_y + 50), f"📍 {ubicacion[:50]}", 
+                  fill='#10B981', font=font_medio)
+    
     # Nombre del comprador
-    draw.text((30, panel_y + 55), f"👤 {entrada.get('nombre_comprador', 'N/A')}", 
+    draw.text((30, panel_y + 80), f"👤 {entrada.get('nombre_comprador', 'N/A')}", 
               fill='white', font=font_medio)
+    
+    # Categoría de entrada (General, Gradas, VIP, Mesa, etc.)
+    categoria_entrada = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or ''
+    if categoria_entrada:
+        draw.text((ancho - 250, panel_y + 15), f"🎫 {categoria_entrada.upper()}", 
+                  fill='#FACC15', font=font_medio)
     
     # Asiento/Mesa si aplica
     asiento_info = ""
     if entrada.get('asiento'):
-        asiento_info = f"🪑 {entrada['asiento']}"
-    elif entrada.get('categoria_asiento'):
-        asiento_info = f"🎫 {entrada['categoria_asiento']}"
+        asiento_info = f"🪑 Asiento: {entrada['asiento']}"
+    elif entrada.get('mesa'):
+        asiento_info = f"🪑 Mesa: {entrada['mesa']}"
     
     if asiento_info:
-        draw.text((30, panel_y + 80), asiento_info, fill='white', font=font_medio)
+        draw.text((30, panel_y + 110), asiento_info, fill='white', font=font_medio)
     
     # Fecha y hora
-    draw.text((30, panel_y + 110), 
+    draw.text((30, panel_y + 145), 
               f"📅 {evento.get('fecha', '')} - {evento.get('hora', '')}", 
               fill='#9CA3AF', font=font_pequeno)
     
     # Código alfanumérico
     codigo = entrada.get('codigo_alfanumerico', entrada.get('id', '')[:12])
-    draw.text((ancho - 200, panel_y + 110), f"#{codigo}", 
+    draw.text((ancho - 200, panel_y + 145), f"#{codigo}", 
               fill='#FACC15', font=font_pequeno)
     
     # Convertir a bytes
