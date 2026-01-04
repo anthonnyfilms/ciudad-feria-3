@@ -627,14 +627,17 @@ const AdminDisenoAcreditacion = () => {
 
                       {elementos.nombre.visible && (
                         <div
-                          className={`absolute cursor-move select-none font-bold text-center ${isDragging && elementoActivo === 'nombre' ? 'ring-2 ring-white rounded' : ''}`}
+                          className={`absolute cursor-move select-none font-bold text-center whitespace-nowrap ${isDragging && elementoActivo === 'nombre' ? 'ring-2 ring-white rounded' : ''}`}
                           style={{
                             left: `${elementos.nombre.x}%`,
                             top: `${elementos.nombre.y}%`,
                             transform: `translate(-50%, -50%) rotate(${elementos.nombre.rotation}deg)`,
                             fontSize: `${elementos.nombre.size}px`,
                             color: elementos.nombre.color,
-                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)'
+                            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+                            maxWidth: '90%',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis'
                           }}
                           onMouseDown={(e) => handleMouseDown(e, 'nombre')}
                           onTouchStart={(e) => handleTouchStart(e, 'nombre')}
@@ -645,14 +648,15 @@ const AdminDisenoAcreditacion = () => {
 
                       {elementos.cedula.visible && (
                         <div
-                          className={`absolute cursor-move select-none font-medium text-center ${isDragging && elementoActivo === 'cedula' ? 'ring-2 ring-white rounded' : ''}`}
+                          className={`absolute cursor-move select-none font-medium text-center whitespace-nowrap ${isDragging && elementoActivo === 'cedula' ? 'ring-2 ring-white rounded' : ''}`}
                           style={{
                             left: `${elementos.cedula.x}%`,
                             top: `${elementos.cedula.y}%`,
                             transform: `translate(-50%, -50%) rotate(${elementos.cedula.rotation}deg)`,
                             fontSize: `${elementos.cedula.size}px`,
                             color: elementos.cedula.color,
-                            textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
+                            textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
+                            maxWidth: '80%'
                           }}
                           onMouseDown={(e) => handleMouseDown(e, 'cedula')}
                           onTouchStart={(e) => handleTouchStart(e, 'cedula')}
