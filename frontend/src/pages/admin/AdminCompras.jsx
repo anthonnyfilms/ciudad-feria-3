@@ -356,7 +356,7 @@ const AdminCompras = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {compras.map((compra) => (
+              {comprasFiltradas.map((compra) => (
                 <motion.div
                   key={compra.id}
                   initial={{ opacity: 0, y: 20 }}
