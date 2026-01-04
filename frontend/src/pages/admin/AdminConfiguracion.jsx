@@ -72,6 +72,29 @@ const AdminConfiguracion = () => {
     }
   };
 
+  const handleSubirImagenFondo = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSubiendoImagen(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await axios.post(`${API}/upload-imagen`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      const imagenUrl = `${BACKEND_URL}${response.data.url}`;
+      setConfig({...config, imagen_fondo_home: imagenUrl});
+      toast.success('Imagen de fondo cargada');
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      toast.error('Error al subir imagen');
+    } finally {
+      setSubiendoImagen(false);
+    }
+  };
+
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: Calendar, label: 'Eventos', path: '/admin/eventos' },
