@@ -7,15 +7,21 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
 const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionChange }) => {
+  // Determinar valor inicial de categorías generales - usar las del prop si existen y tienen elementos
+  const getInitialCategoriasGenerales = () => {
+    if (configuracionInicial?.categorias_generales && configuracionInicial.categorias_generales.length > 0) {
+      return configuracionInicial.categorias_generales;
+    }
+    return [{ nombre: 'General', precio: 0, capacidad: 100, color: '#10B981' }];
+  };
+
   const [tipoAsientos, setTipoAsientos] = useState(configuracionInicial?.tipo || 'general');
   const [mesas, setMesas] = useState(configuracionInicial?.mesas || []);
   const [categoriasMesas, setCategoriasMesas] = useState([]);
   const [mostrarGestionCategorias, setMostrarGestionCategorias] = useState(false);
   const [nuevaCategoria, setNuevaCategoria] = useState({ nombre: '', color: '#10B981' });
-  // Categorías de entradas generales
-  const [categoriasGenerales, setCategoriasGenerales] = useState(configuracionInicial?.categorias_generales || [
-    { nombre: 'General', precio: 0, capacidad: 100, color: '#10B981' }
-  ]);
+  // Categorías de entradas generales - inicializar desde prop si existe
+  const [categoriasGenerales, setCategoriasGenerales] = useState(getInitialCategoriasGenerales);
   const [nuevaCategoriaGeneral, setNuevaCategoriaGeneral] = useState({ nombre: '', precio: 0, capacidad: 100, color: '#10B981' });
 
   const cargarCategoriasMesas = async () => {
