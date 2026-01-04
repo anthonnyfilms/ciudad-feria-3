@@ -149,6 +149,7 @@ class ConfiguracionSitio(BaseModel):
     banner_principal: Optional[str] = None
     logo: Optional[str] = None
     video_principal: Optional[str] = None
+    imagen_fondo_home: Optional[str] = None
     descripcion_inicio: Optional[str] = "Vive la tradición, cultura y alegría de la feria más importante del Táchira. Asegura tus entradas digitales con códigos QR únicos e incopiables."
     color_primario: str = "#FACC15"
     color_secundario: str = "#3B82F6"
