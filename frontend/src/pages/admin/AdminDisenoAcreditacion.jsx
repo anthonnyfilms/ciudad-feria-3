@@ -102,11 +102,30 @@ const AdminDisenoAcreditacion = () => {
         setFondoImagen(null);
       }
       
+    // Actualizar elementos con la configuración guardada
       if (configCategoria.config_elementos) {
-        setElementos(prev => ({
-          ...prev,
-          ...configCategoria.config_elementos
-        }));
+        // Merge con defaults para asegurar que todos los campos existan
+        const defaults = {
+          nombre: { visible: true, x: 50, y: 35, size: 24, color: '#FFFFFF', rotation: 0 },
+          cedula: { visible: true, x: 50, y: 45, size: 14, color: '#FFFFFF', rotation: 0 },
+          departamento: { visible: true, x: 50, y: 55, size: 16, color: '#FFFFFF', rotation: 0 },
+          categoria: { visible: true, x: 50, y: 15, size: 18, color: '#FFD700', rotation: 0 },
+          evento: { visible: true, x: 50, y: 90, size: 10, color: '#CCCCCC', rotation: 0 },
+          qr: { visible: true, x: 85, y: 75, size: 60, rotation: 0 }
+        };
+        
+        const configGuardada = configCategoria.config_elementos;
+        const elementosMerged = {};
+        
+        Object.keys(defaults).forEach(key => {
+          elementosMerged[key] = {
+            ...defaults[key],
+            ...(configGuardada[key] || {})
+          };
+        });
+        
+        setElementos(elementosMerged);
+        console.log('Configuración cargada:', elementosMerged);
       } else {
         resetElementos();
       }
