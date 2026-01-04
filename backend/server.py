@@ -1558,16 +1558,31 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 # Es base64
                 img_data = base64.b64decode(template_url.split(',')[1])
                 img = Image.open(BytesIO(img_data))
-            elif template_url.startswith('/api/uploads/'):
-                # Es archivo local
-                filename = template_url.replace('/api/uploads/', '')
+            elif '/api/uploads/' in template_url or '/uploads/' in template_url:
+                # Es archivo local - extraer nombre del archivo de la URL (completa o relativa)
+                if '/api/uploads/' in template_url:
+                    filename = template_url.split('/api/uploads/')[-1]
+                else:
+                    filename = template_url.split('/uploads/')[-1]
                 file_path = UPLOADS_DIR / filename
                 if file_path.exists():
                     img = Image.open(file_path)
+                    logging.info(f"Template cargado correctamente: {file_path}")
                 else:
+                    logging.warning(f"Template no encontrado: {file_path}")
                     img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
             else:
-                img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
+                # Intentar descargar de URL externa
+                try:
+                    import httpx
+                    async with httpx.AsyncClient() as client:
+                        response = await client.get(template_url)
+                        if response.status_code == 200:
+                            img = Image.open(BytesIO(response.content))
+                        else:
+                            img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
+                except Exception:
+                    img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
             
             img = img.resize((ancho, alto), Image.Resampling.LANCZOS)
         except Exception as e:
