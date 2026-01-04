@@ -780,18 +780,81 @@ async def validar_entrada_por_codigo(request: Request):
     if not codigo:
         raise HTTPException(status_code=400, detail="Código requerido")
     
-    # Buscar entrada por código alfanumérico
+    # Primero buscar en ENTRADAS
     entrada = await db.entradas.find_one({
         "codigo_alfanumerico": codigo,
         "estado_pago": "aprobado"
     }, {"_id": 0})
     
+    # Si no es entrada, buscar en ACREDITACIONES
     if not entrada:
+        acreditacion = await db.acreditaciones.find_one({
+            "codigo_alfanumerico": codigo,
+            "estado": "activa"
+        }, {"_id": 0})
+        
+        if acreditacion:
+            # Es una acreditación
+            categoria = acreditacion.get('categoria_nombre', 'N/A')
+            nombre = acreditacion.get('nombre_persona', 'N/A')
+            
+            if accion == 'verificar':
+                return {
+                    "valido": True,
+                    "tipo": "acreditacion",
+                    "mensaje": f"✅ ACREDITACIÓN VÁLIDA - {categoria.upper()}",
+                    "entrada": {
+                        "nombre_comprador": nombre,
+                        "nombre_evento": "ACREDITACIÓN",
+                        "categoria": categoria,
+                        "cargo": acreditacion.get('cargo'),
+                        "organizacion": acreditacion.get('organizacion'),
+                        "cedula": acreditacion.get('cedula'),
+                        "estado_actual": acreditacion.get('estado_entrada', 'fuera')
+                    }
+                }
+            elif accion == 'entrada':
+                if acreditacion.get('estado_entrada') == 'dentro':
+                    return {
+                        "valido": False,
+                        "tipo": "acreditacion",
+                        "mensaje": f"🚨 {nombre} YA ESTÁ DENTRO ({categoria})",
+                        "entrada": {"nombre_comprador": nombre, "categoria": categoria}
+                    }
+                
+                historial = acreditacion.get('historial_acceso', [])
+                historial.append({"tipo": "entrada", "fecha": datetime.now(timezone.utc).isoformat()})
+                
+                await db.acreditaciones.update_one(
+                    {"id": acreditacion['id']},
+                    {"$set": {"estado_entrada": "dentro", "historial_acceso": historial}}
+                )
+                
+                return {
+                    "valido": True,
+                    "tipo": "acreditacion",
+                    "mensaje": f"✅ ENTRADA REGISTRADA - {categoria.upper()} - {nombre}",
+                    "entrada": {"nombre_comprador": nombre, "categoria": categoria}
+                }
+            elif accion == 'salida':
+                await db.acreditaciones.update_one(
+                    {"id": acreditacion['id']},
+                    {"$set": {"estado_entrada": "fuera"}}
+                )
+                return {
+                    "valido": True,
+                    "tipo": "acreditacion",
+                    "mensaje": f"✅ SALIDA REGISTRADA - {nombre}",
+                    "entrada": {"nombre_comprador": nombre}
+                }
+        
+        # No se encontró ni entrada ni acreditación
         return {
             "valido": False,
-            "mensaje": "❌ Código no encontrado o entrada no aprobada"
+            "mensaje": "❌ Código no encontrado"
         }
     
+    # Es una ENTRADA
     entrada_id = entrada['id']
     categoria = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or 'General'
     
@@ -802,6 +865,7 @@ async def validar_entrada_por_codigo(request: Request):
     if accion == 'verificar':
         return {
             "valido": True,
+            "tipo": "entrada",
             "mensaje": f"✅ Entrada válida - {categoria.upper()}",
             "entrada": {
                 "nombre_evento": entrada.get('nombre_evento'),
