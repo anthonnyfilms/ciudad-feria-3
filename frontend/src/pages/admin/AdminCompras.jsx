@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import axios from 'axios';
-import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users, CreditCard, Shield, Table2, Mail, Download, Send, Trash2, BarChart3, BadgeCheck, Activity } from 'lucide-react';
+import { LayoutDashboard, Calendar, Settings, LogOut, Tag, ShoppingCart, CheckCircle, XCircle, Filter, Users, CreditCard, Shield, Table2, Mail, Download, Send, Trash2, BarChart3, BadgeCheck, Activity, FileSpreadsheet } from 'lucide-react';
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
@@ -14,7 +16,7 @@ const AdminCompras = () => {
   const [compras, setCompras] = useState([]);
   const [eventos, setEventos] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [eventoFiltro, setEventoFiltro] = useState('');
+  const [eventoFiltro, setEventoFiltro] = useState('todos');
   const [estadoFiltro, setEstadoFiltro] = useState('');
   const [comprobanteModal, setComprobanteModal] = useState(null);
   const [emailConfigured, setEmailConfigured] = useState(false);
