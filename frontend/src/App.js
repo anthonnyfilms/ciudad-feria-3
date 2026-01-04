@@ -55,6 +55,7 @@ function App() {
                 <Route path="configuracion" element={<AdminConfiguracion />} />
                 <Route path="acreditaciones" element={<AdminAcreditaciones />} />
                 <Route path="aforo" element={<AdminAforo />} />
+                <Route path="tickets-termicos" element={<AdminTicketsTermicos />} />
               </Routes>
             </PrivateRoute>
           } />
