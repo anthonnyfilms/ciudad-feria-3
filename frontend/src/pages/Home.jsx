@@ -63,7 +63,7 @@ const Home = () => {
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20"
         style={{
-          backgroundImage: `url("${config.banner_principal}")`,
+          backgroundImage: `url("${config.imagen_fondo_home || config.banner_principal}")`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
