@@ -230,6 +230,7 @@ const AdminCompras = () => {
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras', active: true },
     { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
+    { icon: Printer, label: 'Tickets Térmicos', path: '/admin/tickets-termicos' },
     { icon: BarChart3, label: 'Asistencia', path: '/admin/asistencia' },
     { icon: Tag, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: BadgeCheck, label: 'Acreditaciones', path: '/admin/acreditaciones' },
