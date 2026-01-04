@@ -2217,63 +2217,80 @@ async def generar_entradas_termicas(request: Request, current_user: str = Depend
 
 @api_router.get("/admin/entrada-termica/{entrada_id}")
 async def obtener_entrada_termica(entrada_id: str, current_user: str = Depends(get_current_user)):
-    """Genera imagen de entrada para impresora térmica 80mm (576px ancho)"""
+    """Genera imagen de entrada para impresora térmica 80mm (576px ancho) con logo y numeración"""
     entrada = await db.entradas.find_one({"id": entrada_id}, {"_id": 0})
     if not entrada:
         raise HTTPException(status_code=404, detail="Entrada no encontrada")
     
     # Dimensiones para impresora térmica 80mm (aprox 576px a 203dpi)
     ancho = 576
-    alto = 400
+    alto = 450  # Un poco más alto para el logo
     
     # Crear imagen
     img = Image.new('RGB', (ancho, alto), color='white')
     draw = ImageDraw.Draw(img)
     
     try:
+        font_logo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
         font_titulo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 24)
         font_normal = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
-        font_codigo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 14)
+        font_codigo = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 16)
+        font_numero = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
+        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 12)
     except:
+        font_logo = ImageFont.load_default()
         font_titulo = ImageFont.load_default()
         font_normal = ImageFont.load_default()
         font_codigo = ImageFont.load_default()
+        font_numero = ImageFont.load_default()
+        font_small = ImageFont.load_default()
     
-    # Título del evento
-    evento_nombre = entrada.get('nombre_evento', 'EVENTO')[:30]
-    draw.text((ancho//2, 20), evento_nombre, font=font_titulo, fill='black', anchor='mt')
+    # === HEADER CON LOGO ===
+    # Rectángulo negro para el header
+    draw.rectangle([(0, 0), (ancho, 60)], fill='black')
     
-    # Línea separadora
-    draw.line([(20, 55), (ancho-20, 55)], fill='black', width=2)
+    # Logo texto "CIUDAD FERIA"
+    draw.text((ancho//2, 15), "🎪 CIUDAD FERIA", font=font_logo, fill='white', anchor='mt')
+    draw.text((ancho//2, 45), "FERIA DE SAN SEBASTIÁN 2026", font=font_small, fill='#FFD700', anchor='mt')
     
-    # Categoría
+    # === NÚMERO DE TICKET (grande y visible) ===
+    numero_ticket = entrada.get('numero_ticket', 0)
+    if numero_ticket:
+        # Número grande a la derecha
+        draw.text((ancho - 30, 80), f"#{numero_ticket:04d}", font=font_numero, fill='black', anchor='rt')
+    
+    # === CATEGORÍA ===
     categoria = entrada.get('categoria_entrada', 'General')
-    draw.text((ancho//2, 70), categoria.upper(), font=font_normal, fill='black', anchor='mt')
+    draw.rectangle([(20, 75), (200, 105)], fill='#1a1a2e', outline='#FFD700', width=2)
+    draw.text((110, 90), categoria.upper(), font=font_normal, fill='white', anchor='mm')
     
-    # QR Code (más grande, centrado)
+    # === QR CODE (centrado) ===
     if entrada.get('codigo_qr'):
         try:
             qr_data = entrada['codigo_qr'].split(',')[1]
             qr_img = Image.open(BytesIO(base64.b64decode(qr_data)))
-            qr_size = 200
+            qr_size = 180
             qr_img = qr_img.resize((qr_size, qr_size), Image.Resampling.LANCZOS)
             qr_x = (ancho - qr_size) // 2
-            qr_y = 100
+            qr_y = 120
             img.paste(qr_img, (qr_x, qr_y))
         except Exception as e:
             logging.error(f"Error procesando QR: {e}")
     
-    # Código alfanumérico
+    # === CÓDIGO ALFANUMÉRICO ===
     codigo = entrada.get('codigo_alfanumerico', '')
-    draw.text((ancho//2, 320), codigo, font=font_codigo, fill='black', anchor='mt')
+    draw.text((ancho//2, 315), codigo, font=font_codigo, fill='black', anchor='mt')
     
-    # Precio
+    # === PRECIO ===
     precio = entrada.get('precio_total', 0)
-    draw.text((ancho//2, 350), f"${precio:.2f}", font=font_titulo, fill='black', anchor='mt')
+    # Rectángulo para el precio
+    draw.rectangle([(ancho//2 - 80, 340), (ancho//2 + 80, 380)], fill='#FFD700', outline='black', width=2)
+    draw.text((ancho//2, 360), f"${precio:.2f}", font=font_titulo, fill='black', anchor='mm')
     
-    # Línea separadora final
-    draw.line([(20, 380), (ancho-20, 380)], fill='black', width=1)
-    draw.text((ancho//2, 390), "Ciudad Feria 2026", font=font_codigo, fill='gray', anchor='mt')
+    # === FOOTER ===
+    draw.line([(20, 400), (ancho-20, 400)], fill='black', width=1)
+    draw.text((ancho//2, 415), "San Cristóbal, Táchira - Venezuela", font=font_small, fill='gray', anchor='mt')
+    draw.text((ancho//2, 435), "Entrada válida para un solo uso", font=font_small, fill='gray', anchor='mt')
     
     # Convertir a bytes
     buffer = BytesIO()
