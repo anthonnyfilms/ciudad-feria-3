@@ -61,7 +61,6 @@ const ConfiguradorAsientos = ({ eventoId, configuracionInicial, onConfiguracionC
         setCategoriasGenerales([...configuracionInicial.categorias_generales]);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [configSerialized]);
 
   const agregarCategoriaMesa = async () => {
