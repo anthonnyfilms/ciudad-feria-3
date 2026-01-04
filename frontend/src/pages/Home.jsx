@@ -98,15 +98,6 @@ const Home = () => {
                   Ver Eventos
                 </motion.button>
               </Link>
-              <Link to="/mis-entradas">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="glass-card px-10 py-5 rounded-full font-bold text-lg text-foreground hover:border-primary/50 transition-all"
-                >
-                  Mis Entradas
-                </motion.button>
-              </Link>
             </div>
           </motion.div>
         </div>
