@@ -2723,8 +2723,12 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
         c.drawCentredString(x + width/2, dept_y, departamento.upper())
     
     # QR Code - GRANDE para fácil escaneo (35mm = 3.5cm)
+    mostrar_qr = True
+    if config and "qr" in config:
+        mostrar_qr = config["qr"].get("visible", True)
+    
     qr_data = acreditacion.get("codigo_qr")
-    if qr_data:
+    if mostrar_qr and qr_data:
         try:
             # Extraer imagen base64 del QR
             if qr_data.startswith("data:image"):
@@ -2734,8 +2738,8 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
                 
                 # QR grande: 35mm (3.5 cm) para fácil escaneo
                 qr_size = 35 * mm
-                if config and config.get("qr", {}).get("visible", True):
-                    # Usar posición del config pero escalar el tamaño
+                if config and "qr" in config:
+                    # Usar posición del config
                     qr_x = x + width * config["qr"].get("x", 85) / 100 - qr_size/2
                     qr_y = y + height * (1 - config["qr"].get("y", 70) / 100) - qr_size/2
                 else:
