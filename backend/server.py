@@ -2662,29 +2662,42 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
             logging.warning(f"Error cargando template de acreditación: {e}")
             pass  # Si falla, usar diseño por defecto
     
-    # Nombre de la categoría (arriba) - Fuente grande para credencial de 14.5 x 9.5 cm
-    # Verificar si debe mostrarse
+    # Función helper para convertir color hex a RGB
+    def hex_to_rgb(hex_color):
+        if not hex_color or not hex_color.startswith('#'):
+            return (1, 1, 1)  # Blanco por defecto
+        try:
+            hex_color = hex_color.lstrip('#')
+            return tuple(int(hex_color[i:i+2], 16) / 255 for i in (0, 2, 4))
+        except:
+            return (1, 1, 1)
+    
+    # Nombre de la categoría (arriba)
     mostrar_categoria = True
     if config and "categoria" in config:
         mostrar_categoria = config["categoria"].get("visible", True)
     
     if mostrar_categoria:
-        c.setFillColorRGB(1, 1, 1)
-        c.setFont("Helvetica-Bold", 22)
+        cat_color = hex_to_rgb(config.get("categoria", {}).get("color", "#FFD700") if config else "#FFD700")
+        c.setFillColorRGB(*cat_color)
+        cat_size = config.get("categoria", {}).get("size", 22) if config else 22
+        c.setFont("Helvetica-Bold", cat_size)
         categoria_nombre = categoria.get("nombre", "GENERAL") if categoria else "GENERAL"
         cat_y = y + height - 12*mm
         if config and "categoria" in config:
             cat_y = y + height * (1 - config["categoria"].get("y", 10) / 100)
         c.drawCentredString(x + width/2, cat_y, categoria_nombre.upper())
     
-    # Nombre de la persona - Fuente grande
+    # Nombre de la persona
     mostrar_nombre = True
     if config and "nombre" in config:
         mostrar_nombre = config["nombre"].get("visible", True)
     
     if mostrar_nombre:
-        c.setFillColorRGB(1, 1, 1)
-        c.setFont("Helvetica-Bold", 20)
+        nombre_color = hex_to_rgb(config.get("nombre", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
+        c.setFillColorRGB(*nombre_color)
+        nombre_size = config.get("nombre", {}).get("size", 20) if config else 20
+        c.setFont("Helvetica-Bold", nombre_size)
         nombre = acreditacion.get("nombre_persona", "SIN NOMBRE")
         if config and "nombre" in config:
             nombre_y = y + height * (1 - config["nombre"].get("y", 35) / 100)
@@ -2692,30 +2705,34 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
             nombre_y = y + height - 28*mm
         c.drawCentredString(x + width/2, nombre_y, nombre.upper())
     
-    # Cédula - Fuente mediana
+    # Cédula
     mostrar_cedula = True
     if config and "cedula" in config:
         mostrar_cedula = config["cedula"].get("visible", True)
     
     cedula = acreditacion.get("cedula", "")
     if mostrar_cedula and cedula:
-        c.setFillColorRGB(1, 1, 1)
-        c.setFont("Helvetica", 14)
+        cedula_color = hex_to_rgb(config.get("cedula", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
+        c.setFillColorRGB(*cedula_color)
+        cedula_size = config.get("cedula", {}).get("size", 14) if config else 14
+        c.setFont("Helvetica", cedula_size)
         if config and "cedula" in config:
             cedula_y = y + height * (1 - config["cedula"].get("y", 45) / 100)
         else:
             cedula_y = y + height - 38*mm
         c.drawCentredString(x + width/2, cedula_y, f"C.I.: {cedula}")
     
-    # Departamento/Organización - Fuente mediana
+    # Departamento/Organización
     mostrar_departamento = True
     if config and "departamento" in config:
         mostrar_departamento = config["departamento"].get("visible", True)
     
     departamento = acreditacion.get("organizacion", "") or acreditacion.get("cargo", "")
     if mostrar_departamento and departamento:
-        c.setFillColorRGB(1, 1, 1)
-        c.setFont("Helvetica-Bold", 16)
+        dept_color = hex_to_rgb(config.get("departamento", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
+        c.setFillColorRGB(*dept_color)
+        dept_size = config.get("departamento", {}).get("size", 16) if config else 16
+        c.setFont("Helvetica-Bold", dept_size)
         if config and "departamento" in config:
             dept_y = y + height * (1 - config["departamento"].get("y", 55) / 100)
         else:
