@@ -723,15 +723,22 @@ async def validar_entrada_por_codigo(request: Request):
         }
     
     entrada_id = entrada['id']
+    categoria = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or 'General'
+    
+    # Obtener ubicación del evento
+    evento_info = await db.eventos.find_one({"id": entrada.get('evento_id')}, {"_id": 0, "ubicacion": 1})
+    ubicacion = evento_info.get('ubicacion', '') if evento_info else ''
     
     if accion == 'verificar':
         return {
             "valido": True,
-            "mensaje": "✅ Entrada válida",
+            "mensaje": f"✅ Entrada válida - {categoria.upper()}",
             "entrada": {
                 "nombre_evento": entrada.get('nombre_evento'),
                 "nombre_comprador": entrada['nombre_comprador'],
                 "email_comprador": entrada['email_comprador'],
+                "categoria": categoria,
+                "ubicacion": ubicacion,
                 "asiento": entrada.get('asiento'),
                 "mesa": entrada.get('mesa'),
                 "estado_actual": entrada.get('estado_entrada', 'fuera')
@@ -742,9 +749,10 @@ async def validar_entrada_por_codigo(request: Request):
         if entrada.get('estado_entrada') == 'dentro':
             return {
                 "valido": False,
-                "mensaje": "🚨 Esta persona ya está dentro del evento",
+                "mensaje": f"🚨 Esta persona ya está dentro ({categoria.upper()})",
                 "entrada": {
                     "nombre_comprador": entrada['nombre_comprador'],
+                    "categoria": categoria,
                     "asiento": entrada.get('asiento')
                 }
             }
@@ -762,9 +770,11 @@ async def validar_entrada_por_codigo(request: Request):
         
         return {
             "valido": True,
-            "mensaje": f"✅ Entrada registrada - {entrada['nombre_comprador']}",
+            "mensaje": f"✅ Entrada registrada - {categoria.upper()} - {entrada['nombre_comprador']}",
             "entrada": {
                 "nombre_comprador": entrada['nombre_comprador'],
+                "categoria": categoria,
+                "ubicacion": ubicacion,
                 "asiento": entrada.get('asiento')
             }
         }
