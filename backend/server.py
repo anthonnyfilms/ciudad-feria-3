@@ -560,18 +560,31 @@ async def validar_entrada(request: Request):
             "requiere_aprobacion": True
         }
     
-    # Verificar hash
-    hash_verificacion = generar_hash({
-        "entrada_id": datos_entrada['entrada_id'],
-        "codigo_alfanumerico": datos_entrada.get('codigo_alfanumerico', ''),
-        "evento_id": datos_entrada['evento_id'],
-        "nombre_evento": datos_entrada['nombre_evento'],
-        "nombre_comprador": datos_entrada['nombre_comprador'],
-        "email_comprador": datos_entrada['email_comprador'],
-        "telefono_comprador": datos_entrada.get('telefono_comprador'),
-        "numero_entrada": datos_entrada['numero_entrada'],
-        "asiento": datos_entrada.get('asiento')
-    })
+    # Verificar hash según el tipo de entrada
+    tipo_entrada = datos_entrada.get('tipo', 'entrada')
+    
+    if tipo_entrada == 'entrada_taquilla':
+        # Hash para tickets térmicos (estructura simplificada)
+        hash_verificacion = generar_hash({
+            "tipo": "entrada_taquilla",
+            "entrada_id": datos_entrada['entrada_id'],
+            "codigo": datos_entrada.get('codigo', ''),
+            "numero": datos_entrada.get('numero', 0),
+            "categoria": datos_entrada.get('categoria', '')
+        })
+    else:
+        # Hash para entradas normales
+        hash_verificacion = generar_hash({
+            "entrada_id": datos_entrada['entrada_id'],
+            "codigo_alfanumerico": datos_entrada.get('codigo_alfanumerico', ''),
+            "evento_id": datos_entrada.get('evento_id', ''),
+            "nombre_evento": datos_entrada.get('nombre_evento', ''),
+            "nombre_comprador": datos_entrada.get('nombre_comprador', ''),
+            "email_comprador": datos_entrada.get('email_comprador', ''),
+            "telefono_comprador": datos_entrada.get('telefono_comprador'),
+            "numero_entrada": datos_entrada.get('numero_entrada', 0),
+            "asiento": datos_entrada.get('asiento')
+        })
     
     if hash_verificacion != entrada['hash_validacion']:
         return {
