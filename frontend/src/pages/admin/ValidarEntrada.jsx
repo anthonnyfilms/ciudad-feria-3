@@ -53,6 +53,7 @@ const ValidarEntrada = () => {
     { icon: ShoppingCart, label: 'Compras', path: '/admin/compras' },
     { icon: CreditCard, label: 'Métodos de Pago', path: '/admin/metodos-pago' },
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar', active: true },
+    { icon: Printer, label: 'Tickets Térmicos', path: '/admin/tickets-termicos' },
     { icon: BarChart3, label: 'Asistencia', path: '/admin/asistencia' },
     { icon: Tag, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: BadgeCheck, label: 'Acreditaciones', path: '/admin/acreditaciones' },

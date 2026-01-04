@@ -196,6 +196,7 @@ const AdminAcreditaciones = () => {
     { icon: BadgeCheck, label: 'Acreditaciones', path: '/admin/acreditaciones', active: true },
     { icon: Palette, label: 'Diseño Acreditación', path: '/admin/diseno-acreditacion' },
     { icon: Shield, label: 'Validar Entradas', path: '/admin/validar' },
+    { icon: Printer, label: 'Tickets Térmicos', path: '/admin/tickets-termicos' },
     { icon: Activity, label: 'Aforo', path: '/admin/aforo' },
     { icon: Table2, label: 'Diseño Entrada', path: '/admin/diseno-entrada' },
     { icon: Users, label: 'Usuarios', path: '/admin/usuarios' },
