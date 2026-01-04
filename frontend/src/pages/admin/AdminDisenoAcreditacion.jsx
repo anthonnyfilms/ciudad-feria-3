@@ -573,13 +573,13 @@ const AdminDisenoAcreditacion = () => {
                       Arrastra los elementos para posicionarlos donde desees
                     </p>
                     
-                    {/* Contenedor de Preview - Formato credencial 14.5 x 9.5 cm (proporción) */}
+                    {/* Contenedor de Preview - Formato credencial vertical 9.5cm (ancho) x 14.5cm (alto) */}
                     <div 
                       ref={previewRef}
                       className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl"
                       style={{ 
-                        width: '435px',   /* 14.5 cm en proporción (3x) */
-                        height: '285px',  /* 9.5 cm en proporción (3x) */
+                        width: '285px',   /* 9.5 cm en proporción (3x) */
+                        height: '435px',  /* 14.5 cm en proporción (3x) */
                         backgroundImage: fondoPreview ? `url(${fondoPreview})` : undefined,
                         backgroundSize: 'cover',
                         backgroundPosition: 'center',
