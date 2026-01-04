@@ -100,34 +100,51 @@ const DetalleEvento = () => {
       return;
     }
 
-    // Validar selección de asientos
+    // Validar selección de asientos o entradas generales
     const tipoAsientos = evento?.tipo_asientos || 'general';
-    if (tipoAsientos !== 'general' && seleccionAsientos.asientos.length === 0) {
+    const tieneAsientos = seleccionAsientos.asientos && seleccionAsientos.asientos.length > 0;
+    const tieneCantidad = seleccionAsientos.cantidad > 0;
+    
+    if (tipoAsientos === 'mesas' && !tieneAsientos) {
       toast.error('Por favor selecciona tus asientos');
+      return;
+    }
+    
+    if ((tipoAsientos === 'general' || tipoAsientos === 'mixto') && !tieneAsientos && !tieneCantidad) {
+      toast.error('Por favor selecciona tus entradas');
       return;
     }
 
     setComprando(true);
 
     try {
-      const cantidadFinal = tipoAsientos === 'general' ? seleccionAsientos.cantidad : seleccionAsientos.asientos.length;
+      // Calcular cantidad final
+      let cantidadFinal = seleccionAsientos.cantidad || seleccionAsientos.asientos?.length || 1;
       
-      const response = await axios.post(`${API}/comprar-entrada`, {
+      // Usar precio calculado del selector si está disponible, sino usar precio base
+      let precioTotal = seleccionAsientos.precioTotal || (evento.precio * cantidadFinal);
+      
+      // Preparar detalles para el backend
+      const datosCompra = {
         evento_id: id,
         nombre_comprador: nombre,
         email_comprador: email,
         telefono_comprador: telefono,
         cantidad: cantidadFinal,
-        precio_total: evento.precio * cantidadFinal,
+        precio_total: precioTotal,
         metodo_pago: metodoPago,
         comprobante_pago: comprobante || null,
-        asientos: seleccionAsientos.asientos
-      });
+        asientos: seleccionAsientos.asientos || [],
+        categoria_asiento: seleccionAsientos.detalles?.[0]?.tipo || 'general',
+        detalles_compra: seleccionAsientos.detalles || []
+      };
+      
+      const response = await axios.post(`${API}/comprar-entrada`, datosCompra);
 
       if (response.data.requiere_aprobacion) {
         toast.success('Compra registrada. Espera la aprobación del pago.', { duration: 5000 });
         setTimeout(() => {
-          navigate('/mis-entradas');
+          navigate('/eventos');
         }, 2000);
       } else {
         setEntradasCompradas(response.data.entradas);
