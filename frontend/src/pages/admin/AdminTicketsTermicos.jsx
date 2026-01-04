@@ -426,6 +426,164 @@ const AdminTicketsTermicos = () => {
                   </motion.button>
                 </div>
               </div>
+              
+              {/* Sección de Diseño del Ticket */}
+              <div className="glass-card rounded-2xl p-6 mt-6">
+                <button
+                  onClick={() => setMostrarDiseno(!mostrarDiseno)}
+                  className="w-full flex items-center justify-between text-left"
+                >
+                  <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                    <Palette className="w-5 h-5 text-secondary" />
+                    Personalizar Diseño
+                  </h3>
+                  {mostrarDiseno ? <ChevronUp className="w-5 h-5 text-foreground/50" /> : <ChevronDown className="w-5 h-5 text-foreground/50" />}
+                </button>
+                
+                {mostrarDiseno && (
+                  <div className="mt-4 space-y-4">
+                    {/* Preview del ticket */}
+                    <div className="bg-white rounded-xl p-3 mx-auto" style={{ width: '280px' }}>
+                      <div 
+                        className="rounded-lg overflow-hidden text-center"
+                        style={{ 
+                          backgroundColor: disenoTicket.colorHeader,
+                          padding: '8px'
+                        }}
+                      >
+                        <div className="text-white font-bold text-sm">🎪 {disenoTicket.titulo}</div>
+                        <div className="text-yellow-400 text-xs">{disenoTicket.subtitulo}</div>
+                      </div>
+                      
+                      <div className="py-4 text-center">
+                        {disenoTicket.mostrarNumero && (
+                          <div className="text-2xl font-black text-gray-800">#0001</div>
+                        )}
+                        {disenoTicket.mostrarCategoria && (
+                          <div className="inline-block px-3 py-1 rounded bg-gray-800 text-white text-xs mt-2">
+                            {formData.categoria.toUpperCase()}
+                          </div>
+                        )}
+                        <div className="my-4 flex justify-center">
+                          <div className="w-20 h-20 bg-gray-300 rounded flex items-center justify-center text-gray-500 text-xs">
+                            QR CODE
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 font-mono">CF-GEN-0001-XXXX</div>
+                        {disenoTicket.mostrarPrecio && (
+                          <div 
+                            className="inline-block px-4 py-2 rounded font-bold mt-2"
+                            style={{ backgroundColor: disenoTicket.colorPrecio }}
+                          >
+                            ${formData.precio.toFixed(2)}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {disenoTicket.mostrarUbicacion && (
+                        <div className="border-t border-gray-200 pt-2 text-center">
+                          <p className="text-xs text-gray-500">{disenoTicket.ubicacion}</p>
+                          <p className="text-xs text-gray-400">Entrada válida para un solo uso</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Controles de diseño */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-xs text-foreground/60">Título</label>
+                        <input
+                          type="text"
+                          value={disenoTicket.titulo}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, titulo: e.target.value})}
+                          className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-foreground/60">Subtítulo</label>
+                        <input
+                          type="text"
+                          value={disenoTicket.subtitulo}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, subtitulo: e.target.value})}
+                          className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-foreground/60">Color Header</label>
+                        <input
+                          type="color"
+                          value={disenoTicket.colorHeader}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, colorHeader: e.target.value})}
+                          className="w-full h-9 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs text-foreground/60">Color Precio</label>
+                        <input
+                          type="color"
+                          value={disenoTicket.colorPrecio}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, colorPrecio: e.target.value})}
+                          className="w-full h-9 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="text-xs text-foreground/60">Ubicación</label>
+                      <input
+                        type="text"
+                        value={disenoTicket.ubicacion}
+                        onChange={(e) => setDisenoTicket({...disenoTicket, ubicacion: e.target.value})}
+                        className="w-full bg-input border border-border rounded-lg px-3 py-2 text-sm text-foreground"
+                      />
+                    </div>
+                    
+                    {/* Checkboxes */}
+                    <div className="flex flex-wrap gap-3">
+                      <label className="flex items-center gap-2 text-sm text-foreground/70">
+                        <input
+                          type="checkbox"
+                          checked={disenoTicket.mostrarNumero}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, mostrarNumero: e.target.checked})}
+                          className="rounded"
+                        />
+                        Número
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-foreground/70">
+                        <input
+                          type="checkbox"
+                          checked={disenoTicket.mostrarCategoria}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, mostrarCategoria: e.target.checked})}
+                          className="rounded"
+                        />
+                        Categoría
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-foreground/70">
+                        <input
+                          type="checkbox"
+                          checked={disenoTicket.mostrarPrecio}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, mostrarPrecio: e.target.checked})}
+                          className="rounded"
+                        />
+                        Precio
+                      </label>
+                      <label className="flex items-center gap-2 text-sm text-foreground/70">
+                        <input
+                          type="checkbox"
+                          checked={disenoTicket.mostrarUbicacion}
+                          onChange={(e) => setDisenoTicket({...disenoTicket, mostrarUbicacion: e.target.checked})}
+                          className="rounded"
+                        />
+                        Ubicación
+                      </label>
+                    </div>
+                    
+                    <p className="text-xs text-foreground/40 text-center mt-2">
+                      El diseño se aplica automáticamente a los nuevos tickets generados
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Lista de tickets generados */}
