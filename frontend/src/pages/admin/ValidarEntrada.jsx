@@ -103,7 +103,11 @@ const ValidarEntrada = () => {
         experimentalFeatures: {
           useBarCodeDetectorIfSupported: true
         },
-        formatsToSupport: [ 0 ] // Solo QR Code
+        formatsToSupport: [ 0 ], // Solo QR Code
+        fps: 15, // Mayor frecuencia de escaneo
+        rememberLastUsedCamera: true,
+        // Soportar QR en cualquier orientación
+        supportedScanTypes: [0] // SCAN_TYPE_CAMERA
       };
 
       try {
