@@ -91,7 +91,8 @@ const AdminDisenoEntrada = () => {
       const response = await axios.post(`${API}/upload-imagen`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-      setFondoImagen(`${BACKEND_URL}${response.data.url}`);
+      // Guardar solo la ruta relativa para que funcione en cualquier dominio
+      setFondoImagen(response.data.url);
       toast.success('Imagen de fondo cargada');
     } catch (error) {
       console.error('Error subiendo imagen:', error);
