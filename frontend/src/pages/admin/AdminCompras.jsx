@@ -219,7 +219,7 @@ const AdminCompras = () => {
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
     toast.success('Sesión cerrada');
-    navigate('/secure-admin-panel-2026');
+    navigate('/admin-ciudadferia');
   };
 
   const menuItems = [

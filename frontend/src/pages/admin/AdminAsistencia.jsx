@@ -71,7 +71,7 @@ const AdminAsistencia = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
-    navigate('/secure-admin-panel-2026');
+    navigate('/admin-ciudadferia');
   };
 
   const menuItems = [

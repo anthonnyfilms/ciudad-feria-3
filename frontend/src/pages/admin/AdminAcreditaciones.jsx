@@ -46,7 +46,7 @@ const AdminAcreditaciones = () => {
   useEffect(() => {
     const token = localStorage.getItem('admin_token');
     if (!token) {
-      navigate('/secure-admin-panel-2026');
+      navigate('/admin-ciudadferia');
       return;
     }
     
@@ -101,7 +101,7 @@ const AdminAcreditaciones = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
-    navigate('/secure-admin-panel-2026');
+    navigate('/admin-ciudadferia');
   };
 
   const crearCategoria = async () => {
