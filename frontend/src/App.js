@@ -37,7 +37,7 @@ function App() {
           <Route path="/mis-entradas" element={<><Navbar /><MisEntradas /><Footer /><WhatsAppButton /></>} />
           
           {/* Admin Routes */}
-          <Route path="/secure-admin-panel-2026" element={<AdminLogin />} />
+          <Route path="/admin-ciudadferia" element={<AdminLogin />} />
           <Route path="/admin/*" element={
             <PrivateRoute>
               <Routes>
