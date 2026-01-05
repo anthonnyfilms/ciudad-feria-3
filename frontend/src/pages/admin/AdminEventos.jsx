@@ -58,9 +58,8 @@ const AdminEventos = () => {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       
-      // Construir URL completa
-      const imageUrl = `${BACKEND_URL}${response.data.url}`;
-      setFormData(prev => ({ ...prev, imagen: imageUrl }));
+      // Guardar solo la ruta relativa para que funcione en cualquier dominio
+      setFormData(prev => ({ ...prev, imagen: response.data.url }));
       toast.success('Imagen subida correctamente');
     } catch (error) {
       console.error('Error subiendo imagen:', error);
