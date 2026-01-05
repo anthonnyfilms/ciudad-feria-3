@@ -79,8 +79,10 @@ const AdminDisenoEntrada = () => {
     const evento = eventos.find(e => e.id === eventoSeleccionado);
     if (evento) {
       if (evento.template_entrada) {
-        setFondoPreview(evento.template_entrada);
-        setFondoImagen(evento.template_entrada);
+        // Usar helper para obtener URL completa para preview
+        setFondoPreview(getImageUrl(evento.template_entrada));
+        // Guardar la ruta relativa para cuando se guarde
+        setFondoImagen(getRelativePath(evento.template_entrada));
       } else {
         setFondoPreview(null);
         setFondoImagen(null);
