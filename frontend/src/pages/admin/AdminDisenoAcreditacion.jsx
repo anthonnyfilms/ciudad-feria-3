@@ -9,6 +9,29 @@ import { Toaster } from '../../components/ui/sonner';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 
+// Helper para obtener URL completa de imagen (maneja rutas relativas y absolutas)
+const getImageUrl = (url) => {
+  if (!url) return null;
+  if (url.startsWith('http') || url.startsWith('data:')) {
+    if (url.includes('/api/uploads/')) {
+      const path = '/api/uploads/' + url.split('/api/uploads/').pop();
+      return `${BACKEND_URL}${path}`;
+    }
+    return url;
+  }
+  return `${BACKEND_URL}${url}`;
+};
+
+// Helper para guardar solo la ruta relativa
+const getRelativePath = (url) => {
+  if (!url) return null;
+  if (url.startsWith('data:')) return url;
+  if (url.includes('/api/uploads/')) {
+    return '/api/uploads/' + url.split('/api/uploads/').pop();
+  }
+  return url;
+};
+
 const AdminDisenoAcreditacion = () => {
   const navigate = useNavigate();
   const previewRef = useRef(null);
