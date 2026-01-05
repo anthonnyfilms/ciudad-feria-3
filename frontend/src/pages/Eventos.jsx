@@ -110,7 +110,7 @@ const Eventos = () => {
             >
               <div className="relative h-64 overflow-hidden">
                 <img
-                  src={evento.imagen}
+                  src={getImageUrl(evento.imagen)}
                   alt={evento.nombre}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                 />
