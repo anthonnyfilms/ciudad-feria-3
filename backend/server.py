@@ -1763,50 +1763,16 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 except Exception as e:
                     logging.error(f"Error descargando template externo: {e}")
             
-            # Si se cargó la imagen, redimensionar manteniendo proporciones
+            # Si se cargó la imagen, redimensionar a 600x900 exacto
             if img and usar_fondo_personalizado:
-                # Obtener dimensiones originales
                 orig_w, orig_h = img.size
                 logging.info(f"Imagen original: {orig_w}x{orig_h}")
                 
-                # Si la imagen es exactamente 600x900, usarla tal cual
-                if orig_w == ancho and orig_h == alto:
-                    logging.info("Imagen ya tiene dimensiones correctas 600x900")
-                else:
-                    # Calcular proporción para ajustar la imagen (contain - sin deformar)
-                    ratio_w = ancho / orig_w
-                    ratio_h = alto / orig_h
-                    
-                    # Usar el ratio MENOR para que la imagen quepa completa (contain)
-                    ratio = min(ratio_w, ratio_h)
-                    
-                    new_w = int(orig_w * ratio)
-                    new_h = int(orig_h * ratio)
-                    
-                    # Crear imagen de fondo del tamaño correcto
-                    background = Image.new('RGB', (ancho, alto), color='#1a1a2e')
-                    
-                    # Redimensionar imagen original
-                    img_resized = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
-                    
-                    # Centrar la imagen en el fondo
-                    paste_x = (ancho - new_w) // 2
-                    paste_y = (alto - new_h) // 2
-                    
-                    # Pegar imagen redimensionada en el centro
-                    if img_resized.mode == 'RGBA':
-                        background.paste(img_resized, (paste_x, paste_y), img_resized)
-                    else:
-                        background.paste(img_resized, (paste_x, paste_y))
-                    
-                    img = background
-                    logging.info(f"Imagen redimensionada a {new_w}x{new_h} y centrada en 600x900")
-                
-                # Asegurar que esté en modo RGB
+                # Redimensionar directamente a 600x900 (el usuario diseñó para este tamaño)
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
-                
-                logging.info(f"Template procesado: {img.size}")
+                img = img.resize((ancho, alto), Image.Resampling.LANCZOS)
+                logging.info(f"Template redimensionado a: {img.size}")
                     
         except Exception as e:
             logging.error(f"Error cargando template: {e}")
