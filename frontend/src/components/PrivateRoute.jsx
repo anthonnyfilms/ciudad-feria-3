@@ -4,7 +4,7 @@ const PrivateRoute = ({ children }) => {
   const token = localStorage.getItem('admin_token');
   
   if (!token) {
-    return <Navigate to="/secure-admin-panel-2026" replace />;
+    return <Navigate to="/admin-ciudadferia" replace />;
   }
   
   return children;
