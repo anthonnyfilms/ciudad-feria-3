@@ -128,7 +128,6 @@ const AdminDisenoAcreditacion = () => {
         });
         
         setElementos(elementosMerged);
-        console.log('Configuración cargada:', elementosMerged);
       } else {
         resetElementos();
       }
