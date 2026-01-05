@@ -206,10 +206,12 @@ const AdminDisenoEntrada = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('admin_token');
+      // Guardar siempre la ruta relativa para que funcione en cualquier dominio
+      const templateToSave = getRelativePath(fondoImagen || fondoPreview);
       await axios.put(
         `${API}/admin/eventos/${eventoSeleccionado}`,
         {
-          template_entrada: fondoImagen || fondoPreview,
+          template_entrada: templateToSave,
           posicion_qr: qrConfig
         },
         { headers: { Authorization: `Bearer ${token}` } }
