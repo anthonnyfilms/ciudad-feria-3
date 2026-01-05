@@ -256,15 +256,21 @@ const AdminDisenoAcreditacion = () => {
   const actualizarElemento = (key, campo, valor) => {
     console.log(`Actualizando ${key}.${campo} = ${valor}`);
     setElementos(prev => {
-      const nuevo = {
-        ...prev,
-        [key]: {
-          ...prev[key],
-          [campo]: valor
+      // Crear una copia completamente nueva del objeto para forzar re-render
+      const nuevosElementos = {};
+      Object.keys(prev).forEach(k => {
+        if (k === key) {
+          nuevosElementos[k] = {
+            ...prev[k],
+            [campo]: campo === 'visible' ? Boolean(valor) : valor
+          };
+        } else {
+          nuevosElementos[k] = { ...prev[k] };
         }
-      };
-      console.log('Nuevo estado elementos:', nuevo);
-      return nuevo;
+      });
+      console.log('Nuevo estado elementos:', nuevosElementos);
+      console.log(`${key}.visible ahora es:`, nuevosElementos[key].visible);
+      return nuevosElementos;
     });
   };
 
