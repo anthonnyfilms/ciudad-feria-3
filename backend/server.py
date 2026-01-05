@@ -1769,24 +1769,38 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 orig_w, orig_h = img.size
                 logging.info(f"Imagen original: {orig_w}x{orig_h}")
                 
-                # Calcular proporción para cubrir el área sin deformar
-                ratio_w = ancho / orig_w
-                ratio_h = alto / orig_h
-                
-                # Usar el ratio mayor para cubrir toda el área (cover)
-                ratio = max(ratio_w, ratio_h)
-                
-                new_w = int(orig_w * ratio)
-                new_h = int(orig_h * ratio)
-                
-                # Redimensionar
-                img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
-                
-                # Recortar al centro si es más grande
-                if new_w > ancho or new_h > alto:
-                    left = (new_w - ancho) // 2
-                    top = (new_h - alto) // 2
-                    img = img.crop((left, top, left + ancho, top + alto))
+                # Si la imagen es exactamente 600x900, usarla tal cual
+                if orig_w == ancho and orig_h == alto:
+                    logging.info("Imagen ya tiene dimensiones correctas 600x900")
+                else:
+                    # Calcular proporción para ajustar la imagen (contain - sin deformar)
+                    ratio_w = ancho / orig_w
+                    ratio_h = alto / orig_h
+                    
+                    # Usar el ratio MENOR para que la imagen quepa completa (contain)
+                    ratio = min(ratio_w, ratio_h)
+                    
+                    new_w = int(orig_w * ratio)
+                    new_h = int(orig_h * ratio)
+                    
+                    # Crear imagen de fondo del tamaño correcto
+                    background = Image.new('RGB', (ancho, alto), color='#1a1a2e')
+                    
+                    # Redimensionar imagen original
+                    img_resized = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                    
+                    # Centrar la imagen en el fondo
+                    paste_x = (ancho - new_w) // 2
+                    paste_y = (alto - new_h) // 2
+                    
+                    # Pegar imagen redimensionada en el centro
+                    if img_resized.mode == 'RGBA':
+                        background.paste(img_resized, (paste_x, paste_y), img_resized)
+                    else:
+                        background.paste(img_resized, (paste_x, paste_y))
+                    
+                    img = background
+                    logging.info(f"Imagen redimensionada a {new_w}x{new_h} y centrada en 600x900")
                 
                 # Asegurar que esté en modo RGB
                 if img.mode != 'RGB':
