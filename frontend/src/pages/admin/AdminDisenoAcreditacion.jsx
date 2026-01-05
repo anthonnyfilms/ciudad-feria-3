@@ -275,6 +275,11 @@ const AdminDisenoAcreditacion = () => {
       console.log(`${key}.visible ahora es:`, nuevosElementos[key].visible);
       return nuevosElementos;
     });
+    
+    // Forzar re-render del preview cuando cambia visibilidad
+    if (campo === 'visible') {
+      setPreviewKey(prev => prev + 1);
+    }
   };
 
   const guardarConfiguracion = async () => {
