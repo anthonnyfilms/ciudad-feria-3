@@ -6,6 +6,7 @@ import { LayoutDashboard, Calendar, Settings, LogOut, Plus, Edit, Trash2, Extern
 import { toast } from 'sonner';
 import { Toaster } from '../../components/ui/sonner';
 import ConfiguradorAsientos from '../../components/ConfiguradorAsientos';
+import { getImageUrl, getRelativePath } from '../../utils/imageHelpers';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
