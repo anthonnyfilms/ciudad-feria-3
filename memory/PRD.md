@@ -55,7 +55,13 @@ Sistema web integral para la gestión y venta de entradas de la "Feria de San Se
 
 ## Historial de Cambios
 
-### 2026-01-04 (Sesión Actual)
+### 2026-01-05
+- **Bug Fix:** Diseñador de Acreditaciones - Toggle de visibilidad de elementos
+  - El checkbox de visibilidad (Cédula, Nombre, etc.) ahora actualiza correctamente la vista previa
+  - Implementado `previewKey` para forzar re-render del componente de preview
+  - Corregida la actualización inmutable del estado `elementos`
+
+### 2026-01-04 (Sesión Anterior)
 - **Removido:** Botón "Mis Entradas" del sitio público
 - **Feature:** Tickets Térmicos ahora son genéricos "CIUDAD FERIA 2026"
   - No requieren evento específico
