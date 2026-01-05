@@ -1815,11 +1815,13 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         font_medio = ImageFont.load_default()
         font_pequeno = ImageFont.load_default()
     
-    # Posición del QR desde configuración - tamaño grande para mejor escaneo
-    posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 50, 'size': 200})
+    # Posición del QR desde configuración
+    posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 70, 'size': 150})
     qr_x = int((posicion_qr.get('x', 50) / 100) * ancho)
-    qr_y = int((posicion_qr.get('y', 50) / 100) * alto)
-    qr_size = max(280, posicion_qr.get('size', 280))  # Mínimo 280px para escaneo fácil
+    qr_y = int((posicion_qr.get('y', 70) / 100) * alto)
+    # Escalar tamaño del QR proporcionalmente (base 150 en diseñador de 600px -> escalar a 900px)
+    qr_base_size = posicion_qr.get('size', 150)
+    qr_size = max(200, int(qr_base_size * 1.5))  # Escalar 1.5x para mejor visibilidad
     
     # Decodificar y pegar QR
     if entrada.get('codigo_qr'):
