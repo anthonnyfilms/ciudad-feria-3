@@ -1960,11 +1960,16 @@ async def enviar_email_entrada(email_destino: str, entrada: dict, evento: dict) 
         
         # Cuerpo del email en HTML
         codigo = entrada.get('codigo_alfanumerico', entrada.get('id', '')[:12])
+        
+        # Construir información de asiento/mesa
         asiento_info = ""
+        if entrada.get('mesa'):
+            asiento_info += f"<p><strong>Mesa:</strong> {entrada['mesa']}</p>"
         if entrada.get('asiento'):
-            asiento_info = f"<p><strong>Asiento:</strong> {entrada['asiento']}</p>"
-        elif entrada.get('categoria_asiento'):
-            asiento_info = f"<p><strong>Categoría:</strong> {entrada['categoria_asiento']}</p>"
+            asiento_info += f"<p><strong>Asiento/Silla:</strong> {entrada['asiento']}</p>"
+        if entrada.get('categoria_asiento') or entrada.get('categoria_entrada'):
+            cat = entrada.get('categoria_asiento') or entrada.get('categoria_entrada')
+            asiento_info += f"<p><strong>Categoría:</strong> {cat}</p>"
         
         html_body = f"""
         <html>
