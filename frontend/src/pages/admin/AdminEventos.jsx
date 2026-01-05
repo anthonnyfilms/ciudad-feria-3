@@ -304,7 +304,7 @@ const AdminEventos = () => {
                 >
                   <div className="relative h-48">
                     <img
-                      src={evento.imagen}
+                      src={getImageUrl(evento.imagen)}
                       alt={evento.nombre}
                       className="w-full h-full object-cover"
                     />
