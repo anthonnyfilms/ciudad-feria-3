@@ -1718,9 +1718,9 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     - QR posicionado según configuración
     - Información del evento y comprador
     """
-    # Dimensiones de la entrada - formato vertical como el diseñador (600x900 escalado)
-    ancho = 900
-    alto = 1350  # Proporción 2:3 vertical
+    # Dimensiones de la entrada - formato vertical 600x900px
+    ancho = 600
+    alto = 900
     
     # Crear imagen base
     img = None
@@ -1730,6 +1730,8 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         try:
             # Cargar template personalizado
             template_url = evento['template_entrada']
+            logging.info(f"Cargando template: {template_url}")
+            
             if template_url.startswith('data:image'):
                 # Es base64
                 img_data = base64.b64decode(template_url.split(',')[1])
@@ -1742,6 +1744,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 else:
                     filename = template_url.split('/uploads/')[-1]
                 file_path = UPLOADS_DIR / filename
+                logging.info(f"Buscando archivo: {file_path}")
                 if file_path.exists():
                     img = Image.open(file_path)
                     usar_fondo_personalizado = True
@@ -1757,13 +1760,14 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                         if response.status_code == 200:
                             img = Image.open(BytesIO(response.content))
                             usar_fondo_personalizado = True
-                except Exception:
-                    pass
+                except Exception as e:
+                    logging.error(f"Error descargando template externo: {e}")
             
             # Si se cargó la imagen, redimensionar manteniendo proporciones
             if img and usar_fondo_personalizado:
                 # Obtener dimensiones originales
                 orig_w, orig_h = img.size
+                logging.info(f"Imagen original: {orig_w}x{orig_h}")
                 
                 # Calcular proporción para cubrir el área sin deformar
                 ratio_w = ancho / orig_w
@@ -1787,6 +1791,8 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 # Asegurar que esté en modo RGB
                 if img.mode != 'RGB':
                     img = img.convert('RGB')
+                
+                logging.info(f"Template procesado: {img.size}")
                     
         except Exception as e:
             logging.error(f"Error cargando template: {e}")
@@ -1795,6 +1801,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     
     # Si no hay template personalizado, crear fondo predeterminado
     if img is None:
+        logging.info("Usando fondo predeterminado (no hay template)")
         img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
         draw = ImageDraw.Draw(img)
         
