@@ -315,16 +315,17 @@ const AdminDisenoAcreditacion = () => {
       const eventoRes = await axios.get(`${API}/eventos/${eventoSeleccionado}`);
       const configActual = eventoRes.data?.config_acreditaciones || {};
       
+      // Guardar siempre la ruta relativa
+      const templateToSave = getRelativePath(fondoImagen || fondoPreview);
+      
       // Actualizar solo la configuración de esta categoría
       const nuevaConfig = {
         ...configActual,
         [categoriaSeleccionada]: {
-          template_imagen: fondoImagen || fondoPreview || null,
+          template_imagen: templateToSave,
           config_elementos: elementos
         }
       };
-      
-      console.log('Guardando config:', JSON.stringify(nuevaConfig, null, 2));
       
       await axios.put(
         `${API}/admin/eventos/${eventoSeleccionado}`,
