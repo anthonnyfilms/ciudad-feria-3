@@ -1812,23 +1812,22 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     
     draw = ImageDraw.Draw(img)
     
-    # Intentar cargar fuente o usar predeterminada
+    # Intentar cargar fuente o usar predeterminada - ajustado para 600x900
     try:
-        font_grande = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 28)
-        font_medio = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
-        font_pequeno = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+        font_grande = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 20)
+        font_medio = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 14)
+        font_pequeno = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 11)
     except Exception:
         font_grande = ImageFont.load_default()
         font_medio = ImageFont.load_default()
         font_pequeno = ImageFont.load_default()
     
-    # Posición del QR desde configuración
+    # Posición del QR desde configuración - usa las mismas coordenadas del diseñador
     posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 70, 'size': 150})
     qr_x = int((posicion_qr.get('x', 50) / 100) * ancho)
     qr_y = int((posicion_qr.get('y', 70) / 100) * alto)
-    # Escalar tamaño del QR proporcionalmente (base 150 en diseñador de 600px -> escalar a 900px)
-    qr_base_size = posicion_qr.get('size', 150)
-    qr_size = max(200, int(qr_base_size * 1.5))  # Escalar 1.5x para mejor visibilidad
+    # El tamaño del QR es directo del diseñador (que también es 600px de ancho)
+    qr_size = max(120, posicion_qr.get('size', 150))
     
     # Decodificar y pegar QR
     if entrada.get('codigo_qr'):
