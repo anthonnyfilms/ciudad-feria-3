@@ -121,8 +121,8 @@ const AdminDisenoAcreditacion = () => {
     
     if (configCategoria) {
       if (configCategoria.template_imagen) {
-        setFondoPreview(configCategoria.template_imagen);
-        setFondoImagen(configCategoria.template_imagen);
+        setFondoPreview(getImageUrl(configCategoria.template_imagen));
+        setFondoImagen(getRelativePath(configCategoria.template_imagen));
       } else {
         setFondoPreview(null);
         setFondoImagen(null);
