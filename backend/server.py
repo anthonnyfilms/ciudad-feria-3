@@ -1718,11 +1718,14 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     - QR posicionado según configuración
     - Información del evento y comprador
     """
-    # Dimensiones de la entrada (1080x1080 como solicitado)
-    ancho = 1080
-    alto = 1080
+    # Dimensiones de la entrada - formato vertical como el diseñador (600x900 escalado)
+    ancho = 900
+    alto = 1350  # Proporción 2:3 vertical
     
     # Crear imagen base
+    img = None
+    usar_fondo_personalizado = False
+    
     if evento.get('template_entrada'):
         try:
             # Cargar template personalizado
@@ -1731,6 +1734,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 # Es base64
                 img_data = base64.b64decode(template_url.split(',')[1])
                 img = Image.open(BytesIO(img_data))
+                usar_fondo_personalizado = True
             elif '/api/uploads/' in template_url or '/uploads/' in template_url:
                 # Es archivo local - extraer nombre del archivo de la URL (completa o relativa)
                 if '/api/uploads/' in template_url:
@@ -1740,10 +1744,10 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 file_path = UPLOADS_DIR / filename
                 if file_path.exists():
                     img = Image.open(file_path)
+                    usar_fondo_personalizado = True
                     logging.info(f"Template cargado correctamente: {file_path}")
                 else:
                     logging.warning(f"Template no encontrado: {file_path}")
-                    img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
             else:
                 # Intentar descargar de URL externa
                 try:
@@ -1752,17 +1756,45 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                         response = await client.get(template_url)
                         if response.status_code == 200:
                             img = Image.open(BytesIO(response.content))
-                        else:
-                            img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
+                            usar_fondo_personalizado = True
                 except Exception:
-                    img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
+                    pass
             
-            img = img.resize((ancho, alto), Image.Resampling.LANCZOS)
+            # Si se cargó la imagen, redimensionar manteniendo proporciones
+            if img and usar_fondo_personalizado:
+                # Obtener dimensiones originales
+                orig_w, orig_h = img.size
+                
+                # Calcular proporción para cubrir el área sin deformar
+                ratio_w = ancho / orig_w
+                ratio_h = alto / orig_h
+                
+                # Usar el ratio mayor para cubrir toda el área (cover)
+                ratio = max(ratio_w, ratio_h)
+                
+                new_w = int(orig_w * ratio)
+                new_h = int(orig_h * ratio)
+                
+                # Redimensionar
+                img = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
+                
+                # Recortar al centro si es más grande
+                if new_w > ancho or new_h > alto:
+                    left = (new_w - ancho) // 2
+                    top = (new_h - alto) // 2
+                    img = img.crop((left, top, left + ancho, top + alto))
+                
+                # Asegurar que esté en modo RGB
+                if img.mode != 'RGB':
+                    img = img.convert('RGB')
+                    
         except Exception as e:
             logging.error(f"Error cargando template: {e}")
-            img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
-    else:
-        # Crear fondo predeterminado con gradiente
+            img = None
+            usar_fondo_personalizado = False
+    
+    # Si no hay template personalizado, crear fondo predeterminado
+    if img is None:
         img = Image.new('RGB', (ancho, alto), color='#1a1a2e')
         draw = ImageDraw.Draw(img)
         
