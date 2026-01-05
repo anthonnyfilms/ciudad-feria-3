@@ -519,7 +519,7 @@ const AdminEventos = () => {
                       {formData.imagen && (
                         <div className="mt-2 p-2 glass-card rounded-xl">
                           <img 
-                            src={formData.imagen} 
+                            src={getImageUrl(formData.imagen)} 
                             alt="Preview" 
                             className="w-full h-32 object-cover rounded-lg"
                             onError={(e) => e.target.style.display = 'none'}
