@@ -284,7 +284,7 @@ const DetalleEvento = () => {
             className="glass-card rounded-3xl overflow-hidden max-w-4xl mx-auto"
           >
             <img
-              src={evento.imagen}
+              src={getImageUrl(evento.imagen)}
               alt={evento.nombre}
               className="w-full h-auto max-h-[500px] object-cover"
             />
