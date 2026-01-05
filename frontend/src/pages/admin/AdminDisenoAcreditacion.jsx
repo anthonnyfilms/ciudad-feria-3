@@ -29,6 +29,9 @@ const AdminDisenoAcreditacion = () => {
     evento: { visible: true, x: 50, y: 90, size: 10, color: '#CCCCCC', rotation: 0 },
     qr: { visible: true, x: 85, y: 75, size: 60, rotation: 0 }
   });
+
+  // Key para forzar re-render del preview cuando cambian los elementos
+  const [previewKey, setPreviewKey] = useState(0);
   
   const [elementoActivo, setElementoActivo] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
