@@ -627,6 +627,7 @@ const AdminDisenoAcreditacion = () => {
                     
                     {/* Contenedor de Preview - Formato credencial vertical 9.5cm (ancho) x 14.5cm (alto) */}
                     <div 
+                      key={previewKey}
                       ref={previewRef}
                       className="relative mx-auto rounded-2xl overflow-hidden shadow-2xl"
                       style={{ 
