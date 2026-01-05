@@ -50,7 +50,7 @@ Sistema web integral para la gestión y venta de entradas de la "Feria de San Se
 - [x] Registro de entrada/salida con historial
 
 ## Credenciales de Prueba
-- **URL Admin:** `/secure-admin-panel-2026`
+- **URL Admin:** `/admin-ciudadferia`
 - **Usuario:** `admin` / `admin123`
 
 ## Historial de Cambios
