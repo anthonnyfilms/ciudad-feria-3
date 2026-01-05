@@ -1851,8 +1851,8 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         except Exception as e:
             logging.error(f"Error procesando QR: {e}")
     
-    # Agregar información en panel inferior
-    panel_height = 180  # Más alto para incluir ubicación
+    # Agregar información en panel inferior - ajustado para 600x900
+    panel_height = 140
     panel_y = alto - panel_height
     
     # Panel semi-transparente
