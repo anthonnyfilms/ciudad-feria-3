@@ -545,7 +545,7 @@ const DetalleEvento = () => {
                     {evento.imagen && (
                       <div className="mb-4 flex items-center gap-4">
                         <img 
-                          src={evento.imagen} 
+                          src={getImageUrl(evento.imagen)} 
                           alt={evento.nombre} 
                           className="w-16 h-16 rounded-xl object-cover"
                         />
