@@ -146,7 +146,6 @@ const AdminEventos = () => {
         toast.error(error.response?.data?.detail || 'Error al guardar evento');
       }
     }
-    }
   };
 
   const handleEliminar = async (id) => {
