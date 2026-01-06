@@ -1880,14 +1880,31 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         draw.text((ancho - 200, panel_y + 10), f"{categoria_entrada.upper()}", 
                   fill='#FACC15', font=font_medio)
     
-    # Mesa y Asiento/Silla
+    # Mesa y Asiento/Silla - parsear diferentes formatos
     y_offset = 65
-    if entrada.get('mesa'):
-        draw.text((20, panel_y + y_offset), f"Mesa: {entrada['mesa']}", fill='#10B981', font=font_medio)
-        y_offset += 22
-    if entrada.get('asiento'):
-        draw.text((20, panel_y + y_offset), f"Silla: {entrada['asiento']}", fill='#10B981', font=font_medio)
-        y_offset += 22
+    mesa_info = entrada.get('mesa', '')
+    asiento_info = entrada.get('asiento', '')
+    silla_info = entrada.get('silla', '')
+    
+    # Si asiento tiene formato "Mesa X-SillaY", parsearlo
+    if asiento_info and 'Mesa' in asiento_info and '-' in asiento_info:
+        parts = asiento_info.split('-')
+        if len(parts) >= 2:
+            mesa_part = parts[0].replace('Mesa', '').strip()
+            silla_part = parts[1].replace('Silla', '').strip()
+            draw.text((20, panel_y + y_offset), f"Mesa: {mesa_part}  |  Silla: {silla_part}", fill='#10B981', font=font_medio)
+            y_offset += 22
+    else:
+        # Mostrar mesa y silla por separado si existen
+        if mesa_info and mesa_info != 'None':
+            draw.text((20, panel_y + y_offset), f"Mesa: {mesa_info}", fill='#10B981', font=font_medio)
+            y_offset += 22
+        if asiento_info and asiento_info != 'None':
+            draw.text((20, panel_y + y_offset), f"Asiento: {asiento_info}", fill='#10B981', font=font_medio)
+            y_offset += 22
+        if silla_info and silla_info != 'None':
+            draw.text((20, panel_y + y_offset), f"Silla: {silla_info}", fill='#10B981', font=font_medio)
+            y_offset += 22
     
     # Ubicación del evento
     ubicacion = evento.get('ubicacion', '')
