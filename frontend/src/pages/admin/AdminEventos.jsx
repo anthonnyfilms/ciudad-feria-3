@@ -175,7 +175,7 @@ const AdminEventos = () => {
       ubicacion: evento.ubicacion,
       categoria: evento.categoria,
       precio: evento.precio,
-      imagen: evento.imagen,
+      imagen: getRelativePath(evento.imagen) || '',
       link_externo: evento.link_externo || '',
       asientos_disponibles: evento.asientos_disponibles,
       tipo_asientos: evento.tipo_asientos || 'general',
