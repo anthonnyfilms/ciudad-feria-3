@@ -1753,31 +1753,34 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                 img_data = base64.b64decode(template_url.split(',')[1])
                 img = Image.open(BytesIO(img_data))
                 usar_fondo_personalizado = True
+            elif template_url.startswith('http'):
+                # URL externa (Cloudinary u otro servicio)
+                try:
+                    import httpx
+                    async with httpx.AsyncClient(timeout=30.0) as http_client:
+                        response = await http_client.get(template_url)
+                        if response.status_code == 200:
+                            img = Image.open(BytesIO(response.content))
+                            usar_fondo_personalizado = True
+                            logging.info(f"Template cargado desde URL: {template_url}")
+                        else:
+                            logging.warning(f"Error descargando template: HTTP {response.status_code}")
+                except Exception as e:
+                    logging.error(f"Error descargando template: {e}")
             elif '/api/uploads/' in template_url or '/uploads/' in template_url:
-                # Es archivo local - extraer nombre del archivo de la URL (completa o relativa)
+                # Es archivo local (legacy)
                 if '/api/uploads/' in template_url:
                     filename = template_url.split('/api/uploads/')[-1]
                 else:
                     filename = template_url.split('/uploads/')[-1]
                 file_path = UPLOADS_DIR / filename
-                logging.info(f"Buscando archivo: {file_path}")
+                logging.info(f"Buscando archivo local: {file_path}")
                 if file_path.exists():
                     img = Image.open(file_path)
                     usar_fondo_personalizado = True
                     logging.info(f"Template cargado correctamente: {file_path}")
                 else:
                     logging.warning(f"Template no encontrado: {file_path}")
-            else:
-                # Intentar descargar de URL externa
-                try:
-                    import httpx
-                    async with httpx.AsyncClient() as client:
-                        response = await client.get(template_url)
-                        if response.status_code == 200:
-                            img = Image.open(BytesIO(response.content))
-                            usar_fondo_personalizado = True
-                except Exception as e:
-                    logging.error(f"Error descargando template externo: {e}")
             
             # Si se cargó la imagen, redimensionar a 600x900 exacto
             if img and usar_fondo_personalizado:
