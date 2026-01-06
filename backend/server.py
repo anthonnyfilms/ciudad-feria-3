@@ -1853,11 +1853,11 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             logging.error(f"Error procesando QR: {e}")
     
     # Agregar información en panel inferior - ajustado para 600x900
-    panel_height = 140
+    panel_height = 160
     panel_y = alto - panel_height
     
     # Panel semi-transparente
-    overlay = Image.new('RGBA', (ancho, panel_height), (0, 0, 0, 180))
+    overlay = Image.new('RGBA', (ancho, panel_height), (0, 0, 0, 200))
     img.paste(Image.alpha_composite(
         Image.new('RGBA', (ancho, panel_height), (0, 0, 0, 0)),
         overlay
@@ -1867,43 +1867,42 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     draw = ImageDraw.Draw(img)
     
     # Nombre del evento
-    draw.text((30, panel_y + 15), evento.get('nombre', 'Evento')[:40], 
+    draw.text((20, panel_y + 10), evento.get('nombre', 'Evento')[:40], 
               fill='#FACC15', font=font_grande)
+    
+    # Nombre del comprador
+    draw.text((20, panel_y + 40), f"{entrada.get('nombre_comprador', 'N/A')}", 
+              fill='white', font=font_medio)
+    
+    # Categoría de entrada
+    categoria_entrada = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or ''
+    if categoria_entrada:
+        draw.text((ancho - 200, panel_y + 10), f"{categoria_entrada.upper()}", 
+                  fill='#FACC15', font=font_medio)
+    
+    # Mesa y Asiento/Silla
+    y_offset = 65
+    if entrada.get('mesa'):
+        draw.text((20, panel_y + y_offset), f"Mesa: {entrada['mesa']}", fill='#10B981', font=font_medio)
+        y_offset += 22
+    if entrada.get('asiento'):
+        draw.text((20, panel_y + y_offset), f"Silla: {entrada['asiento']}", fill='#10B981', font=font_medio)
+        y_offset += 22
     
     # Ubicación del evento
     ubicacion = evento.get('ubicacion', '')
     if ubicacion:
-        draw.text((30, panel_y + 50), f"📍 {ubicacion[:50]}", 
-                  fill='#10B981', font=font_medio)
-    
-    # Nombre del comprador
-    draw.text((30, panel_y + 80), f"👤 {entrada.get('nombre_comprador', 'N/A')}", 
-              fill='white', font=font_medio)
-    
-    # Categoría de entrada (General, Gradas, VIP, Mesa, etc.)
-    categoria_entrada = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or ''
-    if categoria_entrada:
-        draw.text((ancho - 250, panel_y + 15), f"🎫 {categoria_entrada.upper()}", 
-                  fill='#FACC15', font=font_medio)
-    
-    # Asiento/Mesa si aplica
-    asiento_info = ""
-    if entrada.get('asiento'):
-        asiento_info = f"🪑 Asiento: {entrada['asiento']}"
-    elif entrada.get('mesa'):
-        asiento_info = f"🪑 Mesa: {entrada['mesa']}"
-    
-    if asiento_info:
-        draw.text((30, panel_y + 110), asiento_info, fill='white', font=font_medio)
+        draw.text((20, panel_y + y_offset), f"{ubicacion[:45]}", 
+                  fill='#9CA3AF', font=font_pequeno)
     
     # Fecha y hora
-    draw.text((30, panel_y + 145), 
-              f"📅 {evento.get('fecha', '')} - {evento.get('hora', '')}", 
+    draw.text((ancho - 200, panel_y + 40), 
+              f"{evento.get('fecha', '')} {evento.get('hora', '')}", 
               fill='#9CA3AF', font=font_pequeno)
     
     # Código alfanumérico
     codigo = entrada.get('codigo_alfanumerico', entrada.get('id', '')[:12])
-    draw.text((ancho - 200, panel_y + 145), f"#{codigo}", 
+    draw.text((ancho - 120, panel_y + panel_height - 25), f"#{codigo}", 
               fill='#FACC15', font=font_pequeno)
     
     # Convertir a bytes
