@@ -103,19 +103,31 @@ const AdminEventos = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const token = localStorage.getItem('admin_token');
+    
+    if (!token) {
+      toast.error('Sesión expirada. Por favor inicia sesión nuevamente.');
+      navigate('/admin-ciudadferia');
+      return;
+    }
 
     try {
+      // Asegurar que la imagen use ruta relativa
+      const dataToSend = {
+        ...formData,
+        imagen: formData.imagen ? getRelativePath(formData.imagen) : ''
+      };
+      
       if (eventoEditando) {
         await axios.put(
           `${API}/admin/eventos/${eventoEditando.id}`,
-          formData,
+          dataToSend,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Evento actualizado exitosamente');
       } else {
         await axios.post(
           `${API}/admin/eventos`,
-          formData,
+          dataToSend,
           { headers: { Authorization: `Bearer ${token}` } }
         );
         toast.success('Evento creado exitosamente');
@@ -126,7 +138,14 @@ const AdminEventos = () => {
       cargarEventos();
     } catch (error) {
       console.error('Error guardando evento:', error);
-      toast.error(error.response?.data?.detail || 'Error al guardar evento');
+      if (error.response?.status === 401) {
+        toast.error('Sesión expirada. Por favor inicia sesión nuevamente.');
+        localStorage.removeItem('admin_token');
+        navigate('/admin-ciudadferia');
+      } else {
+        toast.error(error.response?.data?.detail || 'Error al guardar evento');
+      }
+    }
     }
   };
 
