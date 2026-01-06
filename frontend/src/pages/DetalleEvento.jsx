@@ -126,6 +126,18 @@ const DetalleEvento = () => {
       let precioTotal = seleccionAsientos.precioTotal || (evento.precio * cantidadFinal);
       
       // Preparar detalles para el backend
+      // Determinar la categoría basada en lo que se seleccionó
+      let categoriaAsiento = 'General';
+      if (seleccionAsientos.detalles && seleccionAsientos.detalles.length > 0) {
+        // Si hay múltiples categorías, tomar la primera (o combinar)
+        const categorias = seleccionAsientos.detalles.map(d => d.tipo || d.categoria).filter(Boolean);
+        categoriaAsiento = categorias.length > 0 ? categorias[0] : 'General';
+      }
+      // Si hay entradas generales específicas, usar esa categoría
+      if (seleccionAsientos.entradasGenerales && seleccionAsientos.entradasGenerales.length > 0) {
+        categoriaAsiento = seleccionAsientos.entradasGenerales[0].tipo || 'General';
+      }
+      
       const datosCompra = {
         evento_id: id,
         nombre_comprador: nombre,
@@ -136,7 +148,7 @@ const DetalleEvento = () => {
         metodo_pago: metodoPago,
         comprobante_pago: comprobante || null,
         asientos: seleccionAsientos.asientos || [],
-        categoria_asiento: seleccionAsientos.detalles?.[0]?.tipo || 'general',
+        categoria_asiento: categoriaAsiento,
         detalles_compra: seleccionAsientos.detalles || []
       };
       
