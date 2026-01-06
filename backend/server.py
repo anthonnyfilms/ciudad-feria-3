@@ -1845,9 +1845,10 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             paste_x = max(10, min(ancho - qr_size - 10, paste_x))
             paste_y = max(10, min(alto - qr_size - 10, paste_y))
             
-            # Crear fondo blanco para el QR con más padding
-            qr_bg = Image.new('RGB', (qr_size + 30, qr_size + 30), 'white')
-            img.paste(qr_bg, (paste_x - 15, paste_y - 15))
+            # Crear fondo blanco para el QR con padding grande para mejor escaneo
+            padding = 20
+            qr_bg = Image.new('RGB', (qr_size + padding*2, qr_size + padding*2), 'white')
+            img.paste(qr_bg, (paste_x - padding, paste_y - padding))
             img.paste(qr_img, (paste_x, paste_y))
         except Exception as e:
             logging.error(f"Error procesando QR: {e}")
