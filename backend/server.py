@@ -1555,29 +1555,35 @@ async def reservar_asientos(request: Request):
 
 @api_router.post("/upload-imagen")
 async def upload_imagen(file: UploadFile = File(...)):
-    """Subir una imagen y retornar la URL"""
+    """Subir una imagen a Cloudinary y retornar la URL permanente"""
     if not file.content_type.startswith('image/'):
         raise HTTPException(status_code=400, detail="El archivo debe ser una imagen")
     
-    # Generar nombre único
-    extension = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    filename = f"{uuid.uuid4()}.{extension}"
-    file_path = UPLOADS_DIR / filename
-    
-    # Guardar archivo
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Retornar URL relativa
-    return {
-        "success": True,
-        "url": f"/api/uploads/{filename}",
-        "filename": filename
-    }
+    try:
+        # Leer contenido del archivo
+        file_content = await file.read()
+        
+        # Subir a Cloudinary
+        result = cloudinary.uploader.upload(
+            file_content,
+            folder="ciudadferia",
+            resource_type="image"
+        )
+        
+        # Retornar URL de Cloudinary (permanente)
+        return {
+            "success": True,
+            "url": result["secure_url"],
+            "public_id": result["public_id"],
+            "filename": file.filename
+        }
+    except Exception as e:
+        logging.error(f"Error subiendo a Cloudinary: {e}")
+        raise HTTPException(status_code=500, detail=f"Error al subir imagen: {str(e)}")
 
 @api_router.get("/uploads/{filename}")
 async def get_upload(filename: str):
-    """Servir archivos subidos"""
+    """Servir archivos subidos (legacy - para compatibilidad)"""
     from fastapi.responses import FileResponse
     file_path = UPLOADS_DIR / filename
     if not file_path.exists():
