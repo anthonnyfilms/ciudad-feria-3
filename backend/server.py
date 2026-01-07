@@ -1834,17 +1834,24 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     qr_payload = entrada.get('qr_payload')
     if qr_payload:
         try:
-            # Calcular box_size para que el QR tenga el tamaño deseado
-            # QR versión 2 tiene 25 módulos, con border=4 son 33 módulos totales
-            # qr_size = modules * box_size, entonces box_size = qr_size / modules
-            qr_version = 2
             qr_border = 4
-            modules = 25 + (qr_border * 2)  # 33 módulos totales
-            calculated_box_size = max(1, qr_size // modules)
             
-            # Regenerar QR al tamaño exacto necesario
+            # Primero, crear QR con box_size=1 para determinar los módulos totales
+            qr_temp = qrcode.QRCode(
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=1,
+                border=qr_border,
+            )
+            qr_temp.add_data(qr_payload)
+            qr_temp.make(fit=True)
+            temp_img = qr_temp.make_image()
+            modules_total = temp_img.size[0]  # Con box_size=1, esto = número de módulos
+            
+            # Calcular box_size para alcanzar el tamaño deseado
+            calculated_box_size = max(2, qr_size // modules_total)  # Mínimo 2 para legibilidad
+            
+            # Regenerar QR al tamaño correcto
             qr = qrcode.QRCode(
-                version=qr_version,
                 error_correction=qrcode.constants.ERROR_CORRECT_H,
                 box_size=calculated_box_size,
                 border=qr_border,
@@ -1854,7 +1861,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             qr_img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
             
             actual_qr_size = qr_img.size[0]
-            logging.info(f"QR regenerado: box_size={calculated_box_size}, tamaño_real={actual_qr_size}px")
+            logging.info(f"QR regenerado: modules={modules_total}, box_size={calculated_box_size}, tamaño_real={actual_qr_size}px")
             
             # Posicionar QR (centrado en las coordenadas)
             paste_x = qr_x - actual_qr_size // 2
