@@ -1830,31 +1830,69 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     qr_size = max(100, int(posicion_qr.get('size', 100)))
     logging.info(f"QR config: pos=({qr_x},{qr_y}), size={qr_size}")
     
-    # Decodificar y pegar QR
-    if entrada.get('codigo_qr'):
+    # Generar QR al tamaño exacto (NO redimensionar, regenerar directamente)
+    qr_payload = entrada.get('qr_payload')
+    if qr_payload:
         try:
-            qr_data = entrada['codigo_qr'].split(',')[1]
-            qr_img = Image.open(BytesIO(base64.b64decode(qr_data)))
+            # Calcular box_size para que el QR tenga el tamaño deseado
+            # QR versión 2 tiene 25 módulos, con border=4 son 33 módulos totales
+            # qr_size = modules * box_size, entonces box_size = qr_size / modules
+            qr_version = 2
+            qr_border = 4
+            modules = 25 + (qr_border * 2)  # 33 módulos totales
+            calculated_box_size = max(1, qr_size // modules)
             
-            # Usar NEAREST para mantener nitidez del QR (sin suavizado)
-            qr_img = qr_img.resize((qr_size, qr_size), Image.Resampling.NEAREST)
+            # Regenerar QR al tamaño exacto necesario
+            qr = qrcode.QRCode(
+                version=qr_version,
+                error_correction=qrcode.constants.ERROR_CORRECT_H,
+                box_size=calculated_box_size,
+                border=qr_border,
+            )
+            qr.add_data(qr_payload)
+            qr.make(fit=True)
+            qr_img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
+            
+            actual_qr_size = qr_img.size[0]
+            logging.info(f"QR regenerado: box_size={calculated_box_size}, tamaño_real={actual_qr_size}px")
             
             # Posicionar QR (centrado en las coordenadas)
-            paste_x = qr_x - qr_size // 2
-            paste_y = qr_y - qr_size // 2
+            paste_x = qr_x - actual_qr_size // 2
+            paste_y = qr_y - actual_qr_size // 2
             
             # Asegurar que esté dentro de los límites
-            paste_x = max(10, min(ancho - qr_size - 10, paste_x))
-            paste_y = max(10, min(alto - qr_size - 10, paste_y))
+            paste_x = max(10, min(ancho - actual_qr_size - 10, paste_x))
+            paste_y = max(10, min(alto - actual_qr_size - 10, paste_y))
             
             # Crear fondo blanco para el QR con padding para mejor escaneo
             padding = 15
-            qr_bg = Image.new('RGB', (qr_size + padding*2, qr_size + padding*2), 'white')
+            qr_bg = Image.new('RGB', (actual_qr_size + padding*2, actual_qr_size + padding*2), 'white')
             img.paste(qr_bg, (paste_x - padding, paste_y - padding))
             img.paste(qr_img, (paste_x, paste_y))
-            logging.info(f"QR insertado: tamaño={qr_size}px, pos=({paste_x},{paste_y})")
+            logging.info(f"QR insertado: tamaño={actual_qr_size}px, pos=({paste_x},{paste_y})")
         except Exception as e:
-            logging.error(f"Error procesando QR: {e}")
+            logging.error(f"Error generando QR: {e}")
+    elif entrada.get('codigo_qr'):
+        # Fallback: usar imagen base64 existente si no hay payload
+        try:
+            qr_data = entrada['codigo_qr'].split(',')[1]
+            qr_img = Image.open(BytesIO(base64.b64decode(qr_data)))
+            actual_qr_size = qr_img.size[0]
+            
+            paste_x = qr_x - actual_qr_size // 2
+            paste_y = qr_y - actual_qr_size // 2
+            paste_x = max(10, min(ancho - actual_qr_size - 10, paste_x))
+            paste_y = max(10, min(alto - actual_qr_size - 10, paste_y))
+            
+            padding = 15
+            qr_bg = Image.new('RGB', (actual_qr_size + padding*2, actual_qr_size + padding*2), 'white')
+            img.paste(qr_bg, (paste_x - padding, paste_y - padding))
+            if qr_img.mode != 'RGB':
+                qr_img = qr_img.convert('RGB')
+            img.paste(qr_img, (paste_x, paste_y))
+            logging.info(f"QR (fallback base64): tamaño={actual_qr_size}px")
+        except Exception as e:
+            logging.error(f"Error procesando QR fallback: {e}")
     
     # Agregar información en panel inferior - ajustado para 600x900
     panel_height = 160
