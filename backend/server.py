@@ -1835,7 +1835,9 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         try:
             qr_data = entrada['codigo_qr'].split(',')[1]
             qr_img = Image.open(BytesIO(base64.b64decode(qr_data)))
-            qr_img = qr_img.resize((qr_size, qr_size), Image.Resampling.LANCZOS)
+            
+            # Usar NEAREST para mantener nitidez del QR (sin suavizado)
+            qr_img = qr_img.resize((qr_size, qr_size), Image.Resampling.NEAREST)
             
             # Posicionar QR (centrado en las coordenadas)
             paste_x = qr_x - qr_size // 2
@@ -1845,11 +1847,12 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             paste_x = max(10, min(ancho - qr_size - 10, paste_x))
             paste_y = max(10, min(alto - qr_size - 10, paste_y))
             
-            # Crear fondo blanco para el QR con padding grande para mejor escaneo
-            padding = 20
+            # Crear fondo blanco para el QR con padding para mejor escaneo
+            padding = 15
             qr_bg = Image.new('RGB', (qr_size + padding*2, qr_size + padding*2), 'white')
             img.paste(qr_bg, (paste_x - padding, paste_y - padding))
             img.paste(qr_img, (paste_x, paste_y))
+            logging.info(f"QR insertado: tamaño={qr_size}px, pos=({paste_x},{paste_y})")
         except Exception as e:
             logging.error(f"Error procesando QR: {e}")
     
