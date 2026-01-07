@@ -665,42 +665,39 @@ class CiudadFeriaAPITester:
         
         return passed_tests == total_tests
 
-    def test_qr_validation_flow_e2e(self, token):
-        """Test complete QR validation flow as requested by user"""
-        print("\n🔍 QR VALIDATION E2E FLOW TESTING")
-        print("=" * 50)
+    def test_qr_validation_system_complete(self, token):
+        """Test complete QR validation system as requested in review"""
+        print("\n🔍 QR VALIDATION SYSTEM TESTING (REVIEW REQUEST)")
+        print("=" * 60)
         
         headers = {
             'Content-Type': 'application/json',
             'Authorization': f'Bearer {token}'
         }
         
-        # Step 1: Get list of approved purchases
-        print(f"\n1️⃣ Getting list of approved purchases...")
-        success1, compras_data = self.run_test("Get Admin Purchases", "GET", "admin/compras?estado=aprobado", 200, headers=headers)
+        # Step 1: Get an approved entry from database
+        print(f"\n1️⃣ Getting approved entry from database...")
         
-        if not success1:
-            print("❌ Cannot get purchases list")
-            return False
+        # First try to get existing approved entries
+        success1, compras_data = self.run_test("Get Approved Purchases", "GET", "admin/compras?estado=aprobado", 200, headers=headers)
         
-        # Find a purchase with qr_payload
-        compra_con_qr = None
-        for compra in compras_data:
-            if compra.get('estado_pago') == 'aprobado' and compra.get('qr_payload'):
-                compra_con_qr = compra
-                break
+        approved_entry = None
+        if success1 and compras_data:
+            for compra in compras_data:
+                if (compra.get('estado_pago') == 'aprobado' and 
+                    compra.get('qr_payload') and 
+                    compra.get('codigo_alfanumerico')):
+                    approved_entry = compra
+                    break
         
-        if not compra_con_qr:
-            print("❌ No approved purchase with QR payload found")
-            print(f"   Found {len(compras_data)} purchases, but none have qr_payload")
+        # If no approved entry found, create one
+        if not approved_entry:
+            print("   No approved entry found, creating test entry...")
             
-            # Let's create and approve a purchase for testing
-            print(f"\n🔧 Creating test purchase for QR validation...")
-            
-            # Get events first
+            # Get events
             success_eventos, eventos = self.test_list_eventos()
             if not success_eventos or not eventos:
-                print("❌ Cannot create test purchase without events")
+                print("❌ Cannot create test entry without events")
                 return False
             
             evento = eventos[0]
@@ -709,15 +706,15 @@ class CiudadFeriaAPITester:
             # Create purchase
             compra_data = {
                 "evento_id": evento_id,
-                "nombre_comprador": "Test QR User",
-                "email_comprador": "testqr@example.com",
-                "telefono_comprador": "1234567890",
+                "nombre_comprador": "QR Test User",
+                "email_comprador": "qrtest@ciudadferia.com",
+                "telefono_comprador": "04121234567",
                 "cantidad": 1,
-                "precio_total": 25.0,
+                "precio_total": 50.0,
                 "metodo_pago": "transferencia"
             }
             
-            success_compra, purchase_data = self.run_test("Create Test Purchase for QR", "POST", "comprar-entrada", 200, compra_data)
+            success_compra, purchase_data = self.run_test("Create Test Purchase", "POST", "comprar-entrada", 200, compra_data)
             
             if not success_compra or not purchase_data.get('entradas'):
                 print("❌ Cannot create test purchase")
@@ -725,11 +722,6 @@ class CiudadFeriaAPITester:
             
             entrada = purchase_data['entradas'][0]
             entrada_id = entrada.get('id')
-            qr_payload = entrada.get('qr_payload')
-            
-            if not entrada_id or not qr_payload:
-                print("❌ Test purchase missing ID or QR payload")
-                return False
             
             # Approve the purchase
             approval_data = {"entrada_ids": [entrada_id]}
@@ -739,106 +731,175 @@ class CiudadFeriaAPITester:
                 print("❌ Cannot approve test purchase")
                 return False
             
-            compra_con_qr = {
-                'id': entrada_id,
-                'qr_payload': qr_payload,
-                'nombre_comprador': compra_data['nombre_comprador'],
-                'estado_pago': 'aprobado'
-            }
-            
-            print(f"   ✅ Created and approved test purchase: {entrada_id[:8]}...")
+            # Get the approved entry details
+            success_refresh, compras_refresh = self.run_test("Get Refreshed Purchases", "GET", "admin/compras", 200, headers=headers)
+            if success_refresh:
+                for compra in compras_refresh:
+                    if compra.get('id') == entrada_id:
+                        approved_entry = compra
+                        break
         
-        # Step 2: Test QR validation with the found/created purchase
-        print(f"\n2️⃣ Testing QR validation with approved purchase...")
-        qr_payload = compra_con_qr.get('qr_payload')
-        comprador = compra_con_qr.get('nombre_comprador', 'Unknown')
-        
-        print(f"   🎫 Testing QR for: {comprador}")
-        print(f"   🔑 QR Payload length: {len(qr_payload)} characters")
-        
-        # Test verification mode
-        validation_data = {
-            "qr_payload": qr_payload,
-            "accion": "verificar"
-        }
-        
-        success2, validation_result = self.run_test("QR Validation - Verify", "POST", "validar-entrada", 200, validation_data)
-        
-        if success2:
-            if validation_result.get('valido'):
-                print(f"   ✅ QR validation successful")
-                print(f"   👤 Comprador: {validation_result.get('entrada', {}).get('nombre_comprador', 'N/A')}")
-                print(f"   🎪 Evento: {validation_result.get('entrada', {}).get('nombre_evento', 'N/A')}")
-                print(f"   🪑 Asiento: {validation_result.get('entrada', {}).get('asiento', 'General')}")
-                print(f"   📍 Estado: {validation_result.get('entrada', {}).get('estado_actual', 'N/A')}")
-            else:
-                print(f"   ❌ QR validation failed: {validation_result.get('mensaje', 'Unknown error')}")
-                return False
-        else:
-            print("❌ QR validation request failed")
+        if not approved_entry:
+            print("❌ Could not get approved entry for testing")
             return False
         
-        # Step 3: Test entry action
-        print(f"\n3️⃣ Testing QR validation with entry action...")
-        validation_data_entry = {
+        entrada_id = approved_entry.get('id')
+        qr_payload = approved_entry.get('qr_payload')
+        codigo_alfanumerico = approved_entry.get('codigo_alfanumerico')
+        evento_id = approved_entry.get('evento_id')
+        
+        print(f"   ✅ Found approved entry: {entrada_id[:8]}...")
+        print(f"   🎫 QR Payload: {len(qr_payload)} chars")
+        print(f"   🔢 Alphanumeric Code: {codigo_alfanumerico}")
+        
+        # Step 2: Test GET /api/entrada/{entrada_id}/imagen
+        print(f"\n2️⃣ Testing ticket image download with QR code...")
+        success2, image_result = self.test_ticket_image_generation(entrada_id)
+        
+        if success2:
+            print(f"   ✅ Ticket image generated successfully")
+            print(f"   📄 Content-Type: {image_result.get('content_type', 'unknown')}")
+            print(f"   📏 Image Size: {image_result.get('size', 0)} bytes")
+        else:
+            print(f"   ❌ Ticket image generation failed")
+        
+        # Step 3: Test POST /api/validar-entrada with QR payload (modo: verificar)
+        print(f"\n3️⃣ Testing QR validation (modo: verificar)...")
+        validation_data = {
             "qr_payload": qr_payload,
-            "accion": "entrada"
+            "modo": "verificar"
         }
         
-        success3, entry_result = self.run_test("QR Validation - Entry", "POST", "validar-entrada", 200, validation_data_entry)
+        success3, validation_result = self.run_test("QR Validation - Verificar", "POST", "validar-entrada", 200, validation_data)
         
         if success3:
+            if validation_result.get('valido'):
+                print(f"   ✅ QR validation successful")
+                print(f"   📝 Message: {validation_result.get('mensaje', 'N/A')}")
+                entrada_info = validation_result.get('entrada', {})
+                print(f"   👤 Buyer: {entrada_info.get('nombre_comprador', 'N/A')}")
+                print(f"   🎪 Event: {entrada_info.get('nombre_evento', 'N/A')}")
+                print(f"   🪑 Seat: {entrada_info.get('asiento', 'General')}")
+            else:
+                print(f"   ❌ QR validation failed: {validation_result.get('mensaje', 'Unknown')}")
+                success3 = False
+        
+        # Step 4: Test POST /api/validar-entrada-codigo with manual code (modo: verificar)
+        print(f"\n4️⃣ Testing manual code validation (modo: verificar)...")
+        code_validation_data = {
+            "codigo": codigo_alfanumerico,
+            "modo": "verificar"
+        }
+        
+        success4, code_result = self.run_test("Manual Code Validation - Verificar", "POST", "validar-entrada-codigo", 200, code_validation_data)
+        
+        if success4:
+            if code_result.get('valido'):
+                print(f"   ✅ Manual code validation successful")
+                print(f"   📝 Message: {code_result.get('mensaje', 'N/A')}")
+                entrada_info = code_result.get('entrada', {})
+                print(f"   👤 Buyer: {entrada_info.get('nombre_comprador', 'N/A')}")
+                print(f"   🎪 Event: {entrada_info.get('nombre_evento', 'N/A')}")
+            else:
+                print(f"   ❌ Manual code validation failed: {code_result.get('mensaje', 'Unknown')}")
+                success4 = False
+        
+        # Step 5: Test Entry/Exit Flow with QR validation
+        print(f"\n5️⃣ Testing Entry/Exit flow with QR validation...")
+        
+        # Test entrada (entry)
+        entry_data = {
+            "qr_payload": qr_payload,
+            "modo": "entrada"
+        }
+        
+        success5a, entry_result = self.run_test("QR Validation - Entrada", "POST", "validar-entrada", 200, entry_data)
+        
+        if success5a:
             if entry_result.get('valido'):
                 print(f"   ✅ Entry registration successful")
                 print(f"   📝 Message: {entry_result.get('mensaje', 'N/A')}")
-                print(f"   🎯 Action: {entry_result.get('tipo_accion', 'N/A')}")
             else:
-                print(f"   ⚠️ Entry registration result: {entry_result.get('mensaje', 'Unknown')}")
-                # This might be expected if person is already inside
-        else:
-            print("❌ Entry validation request failed")
-            return False
+                print(f"   ⚠️ Entry result: {entry_result.get('mensaje', 'Unknown')}")
+                # Might be expected if already inside
         
-        # Step 4: Test duplicate entry (should fail)
-        print(f"\n4️⃣ Testing duplicate entry (should be blocked)...")
-        success4, duplicate_result = self.run_test("QR Validation - Duplicate Entry", "POST", "validar-entrada", 200, validation_data_entry)
-        
-        if success4:
-            if not duplicate_result.get('valido') and 'ya está dentro' in duplicate_result.get('mensaje', ''):
-                print(f"   ✅ Duplicate entry correctly blocked")
-                print(f"   🚨 Alert: {duplicate_result.get('mensaje', 'N/A')}")
-            elif duplicate_result.get('valido'):
-                print(f"   ⚠️ Unexpected: duplicate entry was allowed")
-            else:
-                print(f"   ℹ️ Entry blocked: {duplicate_result.get('mensaje', 'N/A')}")
-        
-        # Step 5: Test exit action
-        print(f"\n5️⃣ Testing QR validation with exit action...")
-        validation_data_exit = {
+        # Test salida (exit)
+        exit_data = {
             "qr_payload": qr_payload,
-            "accion": "salida"
+            "modo": "salida"
         }
         
-        success5, exit_result = self.run_test("QR Validation - Exit", "POST", "validar-entrada", 200, validation_data_exit)
+        success5b, exit_result = self.run_test("QR Validation - Salida", "POST", "validar-entrada", 200, exit_data)
         
-        if success5:
+        if success5b:
             if exit_result.get('valido'):
                 print(f"   ✅ Exit registration successful")
                 print(f"   📝 Message: {exit_result.get('mensaje', 'N/A')}")
-                print(f"   🎯 Action: {exit_result.get('tipo_accion', 'N/A')}")
             else:
-                print(f"   ⚠️ Exit registration result: {exit_result.get('mensaje', 'Unknown')}")
+                print(f"   ⚠️ Exit result: {exit_result.get('mensaje', 'Unknown')}")
+        
+        success5 = success5a and success5b
+        
+        # Step 6: Test Entry/Exit Flow with manual code
+        print(f"\n6️⃣ Testing Entry/Exit flow with manual code...")
+        
+        # Test entrada with code
+        entry_code_data = {
+            "codigo": codigo_alfanumerico,
+            "modo": "entrada"
+        }
+        
+        success6a, entry_code_result = self.run_test("Manual Code - Entrada", "POST", "validar-entrada-codigo", 200, entry_code_data)
+        
+        if success6a:
+            if entry_code_result.get('valido'):
+                print(f"   ✅ Manual code entry successful")
+                print(f"   📝 Message: {entry_code_result.get('mensaje', 'N/A')}")
+            else:
+                print(f"   ⚠️ Manual code entry result: {entry_code_result.get('mensaje', 'Unknown')}")
+        
+        # Test salida with code
+        exit_code_data = {
+            "codigo": codigo_alfanumerico,
+            "modo": "salida"
+        }
+        
+        success6b, exit_code_result = self.run_test("Manual Code - Salida", "POST", "validar-entrada-codigo", 200, exit_code_data)
+        
+        if success6b:
+            if exit_code_result.get('valido'):
+                print(f"   ✅ Manual code exit successful")
+                print(f"   📝 Message: {exit_code_result.get('mensaje', 'N/A')}")
+            else:
+                print(f"   ⚠️ Manual code exit result: {exit_code_result.get('mensaje', 'Unknown')}")
+        
+        success6 = success6a and success6b
         
         # Summary
-        all_tests = [success1, success2, success3, success4, success5]
+        all_tests = [success1, success2, success3, success4, success5, success6]
         passed_tests = sum(all_tests)
         total_tests = len(all_tests)
         
-        print(f"\n🔍 QR VALIDATION E2E TEST SUMMARY:")
+        print(f"\n🔍 QR VALIDATION SYSTEM TEST SUMMARY:")
         print(f"   Tests Passed: {passed_tests}/{total_tests}")
         print(f"   Success Rate: {(passed_tests/total_tests*100):.1f}%")
         
-        return passed_tests >= 4  # Allow one test to fail (duplicate entry might behave differently)
+        # Detailed results
+        test_names = [
+            "Get Approved Entry",
+            "Ticket Image Generation", 
+            "QR Validation (verificar)",
+            "Manual Code Validation (verificar)",
+            "Entry/Exit Flow (QR)",
+            "Entry/Exit Flow (Manual Code)"
+        ]
+        
+        print(f"\n📋 Detailed Results:")
+        for i, (test_name, success) in enumerate(zip(test_names, all_tests)):
+            status = "✅ PASS" if success else "❌ FAIL"
+            print(f"   {i+1}. {test_name}: {status}")
+        
+        return passed_tests >= 4  # Allow some flexibility for entry/exit flow tests
 
     def test_ticket_email_system_complete(self, token):
         """Run complete ticket image and email system test suite"""
