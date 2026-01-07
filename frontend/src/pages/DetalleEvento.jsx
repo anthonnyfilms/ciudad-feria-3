@@ -128,15 +128,25 @@ const DetalleEvento = () => {
       // Preparar detalles para el backend
       // Determinar la categoría basada en lo que se seleccionó
       let categoriaAsiento = 'General';
+      
+      // Primero revisar detalles de la selección
       if (seleccionAsientos.detalles && seleccionAsientos.detalles.length > 0) {
-        // Si hay múltiples categorías, tomar la primera (o combinar)
-        const categorias = seleccionAsientos.detalles.map(d => d.tipo || d.categoria).filter(Boolean);
-        categoriaAsiento = categorias.length > 0 ? categorias[0] : 'General';
+        // Buscar la primera categoría con cantidad > 0
+        const detalleConCantidad = seleccionAsientos.detalles.find(d => d.cantidad > 0);
+        if (detalleConCantidad) {
+          categoriaAsiento = detalleConCantidad.tipo || detalleConCantidad.categoria || 'General';
+        }
       }
-      // Si hay entradas generales específicas, usar esa categoría
+      
+      // Si hay entradas generales específicas (Gradas, General, etc.), usar esa categoría
       if (seleccionAsientos.entradasGenerales && seleccionAsientos.entradasGenerales.length > 0) {
-        categoriaAsiento = seleccionAsientos.entradasGenerales[0].tipo || 'General';
+        const entradaGeneral = seleccionAsientos.entradasGenerales.find(e => e.cantidad > 0);
+        if (entradaGeneral) {
+          categoriaAsiento = entradaGeneral.tipo || entradaGeneral.nombre || 'General';
+        }
       }
+      
+      console.log('Categoría seleccionada:', categoriaAsiento, 'Detalles:', seleccionAsientos.detalles);
       
       const datosCompra = {
         evento_id: id,
