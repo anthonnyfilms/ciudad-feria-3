@@ -1822,15 +1822,80 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         font_pequeno = ImageFont.load_default()
     
     # Posición del QR desde configuración
-    # Tamaño mínimo 100px para que sea escaneable fácilmente
     posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 75, 'size': 100})
     qr_x = int((posicion_qr.get('x', 50) / 100) * ancho)
     qr_y = int((posicion_qr.get('y', 75) / 100) * alto)
-    # Mínimo 100px para escaneo fácil
     qr_size = max(100, int(posicion_qr.get('size', 100)))
     logging.info(f"QR config: pos=({qr_x},{qr_y}), size={qr_size}")
     
-    # Generar QR al tamaño exacto (NO redimensionar, regenerar directamente)
+    # ========== PRIMERO: Dibujar panel inferior ==========
+    panel_height = 160
+    panel_y = alto - panel_height
+    
+    # Panel semi-transparente
+    overlay = Image.new('RGBA', (ancho, panel_height), (0, 0, 0, 200))
+    img.paste(Image.alpha_composite(
+        Image.new('RGBA', (ancho, panel_height), (0, 0, 0, 0)),
+        overlay
+    ).convert('RGB'), (0, panel_y))
+    
+    draw = ImageDraw.Draw(img)
+    
+    # Nombre del evento
+    draw.text((20, panel_y + 10), evento.get('nombre', 'Evento')[:40], 
+              fill='#FACC15', font=font_grande)
+    
+    # Nombre del comprador
+    draw.text((20, panel_y + 40), f"{entrada.get('nombre_comprador', 'N/A')}", 
+              fill='white', font=font_medio)
+    
+    # Categoría de entrada
+    categoria_entrada = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or ''
+    if categoria_entrada:
+        draw.text((ancho - 200, panel_y + 10), f"{categoria_entrada.upper()}", 
+                  fill='#FACC15', font=font_medio)
+    
+    # Mesa y Asiento/Silla
+    y_offset = 65
+    mesa_info = entrada.get('mesa', '')
+    asiento_info = entrada.get('asiento', '')
+    silla_info = entrada.get('silla', '')
+    
+    if asiento_info and 'Mesa' in asiento_info and '-' in asiento_info:
+        parts = asiento_info.split('-')
+        if len(parts) >= 2:
+            mesa_part = parts[0].replace('Mesa', '').strip()
+            silla_part = parts[1].replace('Silla', '').strip()
+            draw.text((20, panel_y + y_offset), f"Mesa: {mesa_part}  |  Silla: {silla_part}", fill='#10B981', font=font_medio)
+            y_offset += 22
+    else:
+        if mesa_info and mesa_info != 'None':
+            draw.text((20, panel_y + y_offset), f"Mesa: {mesa_info}", fill='#10B981', font=font_medio)
+            y_offset += 22
+        if asiento_info and asiento_info != 'None':
+            draw.text((20, panel_y + y_offset), f"Asiento: {asiento_info}", fill='#10B981', font=font_medio)
+            y_offset += 22
+        if silla_info and silla_info != 'None':
+            draw.text((20, panel_y + y_offset), f"Silla: {silla_info}", fill='#10B981', font=font_medio)
+            y_offset += 22
+    
+    # Ubicación del evento
+    ubicacion = evento.get('ubicacion', '')
+    if ubicacion:
+        draw.text((20, panel_y + y_offset), f"{ubicacion[:45]}", 
+                  fill='#9CA3AF', font=font_pequeno)
+    
+    # Fecha y hora
+    draw.text((ancho - 200, panel_y + 40), 
+              f"{evento.get('fecha', '')} {evento.get('hora', '')}", 
+              fill='#9CA3AF', font=font_pequeno)
+    
+    # Código alfanumérico
+    codigo = entrada.get('codigo_alfanumerico', entrada.get('id', '')[:12])
+    draw.text((ancho - 120, panel_y + panel_height - 25), f"#{codigo}", 
+              fill='#FACC15', font=font_pequeno)
+    
+    # ========== DESPUÉS: Generar y pegar QR (encima de todo) ==========
     qr_payload = entrada.get('qr_payload')
     if qr_payload:
         try:
