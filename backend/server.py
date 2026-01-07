@@ -1848,7 +1848,8 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             modules_total = temp_img.size[0]  # Con box_size=1, esto = número de módulos
             
             # Calcular box_size para alcanzar el tamaño deseado
-            calculated_box_size = max(2, qr_size // modules_total)  # Mínimo 2 para legibilidad
+            # Mínimo 3 para garantizar escaneabilidad con payloads largos (QR versión alta)
+            calculated_box_size = max(3, qr_size // modules_total)
             
             # Regenerar QR al tamaño correcto
             qr = qrcode.QRCode(
