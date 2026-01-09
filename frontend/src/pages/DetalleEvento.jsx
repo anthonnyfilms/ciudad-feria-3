@@ -152,6 +152,7 @@ const DetalleEvento = () => {
       const datosCompra = {
         evento_id: id,
         nombre_comprador: nombre,
+        cedula_comprador: cedula,  // Incluir cédula
         email_comprador: email,
         telefono_comprador: telefono,
         cantidad: cantidadFinal,
