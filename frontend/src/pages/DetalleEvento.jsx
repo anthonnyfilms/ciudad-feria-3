@@ -478,6 +478,20 @@ const DetalleEvento = () => {
 
                   <div>
                     <label className="block text-foreground/80 mb-2 font-medium">
+                      Cédula de Identidad
+                    </label>
+                    <input
+                      type="text"
+                      value={cedula}
+                      onChange={(e) => setCedula(e.target.value)}
+                      className="w-full bg-input border border-border rounded-xl px-6 py-4 text-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                      placeholder="V-12345678"
+                      data-testid="input-cedula"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-foreground/80 mb-2 font-medium">
                       Email
                     </label>
                     <input
