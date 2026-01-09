@@ -179,6 +179,7 @@ class ConfiguracionSitio(BaseModel):
 class CompraEntrada(BaseModel):
     evento_id: str
     nombre_comprador: str
+    cedula_comprador: Optional[str] = None  # Cédula del comprador
     email_comprador: str
     telefono_comprador: Optional[str] = None
     cantidad: int
