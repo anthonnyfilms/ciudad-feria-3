@@ -2746,6 +2746,15 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
                 img_data = BytesIO(base64.b64decode(template_img.split(',')[1]))
                 img = ImageReader(img_data)
                 c.drawImage(img, x, y, width, height, preserveAspectRatio=True, mask='auto')
+            elif template_img.startswith("http"):
+                # URL externa (Cloudinary u otro servicio)
+                import httpx
+                response = httpx.get(template_img, timeout=30.0)
+                if response.status_code == 200:
+                    img_data = BytesIO(response.content)
+                    img = ImageReader(img_data)
+                    c.drawImage(img, x, y, width, height, preserveAspectRatio=True, mask='auto')
+                    logging.info(f"Template acreditación cargado desde URL: {template_img}")
             elif '/api/uploads/' in template_img or '/uploads/' in template_img:
                 # Archivo local
                 if '/api/uploads/' in template_img:
