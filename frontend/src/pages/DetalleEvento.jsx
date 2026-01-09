@@ -19,6 +19,7 @@ const DetalleEvento = () => {
   const [comprando, setComprando] = useState(false);
   const [cantidad, setCantidad] = useState(1);
   const [nombre, setNombre] = useState('');
+  const [cedula, setCedula] = useState('');  // Campo de cédula
   const [email, setEmail] = useState('');
   const [telefono, setTelefono] = useState('');
   const [metodoPago, setMetodoPago] = useState('');
