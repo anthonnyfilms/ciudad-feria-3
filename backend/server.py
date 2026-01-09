@@ -1909,38 +1909,23 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
               fill='#FACC15', font=font_pequeno)
     
     # ========== DESPUÉS: Generar y pegar QR (encima de todo) ==========
-    qr_payload = entrada.get('qr_payload')
-    if qr_payload:
+    # Usar el mismo método que las entradas térmicas que SÍ funcionan
+    if entrada.get('codigo_qr'):
         try:
-            qr_border = 4
+            qr_data = entrada['codigo_qr'].split(',')[1]
+            qr_img = Image.open(BytesIO(base64.b64decode(qr_data)))
+            original_size = qr_img.size[0]
+            logging.info(f"QR original: {original_size}x{original_size}px")
             
-            # Primero, crear QR con box_size=1 para determinar los módulos totales
-            qr_temp = qrcode.QRCode(
-                error_correction=qrcode.constants.ERROR_CORRECT_H,
-                box_size=1,
-                border=qr_border,
-            )
-            qr_temp.add_data(qr_payload)
-            qr_temp.make(fit=True)
-            temp_img = qr_temp.make_image()
-            modules_total = temp_img.size[0]  # Con box_size=1, esto = número de módulos
+            # Usar el QR original sin redimensionar si cabe, o reducir mínimamente
+            # El QR original es 1260px, necesitamos ~300-400px para que sea escaneable
+            target_qr_size = min(400, original_size)  # Máximo 400px para que quepa
             
-            # Calcular box_size para alcanzar el tamaño deseado
-            # Mínimo 4 para garantizar escaneabilidad con payloads largos encriptados
-            calculated_box_size = max(4, qr_size // modules_total)
-            
-            # Regenerar QR al tamaño correcto
-            qr = qrcode.QRCode(
-                error_correction=qrcode.constants.ERROR_CORRECT_H,
-                box_size=calculated_box_size,
-                border=qr_border,
-            )
-            qr.add_data(qr_payload)
-            qr.make(fit=True)
-            qr_img = qr.make_image(fill_color="black", back_color="white").convert('RGB')
+            if original_size > target_qr_size:
+                # Reducir usando LANCZOS (igual que térmicas)
+                qr_img = qr_img.resize((target_qr_size, target_qr_size), Image.Resampling.LANCZOS)
             
             actual_qr_size = qr_img.size[0]
-            logging.info(f"QR regenerado: modules={modules_total}, box_size={calculated_box_size}, tamaño_real={actual_qr_size}px")
             
             # Posicionar QR (centrado en las coordenadas)
             paste_x = qr_x - actual_qr_size // 2
@@ -1954,31 +1939,13 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             padding = 15
             qr_bg = Image.new('RGB', (actual_qr_size + padding*2, actual_qr_size + padding*2), 'white')
             img.paste(qr_bg, (paste_x - padding, paste_y - padding))
-            img.paste(qr_img, (paste_x, paste_y))
-            logging.info(f"QR insertado: tamaño={actual_qr_size}px, pos=({paste_x},{paste_y})")
-        except Exception as e:
-            logging.error(f"Error generando QR: {e}")
-    elif entrada.get('codigo_qr'):
-        # Fallback: usar imagen base64 existente si no hay payload
-        try:
-            qr_data = entrada['codigo_qr'].split(',')[1]
-            qr_img = Image.open(BytesIO(base64.b64decode(qr_data)))
-            actual_qr_size = qr_img.size[0]
             
-            paste_x = qr_x - actual_qr_size // 2
-            paste_y = qr_y - actual_qr_size // 2
-            paste_x = max(10, min(ancho - actual_qr_size - 10, paste_x))
-            paste_y = max(10, min(alto - actual_qr_size - 10, paste_y))
-            
-            padding = 15
-            qr_bg = Image.new('RGB', (actual_qr_size + padding*2, actual_qr_size + padding*2), 'white')
-            img.paste(qr_bg, (paste_x - padding, paste_y - padding))
             if qr_img.mode != 'RGB':
                 qr_img = qr_img.convert('RGB')
             img.paste(qr_img, (paste_x, paste_y))
-            logging.info(f"QR (fallback base64): tamaño={actual_qr_size}px")
+            logging.info(f"QR insertado (método térmico): tamaño={actual_qr_size}px, pos=({paste_x},{paste_y})")
         except Exception as e:
-            logging.error(f"Error procesando QR fallback: {e}")
+            logging.error(f"Error procesando QR: {e}")
     
     # Convertir a bytes
     buffer = BytesIO()
