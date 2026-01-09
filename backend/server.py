@@ -1839,14 +1839,14 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         font_pequeno = ImageFont.load_default()
     
     # Posición del QR desde configuración
-    posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 75, 'size': 100})
+    posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 50, 'size': 150})
     qr_x = int((posicion_qr.get('x', 50) / 100) * ancho)
-    qr_y = int((posicion_qr.get('y', 75) / 100) * alto)
-    qr_size = max(100, int(posicion_qr.get('size', 100)))
+    qr_y = int((posicion_qr.get('y', 50) / 100) * alto)
+    qr_size = max(150, int(posicion_qr.get('size', 150)))  # Mínimo 150px
     logging.info(f"QR config: pos=({qr_x},{qr_y}), size={qr_size}")
     
     # ========== PRIMERO: Dibujar panel inferior ==========
-    panel_height = 160
+    panel_height = 180  # Más alto para incluir cédula
     panel_y = alto - panel_height
     
     # Panel semi-transparente
@@ -1866,6 +1866,12 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     draw.text((20, panel_y + 40), f"{entrada.get('nombre_comprador', 'N/A')}", 
               fill='white', font=font_medio)
     
+    # Cédula del comprador (NUEVO)
+    cedula = entrada.get('cedula_comprador', '')
+    if cedula:
+        draw.text((20, panel_y + 58), f"C.I.: {cedula}", 
+                  fill='#9CA3AF', font=font_pequeno)
+    
     # Categoría de entrada
     categoria_entrada = entrada.get('categoria_entrada') or entrada.get('categoria_asiento') or ''
     if categoria_entrada:
@@ -1873,7 +1879,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
                   fill='#FACC15', font=font_medio)
     
     # Mesa y Asiento/Silla
-    y_offset = 65
+    y_offset = 78 if cedula else 65
     mesa_info = entrada.get('mesa', '')
     asiento_info = entrada.get('asiento', '')
     silla_info = entrada.get('silla', '')
