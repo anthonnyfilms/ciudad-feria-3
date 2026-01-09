@@ -205,6 +205,7 @@ class Entrada(BaseModel):
     evento_id: str
     nombre_evento: str
     nombre_comprador: str
+    cedula_comprador: Optional[str] = None  # Cédula del comprador
     email_comprador: str
     telefono_comprador: Optional[str] = None
     fecha_compra: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
