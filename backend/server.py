@@ -2229,6 +2229,7 @@ async def crear_acreditacion(request: Request, current_user: str = Depends(get_c
         "categoria_id": body.get("categoria_id"),
         "categoria_nombre": body.get("categoria_nombre"),
         "nombre_persona": body.get("nombre_persona"),
+        "cedula": body.get("cedula"),  # Campo de cédula
         "organizacion": body.get("organizacion"),
         "cargo": body.get("cargo"),
         "email": body.get("email"),
