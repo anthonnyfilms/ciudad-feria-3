@@ -28,6 +28,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.base import MIMEBase
 from email import encoders
+
+# ========== VERSIÓN DEL SISTEMA ==========
+SYSTEM_VERSION = "2.1.0-QR-FIX-20250107"
 import asyncio
 import hmac
 import cloudinary
