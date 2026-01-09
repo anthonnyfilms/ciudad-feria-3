@@ -498,12 +498,13 @@ async def comprar_entrada(compra: CompraEntrada):
             if len(parts) == 2:
                 mesa_info = parts[0].replace('M', '')
         
-        datos_entrada = {
+501|        datos_entrada = {
             "entrada_id": entrada_id,
             "codigo_alfanumerico": codigo_alfanumerico,
             "evento_id": compra.evento_id,
             "nombre_evento": evento['nombre'],
             "nombre_comprador": compra.nombre_comprador,
+            "cedula_comprador": compra.cedula_comprador,
             "email_comprador": compra.email_comprador,
             "telefono_comprador": compra.telefono_comprador,
             "numero_entrada": i + 1,
@@ -520,6 +521,7 @@ async def comprar_entrada(compra: CompraEntrada):
             evento_id=compra.evento_id,
             nombre_evento=evento['nombre'],
             nombre_comprador=compra.nombre_comprador,
+            cedula_comprador=compra.cedula_comprador,
             email_comprador=compra.email_comprador,
             telefono_comprador=compra.telefono_comprador,
             codigo_qr=qr_image,
