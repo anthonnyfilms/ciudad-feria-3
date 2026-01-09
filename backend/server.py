@@ -441,6 +441,16 @@ async def obtener_configuracion():
         config['ultima_actualizacion'] = datetime.fromisoformat(config['ultima_actualizacion'])
     return config
 
+@api_router.get("/version")
+async def obtener_version():
+    """Endpoint para verificar la versión del sistema - útil para confirmar deploys"""
+    return {
+        "version": SYSTEM_VERSION,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "sistema": "Ciudad Feria - Sistema de Tickets",
+        "mensaje": "Si ves esta versión, el deploy fue exitoso"
+    }
+
 @api_router.post("/comprar-entrada")
 async def comprar_entrada(compra: CompraEntrada):
     evento = await db.eventos.find_one({"id": compra.evento_id}, {"_id": 0})
