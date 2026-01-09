@@ -498,7 +498,7 @@ async def comprar_entrada(compra: CompraEntrada):
             if len(parts) == 2:
                 mesa_info = parts[0].replace('M', '')
         
-501|        datos_entrada = {
+        datos_entrada = {
             "entrada_id": entrada_id,
             "codigo_alfanumerico": codigo_alfanumerico,
             "evento_id": compra.evento_id,
