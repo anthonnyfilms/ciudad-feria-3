@@ -316,12 +316,22 @@ def generar_codigo_alfanumerico(evento_id: str, entrada_id: str) -> str:
 
 def generar_qr_seguro(datos: dict) -> str:
     """Genera QR con payload compacto para mejor escaneabilidad"""
-    # Crear payload COMPACTO - solo datos esenciales para validación
-    datos_compactos = {
-        "id": datos.get('entrada_id', ''),
-        "h": datos.get('hash', '')[:16],  # Solo primeros 16 chars del hash
-        "t": "e"  # tipo: entrada
-    }
+    # Detectar si es acreditación o entrada
+    es_acreditacion = datos.get('tipo') == 'acreditacion' or 'acreditacion_id' in datos
+    
+    if es_acreditacion:
+        # Payload compacto para ACREDITACIÓN
+        datos_compactos = {
+            "id": datos.get('acreditacion_id', ''),
+            "t": "a"  # tipo: acreditación
+        }
+    else:
+        # Payload compacto para ENTRADA
+        datos_compactos = {
+            "id": datos.get('entrada_id', ''),
+            "h": datos.get('hash', '')[:16],  # Solo primeros 16 chars del hash
+            "t": "e"  # tipo: entrada
+        }
     
     datos_json = json.dumps(datos_compactos, separators=(',', ':'))  # Sin espacios
     iv = os.urandom(16)
@@ -343,7 +353,8 @@ def generar_qr_seguro(datos: dict) -> str:
     qr.add_data(payload)
     qr.make(fit=True)
     
-    logging.info(f"QR generado: versión={qr.version}, módulos={qr.modules_count}, payload={len(payload)} chars")
+    tipo_str = "acreditación" if es_acreditacion else "entrada"
+    logging.info(f"QR {tipo_str} generado: versión={qr.version}, módulos={qr.modules_count}, payload={len(payload)} chars")
     
     img = qr.make_image(fill_color="black", back_color="white")
     
@@ -351,9 +362,6 @@ def generar_qr_seguro(datos: dict) -> str:
     img.save(buffer, format="PNG")
     buffer.seek(0)
     qr_base64 = base64.b64encode(buffer.getvalue()).decode()
-    
-    # Guardar también el payload completo para compatibilidad
-    payload_completo = base64.b64encode(iv + encryptor.update(json.dumps(datos).encode())).decode() if False else payload
     
     return f"data:image/png;base64,{qr_base64}", payload
 
