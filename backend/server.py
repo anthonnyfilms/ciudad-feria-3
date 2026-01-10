@@ -328,9 +328,9 @@ def generar_qr_seguro(datos: dict) -> str:
     
     qr = qrcode.QRCode(
         version=None,  # Auto-detect version based on data
-        error_correction=qrcode.constants.ERROR_CORRECT_M,  # Medium error correction for better readability
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # HIGH = 30% corrección, mejor para escaneo en cualquier dirección
         box_size=12,  # Larger boxes for better scanning
-        border=6,  # Larger border for better detection
+        border=6,  # Larger border for better detection from any angle
     )
     qr.add_data(payload)
     qr.make(fit=True)
