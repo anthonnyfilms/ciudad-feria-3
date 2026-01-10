@@ -1192,6 +1192,15 @@ def main():
     
     tester = CiudadFeriaAPITester()
     
+    # PRIORITY: Run specific review request tests first
+    print("\n🔍 RUNNING SPECIFIC REVIEW REQUEST TESTS...")
+    specific_review_success = tester.test_specific_review_request()
+    
+    if specific_review_success:
+        print("✅ All specific review request tests passed!")
+    else:
+        print("❌ Some specific review request tests failed")
+    
     # Test 1: API Root
     tester.test_api_root()
     
