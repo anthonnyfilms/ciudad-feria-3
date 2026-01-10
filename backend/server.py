@@ -2924,7 +2924,8 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     if mostrar_cedula and cedula:
         cedula_color = hex_to_rgb(config.get("cedula", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
         c.setFillColorRGB(*cedula_color)
-        cedula_size = config.get("cedula", {}).get("size", 14) if config else 14
+        cedula_size_config = config.get("cedula", {}).get("size", 14) if config else 14
+        cedula_size = max(10, cedula_size_config * FONT_SCALE_FACTOR)
         c.setFont("Helvetica", cedula_size)
         if config and "cedula" in config:
             cedula_y = y + height * (1 - config["cedula"].get("y", 45) / 100)
@@ -2941,7 +2942,8 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     if mostrar_departamento and departamento:
         dept_color = hex_to_rgb(config.get("departamento", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
         c.setFillColorRGB(*dept_color)
-        dept_size = config.get("departamento", {}).get("size", 16) if config else 16
+        dept_size_config = config.get("departamento", {}).get("size", 16) if config else 16
+        dept_size = max(10, dept_size_config * FONT_SCALE_FACTOR)
         c.setFont("Helvetica-Bold", dept_size)
         if config and "departamento" in config:
             dept_y = y + height * (1 - config["departamento"].get("y", 55) / 100)
@@ -2949,7 +2951,7 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
             dept_y = y + height - 35*mm
         c.drawCentredString(x + width/2, dept_y, departamento.upper())
     
-    # QR Code - GRANDE para fácil escaneo (35mm = 3.5cm)
+    # QR Code - tamaño desde configuración
     mostrar_qr = True
     if config and "qr" in config:
         mostrar_qr = config["qr"].get("visible", True)
@@ -2963,8 +2965,12 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
                 qr_bytes = base64.b64decode(qr_base64)
                 qr_img = ImageReader(BytesIO(qr_bytes))
                 
-                # QR grande: 35mm (3.5 cm) para fácil escaneo
-                qr_size = 35 * mm
+                # Tamaño del QR desde config (en px del diseñador -> mm)
+                # El diseñador usa 285px = 95mm, entonces 1px ≈ 0.33mm
+                QR_SCALE = 0.33  # px a mm
+                qr_size_config = config.get("qr", {}).get("size", 60) if config else 60
+                qr_size = max(25*mm, qr_size_config * QR_SCALE * mm)  # Mínimo 25mm
+                
                 if config and "qr" in config:
                     # Usar posición del config
                     qr_x = x + width * config["qr"].get("x", 85) / 100 - qr_size/2
@@ -2974,6 +2980,7 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
                     qr_x = x + width - qr_size - 8*mm
                     qr_y = y + 8*mm
                 
+                logging.info(f"QR acreditación: config_size={qr_size_config}px -> {qr_size/mm:.1f}mm")
                 c.drawImage(qr_img, qr_x, qr_y, qr_size, qr_size)
         except Exception as e:
             logging.error(f"Error dibujando QR: {e}")
