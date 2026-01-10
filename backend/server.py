@@ -2900,12 +2900,14 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
         nombre_color = hex_to_rgb(config.get("nombre", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
         c.setFillColorRGB(*nombre_color)
         nombre_size = config.get("nombre", {}).get("size", 20) if config else 20
+        logging.info(f"Aplicando nombre size={nombre_size}pt, color={config.get('nombre', {}).get('color') if config else 'default'}")
         c.setFont("Helvetica-Bold", nombre_size)
         nombre = acreditacion.get("nombre_persona", "SIN NOMBRE")
         if config and "nombre" in config:
             nombre_y = y + height * (1 - config["nombre"].get("y", 35) / 100)
         else:
             nombre_y = y + height - 28*mm
+        logging.info(f"Nombre '{nombre}' en Y={nombre_y:.1f}pt")
         c.drawCentredString(x + width/2, nombre_y, nombre.upper())
     
     # Cédula
