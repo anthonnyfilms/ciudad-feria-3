@@ -657,7 +657,8 @@ async def validar_entrada(request: Request):
             }
     
     # Es una ENTRADA normal
-    entrada_id = datos_qr.get('entrada_id')
+    # Soportar tanto payload compacto (nuevo) como completo (antiguo)
+    entrada_id = datos_qr.get('id') or datos_qr.get('entrada_id')
     entrada = await db.entradas.find_one({"id": entrada_id}, {"_id": 0})
     
     if not entrada:
@@ -671,14 +672,27 @@ async def validar_entrada(request: Request):
             "requiere_aprobacion": True
         }
     
-    # Verificar hash según el tipo de entrada
+    # Verificar hash según el tipo de payload
+    tipo_payload = datos_qr.get('t')  # 'e' = entrada compacta
     tipo_entrada = datos_qr.get('tipo', 'entrada')
     
-    if tipo_entrada == 'entrada_taquilla':
+    # Si es payload compacto (nuevo formato)
+    if tipo_payload == 'e':
+        # Solo verificar que el hash parcial coincida
+        hash_parcial = datos_qr.get('h', '')
+        hash_guardado = entrada.get('hash_validacion', '')
+        if not hash_guardado.startswith(hash_parcial):
+            return {
+                "valido": False,
+                "mensaje": "⚠️ ALERTA: Entrada fraudulenta detectada",
+                "tipo_alerta": "fraude"
+            }
+        hash_verificacion = hash_guardado  # Es válido
+    elif tipo_entrada == 'entrada_taquilla':
         # Hash para tickets térmicos (estructura simplificada)
         hash_verificacion = generar_hash({
             "tipo": "entrada_taquilla",
-            "entrada_id": datos_qr['entrada_id'],
+            "entrada_id": entrada_id,
             "codigo": datos_qr.get('codigo', ''),
             "numero": datos_qr.get('numero', 0),
             "categoria": datos_qr.get('categoria', '')
@@ -687,7 +701,7 @@ async def validar_entrada(request: Request):
         # Hash para entradas normales - primero intentar SIN cédula (entradas antiguas)
         # luego CON cédula (entradas nuevas)
         hash_sin_cedula = generar_hash({
-            "entrada_id": datos_qr['entrada_id'],
+            "entrada_id": entrada_id,
             "codigo_alfanumerico": datos_qr.get('codigo_alfanumerico', ''),
             "evento_id": datos_qr.get('evento_id', ''),
             "nombre_evento": datos_qr.get('nombre_evento', ''),
@@ -704,7 +718,7 @@ async def validar_entrada(request: Request):
         else:
             # Intentar con cédula (entradas nuevas)
             hash_verificacion = generar_hash({
-                "entrada_id": datos_qr['entrada_id'],
+                "entrada_id": entrada_id,
                 "codigo_alfanumerico": datos_qr.get('codigo_alfanumerico', ''),
                 "evento_id": datos_qr.get('evento_id', ''),
                 "nombre_evento": datos_qr.get('nombre_evento', ''),
@@ -716,7 +730,7 @@ async def validar_entrada(request: Request):
                 "asiento": datos_qr.get('asiento')
             })
     
-    if hash_verificacion != entrada['hash_validacion']:
+    if tipo_payload != 'e' and hash_verificacion != entrada['hash_validacion']:
         return {
             "valido": False,
             "mensaje": "⚠️ ALERTA: Entrada fraudulenta detectada",
