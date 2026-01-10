@@ -2896,18 +2896,23 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     if config and "nombre" in config:
         mostrar_nombre = config["nombre"].get("visible", True)
     
+    # Factor de escala: el diseñador usa 285x435px, el PDF usa ~269x411pt
+    # Pero los pixeles web son ~1.33x puntos PDF, así que:
+    # tamaño_pdf = tamaño_diseñador * (411/435) * (1/1.33) ≈ tamaño_diseñador * 0.71
+    FONT_SCALE_FACTOR = 0.71  # Ajuste para que coincida diseñador con PDF
+    
     if mostrar_nombre:
         nombre_color = hex_to_rgb(config.get("nombre", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
         c.setFillColorRGB(*nombre_color)
-        nombre_size = config.get("nombre", {}).get("size", 20) if config else 20
-        logging.info(f"Aplicando nombre size={nombre_size}pt, color={config.get('nombre', {}).get('color') if config else 'default'}")
+        nombre_size_config = config.get("nombre", {}).get("size", 20) if config else 20
+        nombre_size = max(12, nombre_size_config * FONT_SCALE_FACTOR)  # Mínimo 12pt
+        logging.info(f"Nombre: config_size={nombre_size_config}, scaled_size={nombre_size:.1f}pt")
         c.setFont("Helvetica-Bold", nombre_size)
         nombre = acreditacion.get("nombre_persona", "SIN NOMBRE")
         if config and "nombre" in config:
             nombre_y = y + height * (1 - config["nombre"].get("y", 35) / 100)
         else:
             nombre_y = y + height - 28*mm
-        logging.info(f"Nombre '{nombre}' en Y={nombre_y:.1f}pt")
         c.drawCentredString(x + width/2, nombre_y, nombre.upper())
     
     # Cédula
