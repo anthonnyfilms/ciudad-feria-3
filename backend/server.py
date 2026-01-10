@@ -1857,12 +1857,13 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         font_medio = ImageFont.load_default()
         font_pequeno = ImageFont.load_default()
     
-    # Posición del QR desde configuración
-    posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 50, 'size': 150})
+    # Posición del QR - centrado en la parte media-superior del ticket (estilo térmico)
+    # Por defecto: centro horizontal (50%), 35% desde arriba, tamaño 200px
+    posicion_qr = evento.get('posicion_qr', {'x': 50, 'y': 35, 'size': 200})
     qr_x = int((posicion_qr.get('x', 50) / 100) * ancho)
-    qr_y = int((posicion_qr.get('y', 50) / 100) * alto)
-    qr_size = max(150, int(posicion_qr.get('size', 150)))  # Mínimo 150px
-    logging.info(f"QR config: pos=({qr_x},{qr_y}), size={qr_size}")
+    qr_y = int((posicion_qr.get('y', 35) / 100) * alto)
+    qr_size_config = max(180, int(posicion_qr.get('size', 200)))  # Mínimo 180px como térmicas
+    logging.info(f"QR config: pos=({qr_x},{qr_y}), size={qr_size_config}")
     
     # ========== PRIMERO: Dibujar panel inferior ==========
     panel_height = 180  # Más alto para incluir cédula
