@@ -1966,23 +1966,55 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
     draw.text((ancho - 120, panel_y + panel_height - 25), f"#{codigo}", 
               fill='#FACC15', font=font_pequeno)
     
-    # ========== DESPUÉS: Generar y pegar QR (encima de todo) ==========
-    # Usar el mismo método que las entradas térmicas que SÍ funcionan
-    if entrada.get('codigo_qr'):
-        try:
-            qr_data = entrada['codigo_qr'].split(',')[1]
-            qr_img = Image.open(BytesIO(base64.b64decode(qr_data)))
-            original_size = qr_img.size[0]
-            logging.info(f"QR original: {original_size}x{original_size}px")
-            
-            # Usar tamaño similar a las entradas térmicas (180-200px)
-            target_qr_size = min(qr_size_config, original_size)
-            
-            if original_size > target_qr_size:
-                # Reducir usando LANCZOS (igual que térmicas)
-                qr_img = qr_img.resize((target_qr_size, target_qr_size), Image.Resampling.LANCZOS)
-            
-            actual_qr_size = qr_img.size[0]
+    # ========== REGENERAR QR con payload COMPACTO para mejor escaneabilidad ==========
+    try:
+        # Crear payload compacto con solo ID y hash parcial
+        entrada_id = entrada.get('id', '')
+        hash_validacion = entrada.get('hash_validacion', '')
+        
+        datos_compactos = {
+            "id": entrada_id,
+            "h": hash_validacion[:16],  # Solo primeros 16 chars
+            "t": "e"  # tipo: entrada
+        }
+        
+        import json as json_module
+        datos_json = json_module.dumps(datos_compactos, separators=(',', ':'))
+        
+        # Encriptar
+        from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+        from cryptography.hazmat.backends import default_backend
+        iv = os.urandom(16)
+        cipher = Cipher(
+            algorithms.AES(ENCRYPTION_KEY[:32]),
+            modes.CFB(iv),
+            backend=default_backend()
+        )
+        encryptor = cipher.encryptor()
+        datos_encriptados = encryptor.update(datos_json.encode()) + encryptor.finalize()
+        payload_compacto = base64.b64encode(iv + datos_encriptados).decode()
+        
+        # Generar QR con módulos GRANDES
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,  # Módulos grandes
+            border=4,
+        )
+        qr.add_data(payload_compacto)
+        qr.make(fit=True)
+        qr_img = qr.make_image(fill_color="black", back_color="white")
+        
+        original_size = qr_img.size[0]
+        logging.info(f"QR COMPACTO regenerado: versión={qr.version}, módulos={qr.modules_count}, size={original_size}px")
+        
+        # Ajustar tamaño al configurado
+        target_qr_size = max(qr_size_config, 250)  # Mínimo 250px
+        
+        if original_size != target_qr_size:
+            qr_img = qr_img.resize((target_qr_size, target_qr_size), Image.Resampling.NEAREST)  # NEAREST mantiene nitidez
+        
+        actual_qr_size = qr_img.size[0]
             
             # Posicionar QR (centrado en las coordenadas)
             paste_x = qr_x - actual_qr_size // 2
