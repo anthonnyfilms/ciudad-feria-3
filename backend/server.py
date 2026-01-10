@@ -2817,10 +2817,12 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
         if config_evento:
             config = config_evento.get("config_elementos")
             template_img = config_evento.get("template_imagen")
+            logging.info(f"Config acreditación encontrada: nombre_size={config.get('nombre', {}).get('size') if config else 'N/A'}")
     
     # Fallback a config de categoría
     if not config and categoria:
         config = categoria.get("config_elementos")
+        logging.info(f"Usando config de categoría: {config is not None}")
     if not template_img and categoria:
         template_img = categoria.get("template_imagen")
     
