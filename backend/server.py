@@ -1964,9 +1964,20 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             paste_x = max(10, min(ancho - actual_qr_size - 10, paste_x))
             paste_y = max(10, min(alto - actual_qr_size - 10, paste_y))
             
-            # Crear fondo blanco sólido para el QR con padding para mejor escaneo
-            padding = 20  # Más padding para mejor contraste
+            # Crear fondo blanco sólido AMPLIO para el QR - crítico para escaneabilidad
+            # Usar padding generoso para asegurar contraste con el template colorido
+            padding = 30  # Padding amplio para mejor contraste
             qr_bg = Image.new('RGB', (actual_qr_size + padding*2, actual_qr_size + padding*2), (255, 255, 255))
+            
+            # Agregar borde negro fino alrededor del fondo blanco para más contraste
+            from PIL import ImageDraw as ID
+            bg_draw = ID.Draw(qr_bg)
+            bg_draw.rectangle(
+                [(0, 0), (actual_qr_size + padding*2 - 1, actual_qr_size + padding*2 - 1)], 
+                outline=(0, 0, 0), 
+                width=2
+            )
+            
             img.paste(qr_bg, (paste_x - padding, paste_y - padding))
             
             # Convertir QR a blanco y negro puro para mejor escaneabilidad
@@ -1977,7 +1988,7 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             qr_img = qr_img.convert('RGB')  # Volver a RGB para pegar
             
             img.paste(qr_img, (paste_x, paste_y))
-            logging.info(f"QR insertado (método térmico): tamaño={actual_qr_size}px, pos=({paste_x},{paste_y})")
+            logging.info(f"QR insertado con fondo amplio: tamaño={actual_qr_size}px, padding={padding}, pos=({paste_x},{paste_y})")
         except Exception as e:
             logging.error(f"Error procesando QR: {e}")
     
