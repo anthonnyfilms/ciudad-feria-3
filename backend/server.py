@@ -1947,9 +1947,8 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             original_size = qr_img.size[0]
             logging.info(f"QR original: {original_size}x{original_size}px")
             
-            # Usar el QR original sin redimensionar si cabe, o reducir mínimamente
-            # El QR original es 1260px, necesitamos ~300-400px para que sea escaneable
-            target_qr_size = min(400, original_size)  # Máximo 400px para que quepa
+            # Usar tamaño similar a las entradas térmicas (180-200px)
+            target_qr_size = min(qr_size_config, original_size)
             
             if original_size > target_qr_size:
                 # Reducir usando LANCZOS (igual que térmicas)
