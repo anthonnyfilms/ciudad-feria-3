@@ -587,6 +587,9 @@ async def validar_entrada(request: Request):
     body = await request.json()
     qr_payload = body.get('qr_payload')
     accion = body.get('accion', 'verificar')  # verificar, entrada, salida
+    modo = body.get('modo', accion)  # Alias para accion
+    if modo:
+        accion = modo
     
     if not qr_payload:
         raise HTTPException(status_code=400, detail="Payload QR no proporcionado")
@@ -596,7 +599,15 @@ async def validar_entrada(request: Request):
         raise HTTPException(status_code=400, detail="Código QR inválido o corrupto")
     
     # Detectar si es ACREDITACIÓN o ENTRADA
+    # Soportar tanto formato antiguo (tipo: 'acreditacion') como compacto (t: 'a')
+    tipo_compacto = datos_qr.get('t')
     tipo_qr = datos_qr.get('tipo', 'entrada')
+    
+    # Si es tipo compacto "a", es acreditación
+    if tipo_compacto == 'a':
+        tipo_qr = 'acreditacion'
+        # En formato compacto, el id está en 'id' no en 'acreditacion_id'
+        datos_qr['acreditacion_id'] = datos_qr.get('id')
     
     if tipo_qr == 'acreditacion':
         # Es una acreditación - buscar y validar
