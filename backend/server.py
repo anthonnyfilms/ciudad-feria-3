@@ -2880,10 +2880,16 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     if config and "categoria" in config:
         mostrar_categoria = config["categoria"].get("visible", True)
     
+    # Factor de escala: el diseñador usa 285x435px, el PDF usa ~269x411pt
+    # Pero los pixeles web son ~1.33x puntos PDF, así que:
+    # tamaño_pdf = tamaño_diseñador * (411/435) * (1/1.33) ≈ tamaño_diseñador * 0.71
+    FONT_SCALE_FACTOR = 0.71  # Ajuste para que coincida diseñador con PDF
+    
     if mostrar_categoria:
         cat_color = hex_to_rgb(config.get("categoria", {}).get("color", "#FFD700") if config else "#FFD700")
         c.setFillColorRGB(*cat_color)
-        cat_size = config.get("categoria", {}).get("size", 22) if config else 22
+        cat_size_config = config.get("categoria", {}).get("size", 22) if config else 22
+        cat_size = max(12, cat_size_config * FONT_SCALE_FACTOR)
         c.setFont("Helvetica-Bold", cat_size)
         categoria_nombre = categoria.get("nombre", "GENERAL") if categoria else "GENERAL"
         cat_y = y + height - 12*mm
@@ -2895,11 +2901,6 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     mostrar_nombre = True
     if config and "nombre" in config:
         mostrar_nombre = config["nombre"].get("visible", True)
-    
-    # Factor de escala: el diseñador usa 285x435px, el PDF usa ~269x411pt
-    # Pero los pixeles web son ~1.33x puntos PDF, así que:
-    # tamaño_pdf = tamaño_diseñador * (411/435) * (1/1.33) ≈ tamaño_diseñador * 0.71
-    FONT_SCALE_FACTOR = 0.71  # Ajuste para que coincida diseñador con PDF
     
     if mostrar_nombre:
         nombre_color = hex_to_rgb(config.get("nombre", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
