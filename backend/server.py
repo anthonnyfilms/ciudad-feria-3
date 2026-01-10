@@ -30,7 +30,7 @@ from email.mime.base import MIMEBase
 from email import encoders
 
 # ========== VERSIÓN DEL SISTEMA ==========
-SYSTEM_VERSION = "3.1.0-QR-DESIGNER-20250110"
+SYSTEM_VERSION = "3.2.0-ACRED-SCALE-20250110"
 import asyncio
 import hmac
 import cloudinary
