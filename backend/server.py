@@ -2008,8 +2008,8 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         original_size = qr_img.size[0]
         logging.info(f"QR COMPACTO regenerado: versión={qr.version}, módulos={qr.modules_count}, size={original_size}px")
         
-        # Ajustar tamaño al configurado
-        target_qr_size = max(qr_size_config, 250)  # Mínimo 250px
+        # Ajustar tamaño al configurado por el diseñador
+        target_qr_size = qr_size_config  # Usar el tamaño exacto del diseñador
         
         if original_size != target_qr_size:
             qr_img = qr_img.resize((target_qr_size, target_qr_size), Image.Resampling.NEAREST)  # NEAREST mantiene nitidez
