@@ -2033,24 +2033,23 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
         from PIL import ImageDraw as ID
         bg_draw = ID.Draw(qr_bg)
         bg_draw.rectangle(
-                [(0, 0), (actual_qr_size + padding*2 - 1, actual_qr_size + padding*2 - 1)], 
-                outline=(0, 0, 0), 
-                width=2
-            )
-            
-            img.paste(qr_bg, (paste_x - padding, paste_y - padding))
-            
-            # Convertir QR a blanco y negro puro para mejor escaneabilidad
-            if qr_img.mode != 'L':
-                qr_img = qr_img.convert('L')  # Escala de grises
-            # Binarizar: todo < 128 es negro, >= 128 es blanco
-            qr_img = qr_img.point(lambda x: 0 if x < 128 else 255, '1')
-            qr_img = qr_img.convert('RGB')  # Volver a RGB para pegar
-            
-            img.paste(qr_img, (paste_x, paste_y))
-            logging.info(f"QR insertado con fondo amplio: tamaño={actual_qr_size}px, padding={padding}, pos=({paste_x},{paste_y})")
-        except Exception as e:
-            logging.error(f"Error procesando QR: {e}")
+            [(0, 0), (actual_qr_size + padding*2 - 1, actual_qr_size + padding*2 - 1)], 
+            outline=(0, 0, 0), 
+            width=2
+        )
+        
+        img.paste(qr_bg, (paste_x - padding, paste_y - padding))
+        
+        # El QR ya está en formato correcto, solo convertir a RGB si es necesario
+        if qr_img.mode != 'RGB':
+            qr_img = qr_img.convert('RGB')
+        
+        img.paste(qr_img, (paste_x, paste_y))
+        logging.info(f"QR COMPACTO insertado: tamaño={actual_qr_size}px, padding={padding}, pos=({paste_x},{paste_y})")
+    except Exception as e:
+        logging.error(f"Error generando QR compacto: {e}")
+        import traceback
+        traceback.print_exc()
     
     # Convertir a bytes
     buffer = BytesIO()
