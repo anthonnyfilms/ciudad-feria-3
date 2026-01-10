@@ -1964,13 +1964,18 @@ async def generar_imagen_entrada(entrada: dict, evento: dict) -> bytes:
             paste_x = max(10, min(ancho - actual_qr_size - 10, paste_x))
             paste_y = max(10, min(alto - actual_qr_size - 10, paste_y))
             
-            # Crear fondo blanco para el QR con padding para mejor escaneo
-            padding = 15
-            qr_bg = Image.new('RGB', (actual_qr_size + padding*2, actual_qr_size + padding*2), 'white')
+            # Crear fondo blanco sólido para el QR con padding para mejor escaneo
+            padding = 20  # Más padding para mejor contraste
+            qr_bg = Image.new('RGB', (actual_qr_size + padding*2, actual_qr_size + padding*2), (255, 255, 255))
             img.paste(qr_bg, (paste_x - padding, paste_y - padding))
             
-            if qr_img.mode != 'RGB':
-                qr_img = qr_img.convert('RGB')
+            # Convertir QR a blanco y negro puro para mejor escaneabilidad
+            if qr_img.mode != 'L':
+                qr_img = qr_img.convert('L')  # Escala de grises
+            # Binarizar: todo < 128 es negro, >= 128 es blanco
+            qr_img = qr_img.point(lambda x: 0 if x < 128 else 255, '1')
+            qr_img = qr_img.convert('RGB')  # Volver a RGB para pegar
+            
             img.paste(qr_img, (paste_x, paste_y))
             logging.info(f"QR insertado (método térmico): tamaño={actual_qr_size}px, pos=({paste_x},{paste_y})")
         except Exception as e:
