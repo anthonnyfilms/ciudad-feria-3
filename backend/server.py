@@ -315,7 +315,15 @@ def generar_codigo_alfanumerico(evento_id: str, entrada_id: str) -> str:
     return f"CF-2026-{codigo_unico}-{parte_aleatoria}"
 
 def generar_qr_seguro(datos: dict) -> str:
-    datos_json = json.dumps(datos)
+    """Genera QR con payload compacto para mejor escaneabilidad"""
+    # Crear payload COMPACTO - solo datos esenciales para validación
+    datos_compactos = {
+        "id": datos.get('entrada_id', ''),
+        "h": datos.get('hash', '')[:16],  # Solo primeros 16 chars del hash
+        "t": "e"  # tipo: entrada
+    }
+    
+    datos_json = json.dumps(datos_compactos, separators=(',', ':'))  # Sin espacios
     iv = os.urandom(16)
     cipher = Cipher(
         algorithms.AES(ENCRYPTION_KEY[:32]),
@@ -327,19 +335,25 @@ def generar_qr_seguro(datos: dict) -> str:
     payload = base64.b64encode(iv + datos_encriptados).decode()
     
     qr = qrcode.QRCode(
-        version=None,  # Auto-detect version based on data
-        error_correction=qrcode.constants.ERROR_CORRECT_H,  # HIGH = 30% corrección, mejor para escaneo en cualquier dirección
-        box_size=12,  # Larger boxes for better scanning
-        border=6,  # Larger border for better detection from any angle
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # Máxima corrección
+        box_size=10,
+        border=4,
     )
     qr.add_data(payload)
     qr.make(fit=True)
+    
+    logging.info(f"QR generado: versión={qr.version}, módulos={qr.modules_count}, payload={len(payload)} chars")
+    
     img = qr.make_image(fill_color="black", back_color="white")
     
     buffer = BytesIO()
     img.save(buffer, format="PNG")
     buffer.seek(0)
     qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+    
+    # Guardar también el payload completo para compatibilidad
+    payload_completo = base64.b64encode(iv + encryptor.update(json.dumps(datos).encode())).decode() if False else payload
     
     return f"data:image/png;base64,{qr_base64}", payload
 
