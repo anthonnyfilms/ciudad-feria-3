@@ -670,19 +670,37 @@ async def validar_entrada(request: Request):
             "categoria": datos_qr.get('categoria', '')
         })
     else:
-        # Hash para entradas normales - DEBE coincidir con los campos usados al crear
-        hash_verificacion = generar_hash({
+        # Hash para entradas normales - primero intentar SIN cédula (entradas antiguas)
+        # luego CON cédula (entradas nuevas)
+        hash_sin_cedula = generar_hash({
             "entrada_id": datos_qr['entrada_id'],
             "codigo_alfanumerico": datos_qr.get('codigo_alfanumerico', ''),
             "evento_id": datos_qr.get('evento_id', ''),
             "nombre_evento": datos_qr.get('nombre_evento', ''),
             "nombre_comprador": datos_qr.get('nombre_comprador', ''),
-            "cedula_comprador": datos_qr.get('cedula_comprador'),
             "email_comprador": datos_qr.get('email_comprador', ''),
             "telefono_comprador": datos_qr.get('telefono_comprador'),
             "numero_entrada": datos_qr.get('numero_entrada', 0),
             "asiento": datos_qr.get('asiento')
         })
+        
+        # Verificar primero sin cédula (compatibilidad con entradas antiguas)
+        if hash_sin_cedula == entrada['hash_validacion']:
+            hash_verificacion = hash_sin_cedula
+        else:
+            # Intentar con cédula (entradas nuevas)
+            hash_verificacion = generar_hash({
+                "entrada_id": datos_qr['entrada_id'],
+                "codigo_alfanumerico": datos_qr.get('codigo_alfanumerico', ''),
+                "evento_id": datos_qr.get('evento_id', ''),
+                "nombre_evento": datos_qr.get('nombre_evento', ''),
+                "nombre_comprador": datos_qr.get('nombre_comprador', ''),
+                "cedula_comprador": datos_qr.get('cedula_comprador'),
+                "email_comprador": datos_qr.get('email_comprador', ''),
+                "telefono_comprador": datos_qr.get('telefono_comprador'),
+                "numero_entrada": datos_qr.get('numero_entrada', 0),
+                "asiento": datos_qr.get('asiento')
+            })
     
     if hash_verificacion != entrada['hash_validacion']:
         return {
