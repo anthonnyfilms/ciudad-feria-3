@@ -665,6 +665,134 @@ class CiudadFeriaAPITester:
         
         return passed_tests == total_tests
 
+    def test_specific_review_request(self):
+        """Test specific QR code system for Ciudad Feria ticketing as requested in review"""
+        print("\n🔍 SPECIFIC REVIEW REQUEST TESTING")
+        print("=" * 60)
+        
+        # Test Case 1: GET /api/version - Verify version is "2.7.0-QR-PADDING-20250110"
+        print(f"\n1️⃣ Testing GET /api/version...")
+        success1, version_data = self.run_test("Version Check", "GET", "version", 200)
+        
+        if success1:
+            expected_version = "2.7.0-QR-PADDING-20250110"
+            actual_version = version_data.get('version', '')
+            if actual_version == expected_version:
+                print(f"   ✅ Version matches: {actual_version}")
+            else:
+                print(f"   ❌ Version mismatch: expected {expected_version}, got {actual_version}")
+                success1 = False
+        
+        # Test Case 2: GET /api/entrada/{entrada_id}/imagen - Download ticket image
+        print(f"\n2️⃣ Testing GET /api/entrada/6f5f7b61-3190-4283-b950-d636d9adf923/imagen...")
+        entrada_id = "6f5f7b61-3190-4283-b950-d636d9adf923"
+        
+        url = f"{self.api_url}/entrada/{entrada_id}/imagen"
+        print(f"   URL: {url}")
+        
+        try:
+            response = requests.get(url, timeout=30)
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('content-type', '')
+                content_length = len(response.content)
+                
+                if 'image/png' in content_type and content_length > 100000:  # > 100KB
+                    print(f"   ✅ PNG image downloaded successfully")
+                    print(f"   📄 Content-Type: {content_type}")
+                    print(f"   📏 Image Size: {content_length} bytes (> 100KB)")
+                    success2 = True
+                else:
+                    print(f"   ❌ Image validation failed: type={content_type}, size={content_length}")
+                    success2 = False
+            else:
+                print(f"   ❌ Request failed with status {response.status_code}")
+                try:
+                    error_detail = response.json()
+                    print(f"   Error: {error_detail}")
+                except:
+                    print(f"   Error: {response.text[:200]}")
+                success2 = False
+                
+        except Exception as e:
+            print(f"   ❌ Request failed: {str(e)}")
+            success2 = False
+        
+        # Test Case 3: POST /api/validar-entrada - Validate QR payload
+        print(f"\n3️⃣ Testing POST /api/validar-entrada with specific QR payload...")
+        qr_payload = "AyJVwiEhTX2IHJpt9hwn34QRjl3a/WRYZo90gJuBC6lc1RxFKyDyuT/M+ebQxuXzvYnYlTi35VEA9vCuR5LJyBnu5tIa5KiHLOZ7cXwxv6d+/rhaWZPzPLnX1d9BxqWv7PY4GO6k6FOV7LBWcrqIa8E6Gn9o71u4cFNF4ERNF9PxvXXvHuMyIGvXKy9194IXXdysSOLM0pvupB0AGsUUkyhjYMTymXKO8/EEoQjFXqXqDnNJSE7zF002Sdr8br8wQwJgQXj/ftuTLQYy8muDxIGetXmhnfGQIXJBHxc/3JPniUL+mZQ+SqmzAzBg3cbvZRXYWWd5W8GJPQTVxeNQZ7Ol8GEOIlTp3LBi+B27GklLEsR66YJLzS46x+eVA+c4uKeHJcZmhfHjrpRmb0oKqnZ7qNA5s6GNSYg83OJSeHZ910ZUm/ywKnygi29+KVIbVf6S+WdXE/x1ZaQ7jnVSogtVWORY+AmWfJ2AjahBU/Anoy8qB2AZYNJEDlFAf4e8xzk6NPjoxKq6eSrf/gHDZS/lP2QRxofMu/FJsDDH0j08huURBqYpu7lxrNaKvdDcQWr5fupPBRbT5jIFMpfnh0WW65Q="
+        
+        validation_data = {
+            "qr_payload": qr_payload,
+            "modo": "verificar"
+        }
+        
+        success3, validation_result = self.run_test("QR Payload Validation", "POST", "validar-entrada", 200, validation_data)
+        
+        if success3:
+            valido = validation_result.get('valido', False)
+            mensaje = validation_result.get('mensaje', '')
+            
+            # Critical: Must NOT return "fraudulenta"
+            if valido and "fraudulenta" not in mensaje.lower():
+                print(f"   ✅ QR validation successful")
+                print(f"   📝 Valid: {valido}")
+                print(f"   📝 Message: {mensaje}")
+            else:
+                print(f"   ❌ QR validation failed or returned fraudulenta")
+                print(f"   📝 Valid: {valido}")
+                print(f"   📝 Message: {mensaje}")
+                success3 = False
+        
+        # Test Case 4: POST /api/validar-entrada-codigo - Validate manual code
+        print(f"\n4️⃣ Testing POST /api/validar-entrada-codigo with manual code...")
+        codigo = "CF-2026-ADF923-VGZ2"
+        
+        code_validation_data = {
+            "codigo": codigo,
+            "modo": "verificar"
+        }
+        
+        success4, code_result = self.run_test("Manual Code Validation", "POST", "validar-entrada-codigo", 200, code_validation_data)
+        
+        if success4:
+            valido = code_result.get('valido', False)
+            mensaje = code_result.get('mensaje', '')
+            
+            if valido:
+                print(f"   ✅ Manual code validation successful")
+                print(f"   📝 Valid: {valido}")
+                print(f"   📝 Message: {mensaje}")
+            else:
+                print(f"   ❌ Manual code validation failed")
+                print(f"   📝 Valid: {valido}")
+                print(f"   📝 Message: {mensaje}")
+                success4 = False
+        
+        # Summary
+        all_tests = [success1, success2, success3, success4]
+        passed_tests = sum(all_tests)
+        total_tests = len(all_tests)
+        
+        print(f"\n🔍 SPECIFIC REVIEW REQUEST SUMMARY:")
+        print(f"   Tests Passed: {passed_tests}/{total_tests}")
+        print(f"   Success Rate: {(passed_tests/total_tests*100):.1f}%")
+        
+        # Detailed results
+        test_names = [
+            "Version Check (2.7.0-QR-PADDING-20250110)",
+            "Ticket Image Download (PNG > 100KB)", 
+            "QR Payload Validation (no fraudulenta)",
+            "Manual Code Validation (CF-2026-ADF923-VGZ2)"
+        ]
+        
+        print(f"\n📋 Detailed Results:")
+        for i, (test_name, success) in enumerate(zip(test_names, all_tests)):
+            status = "✅ PASS" if success else "❌ FAIL"
+            print(f"   {i+1}. {test_name}: {status}")
+        
+        return passed_tests == total_tests
+
     def test_qr_validation_system_complete(self, token):
         """Test complete QR validation system as requested in review"""
         print("\n🔍 QR VALIDATION SYSTEM TESTING (REVIEW REQUEST)")
