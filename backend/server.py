@@ -2759,7 +2759,7 @@ async def generar_pdf_acreditacion(acreditacion_id: str, current_user: str = Dep
 
 @api_router.get("/admin/acreditaciones/evento/{evento_id}/pdf")
 async def generar_pdf_todas_acreditaciones(evento_id: str, current_user: str = Depends(get_current_user)):
-    """Genera PDF con todas las acreditaciones de un evento (múltiples por página)"""
+    """Genera PDF con todas las acreditaciones de un evento - 4 por página tamaño carta"""
     acreditaciones = await db.acreditaciones.find({"evento_id": evento_id}, {"_id": 0}).to_list(1000)
     
     if not acreditaciones:
@@ -2772,33 +2772,44 @@ async def generar_pdf_todas_acreditaciones(evento_id: str, current_user: str = D
     categorias = await db.categorias_acreditacion.find({}, {"_id": 0}).to_list(100)
     categorias_dict = {cat["id"]: cat for cat in categorias}
     
-    # Crear PDF tamaño carta con credenciales verticales (9.5 x 14.5 cm)
+    # Crear PDF tamaño CARTA (letter: 8.5 x 11 pulgadas = 215.9 x 279.4 mm)
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
-    page_width, page_height = letter
+    page_width, page_height = letter  # 612 x 792 puntos
     
-    # Configuración de layout: 2 columnas x 1 fila = 2 credenciales por página (verticales)
-    margin = 10 * mm
-    cred_width = 95 * mm    # 9.5 cm ancho
-    cred_height = 145 * mm  # 14.5 cm alto
-    spacing_x = 10 * mm
+    # Configuración de layout: 2 columnas x 2 filas = 4 credenciales por página
+    margin_x = 15 * mm  # Margen horizontal
+    margin_y = 15 * mm  # Margen vertical
+    spacing_x = 10 * mm  # Espacio entre columnas
+    spacing_y = 10 * mm  # Espacio entre filas
     
     cols = 2
-    rows = 1
+    rows = 2
+    acred_per_page = cols * rows  # 4 por página
+    
+    # Calcular tamaño de cada acreditación para que quepan 4 en carta
+    # Ancho disponible: page_width - 2*margin_x - spacing_x
+    cred_width = (page_width - 2*margin_x - spacing_x) / cols
+    # Alto disponible: page_height - 2*margin_y - spacing_y  
+    cred_height = (page_height - 2*margin_y - spacing_y) / rows
+    
+    logging.info(f"PDF carta: {page_width:.0f}x{page_height:.0f}pt, acreditación: {cred_width:.0f}x{cred_height:.0f}pt ({cred_width/mm:.0f}x{cred_height/mm:.0f}mm)")
     
     for i, acred in enumerate(acreditaciones):
-        # Calcular posición en la página (2 columnas x 1 fila)
-        page_index = i // (cols * rows)
-        pos_in_page = i % (cols * rows)
+        # Calcular posición en la página
+        pos_in_page = i % acred_per_page
         col = pos_in_page % cols
+        row = pos_in_page // cols
         
         # Nueva página si es necesario
         if pos_in_page == 0 and i > 0:
             c.showPage()
         
-        # Calcular coordenadas (2 columnas lado a lado)
-        x = margin + col * (cred_width + spacing_x)
-        y = page_height - margin - cred_height
+        # Calcular coordenadas
+        # X: desde la izquierda
+        x = margin_x + col * (cred_width + spacing_x)
+        # Y: desde abajo (la fila 0 está arriba)
+        y = page_height - margin_y - cred_height - row * (cred_height + spacing_y)
         
         # Obtener categoría
         categoria = categorias_dict.get(acred.get("categoria_id"))
