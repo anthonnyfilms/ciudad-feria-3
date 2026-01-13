@@ -2925,7 +2925,7 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
         cat_y = y + height - 12*mm
         if config and "categoria" in config:
             cat_y = y + height * (1 - config["categoria"].get("y", 10) / 100)
-        c.drawCentredString(x + width/2, cat_y, categoria_nombre.upper())
+        c.drawCentredString(x + width/2, cat_y, (categoria_nombre or "GENERAL").upper())
     
     # Nombre de la persona
     mostrar_nombre = True
@@ -2937,9 +2937,8 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
         c.setFillColorRGB(*nombre_color)
         nombre_size_config = config.get("nombre", {}).get("size", 20) if config else 20
         nombre_size = max(12, nombre_size_config * FONT_SCALE_FACTOR)  # Mínimo 12pt
-        logging.info(f"Nombre: config_size={nombre_size_config}, scaled_size={nombre_size:.1f}pt")
         c.setFont("Helvetica-Bold", nombre_size)
-        nombre = acreditacion.get("nombre_persona", "SIN NOMBRE")
+        nombre = acreditacion.get("nombre_persona") or "SIN NOMBRE"
         if config and "nombre" in config:
             nombre_y = y + height * (1 - config["nombre"].get("y", 35) / 100)
         else:
@@ -2951,7 +2950,7 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     if config and "cedula" in config:
         mostrar_cedula = config["cedula"].get("visible", True)
     
-    cedula = acreditacion.get("cedula", "")
+    cedula = acreditacion.get("cedula") or ""
     if mostrar_cedula and cedula:
         cedula_color = hex_to_rgb(config.get("cedula", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
         c.setFillColorRGB(*cedula_color)
