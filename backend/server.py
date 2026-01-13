@@ -2968,7 +2968,7 @@ async def dibujar_acreditacion(c, acreditacion: dict, categoria: dict, x: float,
     if config and "departamento" in config:
         mostrar_departamento = config["departamento"].get("visible", True)
     
-    departamento = acreditacion.get("organizacion", "") or acreditacion.get("cargo", "")
+    departamento = acreditacion.get("organizacion") or acreditacion.get("cargo") or ""
     if mostrar_departamento and departamento:
         dept_color = hex_to_rgb(config.get("departamento", {}).get("color", "#FFFFFF") if config else "#FFFFFF")
         c.setFillColorRGB(*dept_color)
